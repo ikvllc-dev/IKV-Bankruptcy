@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ԱՅ ՔԻ ՎԻ — Սնանկության կառավարում</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wght@400;500;600;700&family=Noto+Serif+Armenian:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#172033;--ink-soft:#42506a;--ink-muted:#748098;
+  --nav:#121a2d;--nav-soft:#1c2740;--primary:#3349a0;--primary-hover:#293d8b;
+  --gold:#d59c34;--gold-light:#f2d49c;--gold-pale:#fff8e8;
+  --red:#b93838;--red-pale:#fff1f1;
+  --green:#18724a;--green-pale:#ecf8f2;
+  --amber:#a96d08;--amber-pale:#fff7e5;
+  --blue:#285ca8;--blue-pale:#edf4ff;
+  --surface:#ffffff;--surface-soft:#f8f9fc;--border:#e2e6ee;--border-strong:#cfd5e1;--bg:#f3f5f9;
+  --radius:16px;--radius-sm:10px;--shadow:0 8px 24px rgba(25,35,58,.06);--shadow-lg:0 24px 70px rgba(17,25,45,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans Armenian',sans-serif;background:var(--bg);min-height:100vh;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:none}
+.topnav{background:var(--nav);padding:18px 14px;display:flex;flex-direction:column;align-items:stretch;gap:6px;position:fixed;inset:0 auto 0 0;width:236px;z-index:100;box-shadow:8px 0 32px rgba(17,25,45,.08)}
+.topnav-logo{font-family:'Noto Serif Armenian',serif;color:#fff;font-size:1.08rem;font-weight:700;padding:8px 12px 24px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap}
+.topnav-logo::after{content:'Գործերի կառավարում';display:block;font-family:'Noto Sans Armenian',sans-serif;font-size:.65rem;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.46);margin-top:4px}
+.nav-tab{color:rgba(255,255,255,.68);padding:11px 13px;font-size:.84rem;font-weight:500;cursor:pointer;border:1px solid transparent;border-radius:10px;transition:background .16s,color .16s,border-color .16s;white-space:nowrap}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,.07)}
+.nav-tab.active{color:#fff;background:var(--nav-soft);border-color:rgba(255,255,255,.08);box-shadow:inset 3px 0 0 var(--gold)}
+.page{display:none;padding:36px 40px 56px;max-width:1320px;margin:0 auto 0 236px}
+.page.active{display:block;animation:page-in .22s ease-out}
+@keyframes page-in{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:none}}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.page-title{font-family:'Noto Serif Armenian',serif;font-size:1.55rem;line-height:1.25;color:var(--ink)}
+.page-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:5px}
+.page-subtitle{font-size:.84rem;color:var(--ink-muted);margin-top:5px}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{position:relative;min-width:260px;flex:1;max-width:420px}
+.search-box input{width:100%;min-height:42px;padding:9px 12px 9px 38px;border:1px solid var(--border-strong);border-radius:11px;background:#fff;color:var(--ink);font-size:.8rem}
+.search-box input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,73,160,.1)}
+.search-box::before{content:'⌕';position:absolute;left:13px;top:7px;color:var(--ink-muted);font-size:1.15rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card-title{font-family:'Noto Serif Armenian',serif;font-size:1rem;font-weight:700;margin-bottom:17px;color:var(--ink);display:flex;align-items:center;gap:9px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 15px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-soft);font-size:.8rem;font-weight:600;cursor:pointer;transition:transform .14s,box-shadow .14s,border-color .14s,background .14s;white-space:nowrap}
+.btn:hover{border-color:#aeb7c8;background:var(--surface-soft);box-shadow:0 4px 12px rgba(25,35,58,.08);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:focus-visible,.qbtn:focus-visible,.bank-btn:focus-visible,.tog:focus-visible{outline:3px solid rgba(51,73,160,.2);outline-offset:2px}
+.btn:disabled{opacity:.56;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn-gold{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700}
+.btn-gold:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn-sm{min-height:34px;padding:5px 10px;font-size:.72rem}
+.btn-green{background:var(--green-pale);color:var(--green);border-color:var(--green)}
+.btn-red{background:var(--red-pale);color:var(--red);border-color:var(--red)}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:.73rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:.84rem;color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:#aeb7c8}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,73,160,.11)}
+.field textarea{min-height:90px;resize:vertical}
+.field input[type=file]{padding:8px;background:var(--surface-soft)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:100px;font-size:.68rem;font-weight:700;white-space:nowrap}
+.badge-green{background:var(--green-pale);color:var(--green)}
+.badge-red{background:var(--red-pale);color:var(--red)}
+.badge-amber{background:var(--amber-pale);color:var(--amber)}
+.badge-blue{background:var(--blue-pale);color:var(--blue)}
+.badge-gray{background:#f0f0f0;color:#666}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:.8rem}
+.tbl th{text-align:left;padding:11px 13px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);border-bottom:1px solid var(--border);background:var(--surface-soft)}
+.tbl th:first-child{border-radius:10px 0 0 0}.tbl th:last-child{border-radius:0 10px 0 0}
+.tbl td{padding:13px;border-bottom:1px solid var(--border);vertical-align:middle;background:#fff}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.clickable:hover td{background:#f8faff;cursor:pointer}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.metric{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:left;box-shadow:var(--shadow)}
+.metric::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
+.metric-val{font-size:2rem;line-height:1;font-weight:700;font-family:'Noto Serif Armenian',serif}
+.metric-lbl{font-size:.69rem;color:var(--ink-muted);margin-top:8px;font-weight:600;line-height:1.35}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-title{font-family:'Noto Serif Armenian',serif;font-size:1.08rem;font-weight:700;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+.srow{display:flex;justify-content:space-between;align-items:flex-start;padding:.65rem 0;border-bottom:1px solid var(--border);gap:1.25rem;font-size:.8rem}
+.srow:last-child{border-bottom:none}
+.sk{color:var(--ink-muted);font-size:.73rem;max-width:52%}
+.sv{color:var(--ink);font-weight:600;text-align:right;font-size:.78rem;word-break:break-word}
+.alert{padding:12px 14px;border-radius:12px;font-size:.78rem;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start;line-height:1.55}
+.alert-red{background:var(--red-pale);color:var(--red);border:1px solid #f0bcb6}
+.alert-amber{background:var(--amber-pale);color:var(--amber);border:1px solid #f9d776}
+.alert-green{background:var(--green-pale);color:var(--green);border:1px solid #a8d8bc}
+.alert-blue{background:var(--blue-pale);color:var(--blue);border:1px solid #b5d0f4}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:100px;font-size:.67rem;font-weight:700;border:none;white-space:nowrap}
+.sp-none{background:#f0f0f0;color:#666}
+.sp-applied{background:var(--blue-pale);color:var(--blue)}
+.sp-received{background:var(--green-pale);color:var(--green)}
+.sp-expired{background:var(--red-pale);color:var(--red)}
+#detail-tabs{display:flex;gap:5px;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;padding:0 2px}
+#detail-tabs .nav-tab{color:var(--ink-muted);background:transparent;border:0;border-bottom:2px solid transparent;border-radius:8px 8px 0 0;padding:10px 13px!important}
+#detail-tabs .nav-tab:hover{color:var(--ink);background:var(--surface)}
+#detail-tabs .nav-tab.active{color:var(--primary);background:var(--surface);border-bottom-color:var(--primary);box-shadow:none}
+.doc-group{margin-bottom:24px}.doc-group:last-child{margin-bottom:0}
+.doc-row{display:grid;grid-template-columns:minmax(220px,1fr) auto minmax(220px,auto);align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border)}
+.doc-row:last-child{border-bottom:none}
+.doc-title{font-size:.8rem;font-weight:700;color:var(--ink)}
+.doc-files{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.doc-file{display:inline-flex;align-items:center;padding:3px 7px;border-radius:6px;background:var(--blue-pale);color:var(--blue);font-size:.65rem;font-weight:600}
+.doc-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.progress-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.68rem;font-weight:700;color:var(--ink-muted)}
+.case-info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
+/* QUIZ */
+.progress-bar{height:7px;background:#e8ebf2;border-radius:100px;margin-bottom:2rem;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),#6478cf);border-radius:100px;transition:width .4s}
+.section-tag{display:inline-block;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:.65rem;padding:.28rem .6rem;background:var(--blue-pale);border-radius:100px}
+.step{display:none}.step.active{display:block}
+.step-label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;margin-bottom:.55rem}
+.question{font-family:'Noto Serif Armenian',serif;font-size:1.25rem;font-weight:700;line-height:1.48;color:var(--ink);margin-bottom:.45rem}
+.hint{font-size:.8rem;color:var(--ink-muted);margin-bottom:1.35rem;line-height:1.6;max-width:58ch}
+.qbtn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.qbtn{flex:1;min-width:120px;min-height:48px;padding:.75rem 1rem;border-radius:11px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-soft);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
+.qbtn:hover{border-color:var(--primary);background:var(--blue-pale);color:var(--primary)}
+.qbtn.selected{border-color:var(--primary);background:var(--primary);color:#fff;box-shadow:0 6px 16px rgba(51,73,160,.2)}
+.btn-next{background:var(--primary);color:#fff;border:1px solid var(--primary);min-height:46px;padding:.75rem 1.5rem;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:1.15rem;display:inline-flex;align-items:center;transition:all .15s}
+.btn-next:hover{background:var(--primary-hover);box-shadow:0 7px 18px rgba(51,73,160,.2);transform:translateY(-1px)}
+.bank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px;margin-bottom:1rem}
+.bank-btn{padding:.65rem .8rem;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-soft);font-size:.73rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:left;display:flex;align-items:center;gap:7px}
+.bank-btn:hover{border-color:var(--primary);background:var(--blue-pale)}
+.bank-btn.selected{border-color:var(--primary);background:var(--primary);color:#fff}
+.bank-btn .ck{font-size:12px;opacity:0}.bank-btn.selected .ck{opacity:1}
+.debt-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:.75rem .9rem;border:1px solid var(--border);border-radius:10px;background:var(--surface-soft)}
+.debt-row label{flex:1;font-size:.81rem;color:var(--ink-soft)}
+.debt-row input{width:130px;padding:.36rem .6rem;border:1px solid var(--border);border-radius:6px;font-family:'Noto Sans Armenian',sans-serif;font-size:.82rem;color:var(--ink);background:var(--surface);text-align:right}
+.debt-row input:focus{outline:none;border-color:var(--gold)}
+.collateral-table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:.81rem}
+.collateral-table th{text-align:left;padding:.45rem .7rem;font-weight:600;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);border-bottom:2px solid var(--border)}
+.collateral-table td{padding:.5rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.toggle-pair{display:flex;gap:5px}
+.tog{padding:.35rem .7rem;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-muted);font-size:.73rem;font-weight:700;cursor:pointer;transition:all .14s}
+.tog.on{border-color:var(--primary);background:var(--primary);color:#fff}
+.spouse-banner{background:var(--blue-pale);border:1px solid #cdddf6;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.4rem;font-size:.81rem;color:var(--blue);line-height:1.6}
+.warn-box{background:#fff8e1;border:1px solid #f9d776;border-radius:9px;padding:1rem 1.3rem;font-size:.84rem;color:#7a5c00;line-height:1.6;margin-bottom:1.1rem}
+.cost-box{background:linear-gradient(135deg,#18233d,#2d3f76);border:none;border-radius:14px;padding:1.3rem 1.4rem;margin-bottom:1.35rem;color:#fff}
+.cost-label{font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:.35rem}
+.cost-amount{font-family:'Noto Serif Armenian',serif;font-size:1.7rem;font-weight:700;color:#fff}
+.cost-details{font-size:.77rem;color:rgba(255,255,255,.7);margin-top:.4rem;line-height:1.55}.cost-details strong{color:#fff}
+.summary-block{margin-bottom:1.4rem;border:1px solid var(--border);border-radius:13px;padding:15px 17px;background:#fff}
+.summary-block-title{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:.55rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+.flag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.73rem;font-weight:500}
+.fy{background:#edf7f2;color:var(--green)}.fn{background:#f5f5f8;color:var(--ink-muted)}.fw{background:var(--red-pale);color:var(--red)}
+.result-badge{display:inline-flex;align-items:center;gap:7px;padding:.38rem .9rem;border-radius:100px;font-size:.77rem;font-weight:600;letter-spacing:.04em;margin-bottom:1.1rem}
+.badge-ok-q{background:var(--green-pale);color:var(--green);border:1px solid #a8d8bc}
+.badge-no-q{background:var(--red-pale);color:var(--red);border:1px solid #f0bcb6}
+.result-title{font-family:'Noto Serif Armenian',serif;font-size:1.45rem;font-weight:700;margin-bottom:.5rem;line-height:1.4}
+.result-desc{font-size:.85rem;color:var(--ink-soft);line-height:1.6;margin-bottom:1.2rem}
+.ineligible-box{background:var(--red-pale);border:1px solid #f0bcb6;border-radius:9px;padding:1rem 1.3rem;font-size:.84rem;color:var(--red);line-height:1.5}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:1050px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.page{padding:30px 26px 50px}}
+@media(max-width:820px){
+  body{padding-bottom:68px}
+  .topnav{inset:auto 0 0 0;width:auto;height:64px;padding:7px 8px;flex-direction:row;align-items:center;justify-content:space-around;gap:3px;box-shadow:0 -8px 28px rgba(17,25,45,.12)}
+  .topnav-logo{display:none}
+  .nav-tab{flex:1;text-align:center;padding:10px 5px;font-size:.68rem;border-radius:9px}
+  .nav-tab.active{box-shadow:none;background:var(--nav-soft);border-color:rgba(255,255,255,.08)}
+  .page{margin:0;padding:24px 18px 42px;max-width:none}
+  .page-title{font-size:1.35rem}
+  .case-info-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .form-row,.form-row-3{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:14px}.metric-val{font-size:1.65rem}
+  .page{padding:20px 12px 36px}.card{padding:17px;border-radius:14px}.bank-grid{grid-template-columns:1fr 1fr}
+  .modal{padding:19px;border-radius:16px}.modal-actions{flex-direction:column-reverse}.modal-actions .btn{width:100%}
+  .srow{display:block}.sk{display:block;max-width:none;margin-bottom:3px}.sv{text-align:left;display:block}
+  .question{font-size:1.08rem}.qbtn{min-width:calc(50% - 6px)}
+  .tbl{min-width:650px}.page-head{margin-bottom:18px}
+  .search-box{min-width:100%;max-width:none}.doc-row{grid-template-columns:1fr;gap:8px}.doc-actions{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-logo">⚖ ԱՅ ՔԻ ՎԻ</div>
+  <div class="nav-tab active" onclick="showPage('dashboard')">▦ &nbsp;Վահանակ</div>
+  <div class="nav-tab" onclick="showPage('cases')">▤ &nbsp;Գործեր</div>
+  <div class="nav-tab" onclick="showPage('quiz')">＋ &nbsp;Նոր հաճախորդ</div>
+  <div class="nav-tab" onclick="showPage('calendar')">◷ &nbsp;Օրացույց</div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-head">
+    <div>
+      <div class="page-eyebrow">Գործերի ընդհանուր պատկեր</div>
+      <h1 class="page-title">Վահանակ</h1>
+      <p class="page-subtitle">Հետևեք ակտիվ գործերին, փաստաթղթերի ժամկետներին և հաստատումներին։</p>
+    </div>
+    <button class="btn btn-gold" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
+  </div>
+  <div class="metrics" id="dash-metrics">
+    <div class="metric"><div class="metric-val">—</div><div class="metric-lbl">Գործ</div></div>
+  </div>
+  <div id="dash-alerts"></div>
+  <div class="card">
+    <div class="card-title">📁 Բոլոր գործերը</div>
+    <div id="dash-cases"></div>
+  </div>
+</div>
+
+<!-- CASES -->
+<div class="page" id="page-cases">
+  <div class="page-head">
+    <div>
+      <div class="page-eyebrow">Հաճախորդների բազա</div>
+      <h1 class="page-title">Բոլոր գործերը</h1>
+      <p class="page-subtitle">Գտեք հաճախորդին և շարունակեք աշխատանքը վերջին պահված վիճակից։</p>
+    </div>
+    <button class="btn btn-gold" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
+  </div>
+  <div class="toolbar" style="margin-bottom:14px">
+    <div class="search-box"><input id="case-search" type="search" placeholder="Փնտրել անունով, անձնագրով կամ համարանիշով" oninput="filterCases(this.value)"/></div>
+  </div>
+  <div class="card"><div id="cases-list"></div></div>
+</div>
+
+<!-- CASE DETAIL -->
+<div class="page" id="page-case-detail">
+  <div class="page-head">
+    <div>
+      <button class="btn btn-sm" onclick="showPage('cases')" style="margin-bottom:12px">← Բոլոր գործերը</button>
+      <div class="page-eyebrow">Գործի աշխատանքային տարածք</div>
+      <h1 class="page-title" id="detail-title">Գործ</h1>
+    </div>
+  </div>
+  <div id="detail-tabs"></div>
+  <div id="detail-content"></div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="page-quiz">
+  <div style="max-width:760px;margin:0 auto">
+    <div class="page-head">
+      <div>
+        <button class="btn btn-sm" onclick="showPage('dashboard')" style="margin-bottom:12px">← Վահանակ</button>
+        <div class="page-eyebrow">Նախնական իրավական գնահատում</div>
+        <h1 class="page-title">Նոր հաճախորդ</h1>
+        <p class="page-subtitle">Հավաքագրեք տվյալները հաջորդական քայլերով։ Աստղանիշով դաշտերը պարտադիր են։</p>
+      </div>
+    </div>
+    <div class="card" id="quiz-card">
+      <div class="progress-meta"><span id="q-progress-text">Քայլ 1</span><span id="q-progress-percent">2%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:2%"></div></div>
+      <div id="q-steps"></div>
+    </div>
+    <div id="quiz-result" style="display:none">
+      <div class="card">
+        <div id="quiz-result-inner"></div>
+        <div class="divider"></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+          <button class="btn btn-gold" id="btn-save" onclick="saveAndGenerate()">📄 Պահպանել և ստեղծել փաստաթղթերը</button>
+          <button class="btn" onclick="initQuiz()">← Նորից</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="page-calendar">
+  <div class="page-head">
+    <div>
+      <div class="page-eyebrow">Ժամկետներ և իրադարձություններ</div>
+      <h1 class="page-title">Օրացույց</h1>
+      <p class="page-subtitle">Մեկ տեղում տեսեք ներկայացման օրերը և մոտեցող փաստաթղթային ժամկետները։</p>
+    </div>
+  </div>
+  <div class="card"><div id="cal-content"><p class="hint">Բեռնվում է...</p></div></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-box">
+    <div id="modal-inner"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG — paste your Apps Script URL here
+// ═══════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyihObEc4vja4h97ODcXriL7DNHkyilchzXrzAY_EwAkNmDLPEtHsXze_ckcUVvk3GKbQ/exec'
+
+const COMPANY = {
+  name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
+  reg: '999.110.1563714', hvhh: '00544719', zkd: '56511367',
+  address: 'Արհեստավորների փողոց 2, տուն 6, Երևան, 0018',
+  director: 'Հովհաննես Հարությունյան', phone: '+374 99 648 655'
+}
+
+const BANKS = ['Արարատբանկ','Ամերիաբանկ','Արդշինբանկ','Բիբլոս Բանկ Արմենիա','ԷյչԷսԲիՍի Բանկ Հայաստան','Էվոկաբանկ','Ինեկոբանկ','Կոնվերս Բանկ','Հայէկոնոմբանկ','Հայբիզնեսբանկ','ՎՏԲ-Հայաստան Բանկ','Յունիբանկ','Ֆասթ Բանկ','Արմսվիսբանկ','Ակբա Բանկ','ԱյԴի Բանկ','Մելլաթ Բանկ']
+
+const DOC_TYPES = [
+  {id:'passport',name:'Անձնագիր կամ նույնականացման քարտ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:true},
+  {id:'psn',name:'Հանրային ծառայությունների համարանիշ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
+  {id:'marriage',name:'Ամուսնության վկայական',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
+  {id:'notarial_poa',name:'Նոտարական լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
+  {id:'proc_poa',name:'Դատական ներկայացուցչության լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
+  {id:'credit_report',name:'Վարկային զեկույց',cat:'Ֆինանսական փաստաթղթեր',s90:true,spouse:false},
+  {id:'loan_agr',name:'Վարկային պայմանագրեր',cat:'Ֆինանսական փաստաթղթեր',s90:false,spouse:false},
+  {id:'debt_stmt',name:'Պարտքերի վերաբերյալ քաղվածքներ',cat:'Ֆինանսական փաստաթղթեր',s90:true,spouse:false},
+  {id:'cadastre',name:'Կադաստր',cat:'Գույք',s90:true,spouse:true},
+  {id:'tax',name:'Պետական եկամուտների կոմիտեի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'social',name:'Սոցիալական ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'territorial',name:'Տարածքային կառավարման մարմնի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'minfin',name:'Հայաստանի Հանրապետության ֆինանսների նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'mineco',name:'Հայաստանի Հանրապետության էկոնոմիկայի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'mia',name:'Հայաստանի Հանրապետության ներքին գործերի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'traffic',name:'Ճանապարհային ոստիկանության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'state_reg',name:'Պետական ռեգիստրի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'depository',name:'Կենտրոնական դեպոզիտարիայի տեղեկանք',cat:'Ֆինանսական փաստաթղթեր',s90:true,spouse:true},
+  {id:'banks_resp',name:'Բանկերի պատասխաններ',cat:'Բանկային փաստաթղթեր',s90:true,spouse:false},
+  {id:'court_docs',name:'Դատարան ներկայացվող փաստաթղթեր',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
+  {id:'petition',name:'Սնանկության դիմում',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
+  {id:'cred_service',name:'Ապացույցներ պարտատերերին ծանուցելու վերաբերյալ',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
+  {id:'other_document',name:'Այլ փաստաթուղթ',cat:'Այլ փաստաթղթեր',s90:false,spouse:false},
+]
+
+function newId(){ return crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2,10) }
+function localDate(d=new Date()){
+  const copy = new Date(d.getTime()-d.getTimezoneOffset()*60000)
+  return copy.toISOString().slice(0,10)
+}
+function parseDate(d){ return d ? new Date(d+'T00:00:00') : null }
+function today(){ return localDate() }
+function addDays(d,n){ const dt=parseDate(d);dt.setDate(dt.getDate()+n);return localDate(dt) }
+function daysLeft(d){
+  const target=parseDate(d)
+  const now=parseDate(today())
+  return target ? Math.round((target-now)/86400000) : Infinity
+}
+function fmtDate(d){ const dt=parseDate(d);return dt?dt.toLocaleDateString('hy-AM'):'' }
+function esc(value){
+  return String(value??'').replace(/[&<>"']/g, ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[ch])
+}
+function inlineCall(name,...args){
+  return esc(`${name}(${args.map(arg=>JSON.stringify(arg)).join(',')})`)
+}
+
+// ═══════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════
+async function readApiResponse(response) {
+  const text = await response.text()
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch(e) {
+    throw new Error('Սերվերը վերադարձրել է անվավեր պատասխան')
+  }
+  if(!response.ok) throw new Error(`HTTP ${response.status}`)
+  if(data && data.error) throw new Error(data.error)
+  return data
+}
+
+async function apiGet(action, params={}) {
+  const url = new URL(SCRIPT_URL)
+  url.searchParams.set('action', action)
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v))
+  const r = await fetch(url, {redirect:'follow'})
+  return readApiResponse(r)
+}
+
+async function apiPost(data) {
+  const r = await fetch(SCRIPT_URL, {
+    method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(data)
+  })
+  return readApiResponse(r)
+}
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let allCases = []
+let allDocuments = []
+let currentCase = null
+let currentDocs = []
+let currentFiles = []
+let currentTab = 'info'
+
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'))
+  document.getElementById('page-'+id)?.classList.add('active')
+  const tabs = {dashboard:0,cases:1,'case-detail':1,quiz:2,calendar:3}
+  const navTabs = document.querySelectorAll('.nav-tab')
+  if(tabs[id]!==undefined) navTabs[tabs[id]]?.classList.add('active')
+  if(id==='dashboard') loadDashboard()
+  if(id==='cases') loadCases()
+  if(id==='quiz') initQuiz()
+  if(id==='calendar') loadCalendar()
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+async function loadDashboard() {
+  document.getElementById('dash-metrics').innerHTML = '<div class="metric"><div class="spinner"></div><div class="metric-lbl">Բեռնվում է...</div></div>'
+  try {
+    ;[allCases, allDocuments] = await Promise.all([
+      apiGet('getCases'),
+      apiGet('getDocs')
+    ])
+    renderDashboard()
+  } catch(e) {
+    document.getElementById('dash-metrics').innerHTML = `<div class="alert alert-red">Սխալ՝ ${esc(e.message)}<br><small>Google Apps Script-ը հասանելի է, սակայն տվյալների կառուցվածքը կամ թույլտվությունները ստուգման կարիք ունեն։</small></div>`
+  }
+}
+
+function renderDashboard() {
+  const cases = allCases
+  const deadlineDocs = allDocuments
+    .filter(d=>d.status==='received'&&d.expiryDate)
+    .map(d=>({
+      ...d,
+      days:daysLeft(d.expiryDate),
+      caseData:cases.find(c=>c.id===d.caseId),
+      typeData:DOC_TYPES.find(t=>t.id===d.typeId)
+    }))
+    .filter(d=>d.caseData&&d.typeData)
+    .sort((a,b)=>a.days-b.days)
+
+  const expired = deadlineDocs.filter(d=>d.days<0)
+  const expiring = deadlineDocs.filter(d=>d.days>=0&&d.days<=14)
+
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric"><div class="metric-val">${cases.length}</div><div class="metric-lbl">Ակտիվ գործեր</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--red)">${expired.length}</div><div class="metric-lbl">Ժամկետանց փաստաթղթեր</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--amber)">${expiring.length}</div><div class="metric-lbl">Մինչև 14 օր</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--green)">${cases.filter(c=>c.lawyerApproved==='YES').length}</div><div class="metric-lbl">Փաստաբանի կողմից հաստատված</div></div>
+  `
+  const urgent = [...expired, ...expiring].slice(0,8)
+  document.getElementById('dash-alerts').innerHTML = `<div class="card">
+    <div class="card-title">⏱ Ուշադրություն պահանջող ժամկետներ</div>
+    ${urgent.length?urgent.map(d=>`
+      <div class="alert ${d.days<0?'alert-red':'alert-amber'} clickable" onclick="${inlineCall('openCase',d.caseId)}" style="cursor:pointer">
+        <strong>${d.days<0?'Ժամկետանց':'Մոտ ժամկետ'}:</strong>
+        <span>${esc(d.typeData.name)} · ${esc(d.caseData.applicantName)} · ${esc(d.expiryDate)}
+        (${d.days<0?Math.abs(d.days)+' օր անցած':d.days+' օր մնացած'})</span>
+      </div>
+    `).join(''):'<div class="alert alert-green"><strong>Ամեն ինչ կարգին է։</strong><span>Առաջիկա 14 օրվա ընթացքում ժամկետանց կամ մոտեցող փաստաթուղթ չկա։</span></div>'}
+  </div>`
+  document.getElementById('dash-cases').innerHTML = renderCasesTable(cases)
+}
+
+function renderCasesTable(cases) {
+  if(!cases.length) return `<div style="text-align:center;padding:42px 20px;color:var(--ink-muted)">
+    <div style="font-size:2rem;margin-bottom:8px">⌕</div>
+    <div style="font-weight:700;color:var(--ink);margin-bottom:5px">Գործ չի գտնվել</div>
+    <div style="font-size:.78rem;margin-bottom:15px">Փոխեք որոնման բառը կամ ստեղծեք նոր հաճախորդի գործ։</div>
+    <button class="btn btn-gold btn-sm" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
+  </div>`
+  return `<div style="overflow-x:auto"><table class="tbl"><thead><tr>
+    <th>Հաճախորդ</th><th>Ամուսին կամ կին</th><th>Ներկայացման ամսաթիվ</th><th>Կարգավիճակ</th><th></th>
+  </tr></thead><tbody>
+    ${cases.map(c=>`<tr class="clickable" onclick="${inlineCall('openCase',c.id)}">
+      <td><strong>${esc(c.applicantName)}</strong>${c.isMarried==='YES'?'<br><span style="font-size:.72rem;color:var(--ink-muted)">Ամուսնացած է</span>':''}</td>
+      <td style="font-size:.8rem">${esc(c.spouseName||'—')}</td>
+      <td style="font-size:.8rem">${esc(c.filingDate||'—')}</td>
+      <td>${c.lawyerApproved==='YES'?'<span class="badge badge-green">✓ Հաստատված</span>':'<span class="badge badge-blue">Ընթացքի մեջ</span>'}</td>
+      <td><button class="btn btn-sm" onclick="event.stopPropagation();${inlineCall('openCase',c.id)}">→</button></td>
+    </tr>`).join('')}
+  </tbody></table></div>`
+}
+
+function filterCases(query) {
+  const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
+  const filtered=!value?allCases:allCases.filter(c=>
+    [c.applicantName,c.spouseName,c.passport,c.psn,c.id]
+      .some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value))
+  )
+  document.getElementById('cases-list').innerHTML=renderCasesTable(filtered)
+}
+
+async function loadCases() {
+  document.getElementById('cases-list').innerHTML = '<span class="spinner"></span>'
+  try {
+    allCases = await apiGet('getCases')
+    document.getElementById('cases-list').innerHTML = renderCasesTable(allCases)
+  } catch(e) {
+    document.getElementById('cases-list').innerHTML = `<div class="alert alert-red">${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CASE DETAIL
+// ═══════════════════════════════════════════════
+async function openCase(caseId) {
+  currentCase = allCases.find(c=>c.id===caseId) || (await apiGet('getCases')).find(c=>c.id===caseId)
+  if(!currentCase) return
+  ;[currentDocs, currentFiles] = await Promise.all([
+    apiGet('getDocs', {caseId}),
+    apiGet('getFiles', {caseId})
+  ])
+  showPage('case-detail')
+  document.getElementById('detail-title').textContent = currentCase.applicantName
+  renderDetailTabs()
+  renderDetail('info')
+}
+
+function renderDetailTabs() {
+  const tabs = [
+    {id:'info',label:'👤 Տեղեկություններ'},
+    {id:'docs',label:'📋 Փաստաթղթեր'},
+    {id:'credits',label:'💰 Պարտքեր'},
+    {id:'report',label:'📄 Ամբողջական հաշվետվություն'},
+  ]
+  document.getElementById('detail-tabs').innerHTML = tabs.map(t=>
+    `<div class="nav-tab${currentTab===t.id?' active':''}" onclick="renderDetail('${t.id}')" style="padding:9px 14px;font-size:.82rem">${t.label}</div>`
+  ).join('')
+}
+
+function renderDetail(tab) {
+  currentTab = tab
+  renderDetailTabs()
+  const c = currentCase
+  const married = c.isMarried === 'YES'
+  let html = ''
+
+  if(tab === 'info') {
+    html = `
+    <div class="case-info-grid">
+      <div class="card">
+        <div class="card-title">👤 Դիմողի տվյալներ</div>
+        <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.applicantName)} ${esc(c.middleName||'')}</span></div>
+        <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.birthDate||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${esc(c.passport||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(c.passportBy||'')}</span></div>
+        <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.psn||'—')}</span></div>
+        <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.regAddr||'—')}</span></div>
+        <div class="srow"><span class="sk">Ծանուցման հասցե</span><span class="sv">${esc(c.notifAddr||c.regAddr||'—')}</span></div>
+        <div class="srow"><span class="sk">Դիմումը ներկայացնելու ամսաթիվ</span><span class="sv">${esc(c.filingDate||'—')}</span></div>
+        <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-gold" onclick="editCaseModal()">✎ Խմբագրել</button>
+          ${c.driveFolderUrl?`<a class="btn btn-sm" href="${esc(c.driveFolderUrl)}" target="_blank" rel="noopener">📁 Բացել Drive պանակը</a>`:''}
+          ${c.lawyerApproved==='YES'?'<span class="badge badge-green">✓ Հաստատված</span>':'<button class="btn btn-sm btn-green" onclick="approveLawyer()">⚖ Հաստատել</button>'}
+        </div>
+      </div>
+      ${married?`<div class="card">
+        <div class="card-title">👫 Ամուսնու կամ կնոջ տվյալներ</div>
+        <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.spouseName||'—')} ${esc(c.spouseMiddleName||'')}</span></div>
+        <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.spouseBirthDate||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${esc(c.spousePassport||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(c.spousePassportBy||'')}</span></div>
+        <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.spousePsn||'—')}</span></div>
+        <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.spouseRegAddr||'—')}</span></div>
+      </div>`:'<div class="card"><div class="card-title">ℹ Ընտանեկան դրություն</div><div class="srow"><span class="sk">Ամուսնացած է</span><span class="sv">Ոչ</span></div></div>'}
+    </div>`
+  }
+
+  if(tab === 'docs') {
+    const married = currentCase.isMarried === 'YES'
+    const cats = [...new Set(DOC_TYPES.map(d=>d.cat))]
+    html = '<div class="card">'
+    cats.forEach(cat => {
+      const catTypes = DOC_TYPES.filter(d=>d.cat===cat)
+      html += `<div class="doc-group"><div class="summary-block-title">${cat}</div>`
+      catTypes.forEach(dt => {
+        const subjs = [currentCase.applicantName]
+        if(married && dt.spouse) subjs.push(currentCase.spouseName)
+        subjs.forEach(subj => {
+          const doc = currentDocs.find(d=>d.typeId===dt.id&&d.subject===subj)
+          html += renderDocRow(dt, subj, doc)
+        })
+      })
+      html += '</div>'
+    })
+    html += '</div>'
+  }
+
+  if(tab === 'credits') {
+    let banks = [], debts = {}
+    try { banks = JSON.parse(currentCase.banks||'[]') } catch(e){}
+    try { debts = JSON.parse(currentCase.debts||'{}') } catch(e){}
+    const total = Object.values(debts).reduce((s,v)=>s+(Number(v)||0),0)
+    html = `<div class="card">
+      <div class="card-title">💰 Պարտքերն ըստ բանկերի և վարկատուների</div>
+      ${banks.length?banks.map(b=>`
+        <div class="srow"><span class="sk">${esc(b)}</span><span class="sv">${(Number(debts[b])||0).toLocaleString('hy-AM')} դրամ</span></div>
+      `).join('')+'<div class="srow"><span class="sk"><strong>Ընդհանուր պարտք</strong></span><span class="sv"><strong>'+total.toLocaleString('hy-AM')+' դրամ</strong></span></div>':'<p class="hint">Տվյալներ չկան</p>'}
+    </div>`
+  }
+
+  if(tab === 'report') {
+    let assessment=null
+    try { assessment=JSON.parse(currentCase.assessmentJson||'null') } catch(e){}
+    html = assessment?.applicant
+      ? `<div class="card">
+          <div class="card-title">📄 Նախնական գնահատման ամբողջական հաշվետվություն</div>
+          ${personReport('Դիմողի ամբողջական տվյալները',assessment.applicant,true)}
+          ${assessment.spouse?.name?personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները',assessment.spouse,true):''}
+        </div>`
+      : '<div class="card"><div class="alert alert-amber">Այս գործը ստեղծվել է մինչև ամբողջական հաշվետվության պահպանումը։ Նոր գնահատումների բոլոր պատասխանները կպահպանվեն այստեղ։</div></div>'
+  }
+
+  document.getElementById('detail-content').innerHTML = html
+}
+
+function renderDocRow(dt, subj, doc) {
+  const status = doc?.status || 'none'
+  const isSelf = subj === currentCase.applicantName
+  const label = isSelf ? '' : ` <span style="font-size:.71rem;color:var(--ink-muted)">(ամուսնու կամ կնոջ համար)</span>`
+
+  let statusEl = ''
+  let actions = ''
+  let expiryEl = ''
+  const files = currentFiles.filter(file=>file.typeId===dt.id&&file.subject===subj)
+  const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('uploadDocumentModal',dt.id,subj)}">⬆ Վերբեռնել ֆայլ</button>`
+  const generateButton = dt.id==='state_reg'
+    ? `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateRegisterRequestModal',subj)}">Ստեղծել ռեգիստրի հարցում</button>`
+    : ''
+
+  if(status==='none') {
+    statusEl = '<span class="status-pill sp-none">Չի դիմվել</span>'
+    actions = `<button class="btn btn-sm" onclick="${inlineCall('setStatus',dt.id,subj,'applied')}">Նշել որպես դիմած</button>${uploadButton}`
+  } else if(status==='applied') {
+    statusEl = '<span class="status-pill sp-applied">⏳ Սպասում ենք պատասխանին</span>'
+    actions = `<button class="btn btn-sm btn-green" onclick="${inlineCall('markReceived',dt.id,subj)}">✓ Նշել որպես ստացված</button>
+               <button class="btn btn-sm" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber)" onclick="${inlineCall('genMotion',dt.id,subj,'not_received')}">📄 Ստեղծել միջնորդություն</button>${uploadButton}`
+  } else if(status==='received') {
+    statusEl = '<span class="status-pill sp-received">✅ Ստացված է</span>'
+    if(dt.s90 && doc?.issueDate) {
+      const dl = daysLeft(doc.expiryDate)
+      if(dl<=0) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--red)">❌ ${doc.expiryDate}</div>`
+        actions = `<button class="btn btn-sm" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber)" onclick="${inlineCall('genMotion',dt.id,subj,'expired')}">📄 Ստեղծել միջնորդություն</button>${uploadButton}`
+      } else if(dl<=14) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--amber)">⚠ ${dl} օր (${doc.expiryDate})</div>`
+        actions = uploadButton
+      } else {
+        expiryEl = `<div style="font-size:.71rem;color:var(--green)">✓ ${dl} օր</div>`
+        actions = uploadButton
+      }
+    } else {
+      actions = uploadButton
+    }
+  }
+  actions = generateButton + actions
+
+  return `<div class="doc-row">
+    <div>
+      <div class="doc-title">${esc(dt.name)}${label}</div>
+      ${expiryEl}
+      <div class="doc-files">${files.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(file.fileName)}</a>`).join('')}</div>
+    </div>
+    ${statusEl}
+    <div class="doc-actions">${actions}</div>
+  </div>`
+}
+
+function generateRegisterRequestModal(subj) {
+  openModal(`
+    <div class="modal-title">Ստեղծել պետական ռեգիստրի հարցում<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">
+      Հարցումը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
+      Հարցման ստեղծումը դեռ չի նշանակում, որ այն ուղարկվել է։
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="register-generate-submit" onclick="${inlineCall('submitRegisterRequest',subj)}">Ստեղծել հարցումը</button>
+    </div>
+  `)
+}
+
+async function submitRegisterRequest(subj) {
+  const button = document.getElementById('register-generate-submit')
+  button.disabled = true
+  button.innerHTML = '<span class="spinner"></span> Ստեղծվում է...'
+  try {
+    const generated = await apiPost({
+      action:'generateRegisterRequest',
+      caseId:currentCase.id,
+      subject:subj
+    })
+    currentFiles.push({
+      id:newId(),caseId:currentCase.id,documentId:'',typeId:'state_reg',subject:subj,
+      fileName:generated.fileName,fileUrl:generated.fileUrl,fileId:generated.fileId,
+      folderId:generated.folderId,uploadedAt:new Date().toISOString()
+    })
+    openModal(`
+      <div class="modal-title">Հարցումը ստեղծված է<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+      <div class="alert alert-green">Փաստաթուղթը լրացվել և պահպանվել է գործի Google Drive պանակում։</div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal();renderDetail('docs')">Վերադառնալ փաստաթղթերին</button>
+        <a class="btn btn-primary" href="${esc(generated.fileUrl)}" target="_blank" rel="noopener">Բացել հարցումը</a>
+      </div>
+    `)
+  } catch(e) {
+    button.disabled = false
+    button.textContent = 'Ստեղծել հարցումը'
+    alert('Հարցումը չստեղծվեց՝ '+e.message)
+  }
+}
+
+async function setStatus(typeId, subj, status) {
+  const existing = currentDocs.find(d=>d.typeId===typeId&&d.subject===subj)
+  const row = existing
+    ? [existing.id, currentCase.id, typeId, subj, status, existing.issueDate||'', existing.expiryDate||'', existing.appliedAt||today(), today()]
+    : [newId(), currentCase.id, typeId, subj, status, '', '', today(), today()]
+  await apiPost({action:'saveDoc', row})
+  if(existing) {
+    existing.status = status
+  } else {
+    currentDocs.push({id:row[0],caseId:currentCase.id,typeId,subject:subj,status,issueDate:'',expiryDate:'',appliedAt:today()})
+  }
+  renderDetail('docs')
+}
+
+function markReceived(typeId, subj) {
+  openModal(`
+    <div class="modal-title">✅ Փաստաթղթի ստացման տվյալներ<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Փաստաթղթի տրման ամսաթիվը՝ 90-օրյա վավերականության ժամկետը հաշվարկելու համար</label><input type="date" id="issue-in" /></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" onclick="${inlineCall('saveReceived',typeId,subj)}">Պահպանել</button>
+    </div>
+  `)
+}
+
+async function saveReceived(typeId, subj) {
+  const issueDate = document.getElementById('issue-in').value
+  if(!issueDate){alert('Նշեք փաստաթղթի տրման ամսաթիվը։');return}
+  const expiryDate = addDays(issueDate, 90)
+  const existing = currentDocs.find(d=>d.typeId===typeId&&d.subject===subj)
+  const row = existing
+    ? [existing.id, currentCase.id, typeId, subj, 'received', issueDate, expiryDate, existing.appliedAt||today(), today()]
+    : [newId(), currentCase.id, typeId, subj, 'received', issueDate, expiryDate, today(), today()]
+  await apiPost({action:'saveDoc', row})
+  if(existing){ existing.status='received'; existing.issueDate=issueDate; existing.expiryDate=expiryDate }
+  else currentDocs.push({id:row[0],caseId:currentCase.id,typeId,subject:subj,status:'received',issueDate,expiryDate})
+  closeModal()
+  renderDetail('docs')
+}
+
+function uploadDocumentModal(typeId, subj) {
+  const dt = DOC_TYPES.find(item=>item.id===typeId)
+  openModal(`
+    <div class="modal-title">⬆ Վերբեռնել փաստաթուղթ<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="alert alert-blue">Ֆայլը կպահպանվի տվյալ գործի Google Drive պանակում՝ «${esc(dt?.name||'Փաստաթղթեր')}» բաժնում։ Առավելագույն չափը՝ 8 ՄԲ։</div>
+    <div class="field"><label>Ընտրեք ֆայլը</label><input type="file" id="upload-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt"/></div>
+    ${dt?.s90?'<div class="field"><label>Փաստաթղթի տրման ամսաթիվը</label><input type="date" id="upload-issue-date"/></div>':''}
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="upload-submit" onclick="${inlineCall('submitDocumentUpload',typeId,subj)}">Վերբեռնել</button>
+    </div>
+  `)
+}
+
+async function submitDocumentUpload(typeId, subj) {
+  const input = document.getElementById('upload-file')
+  const file = input?.files?.[0]
+  if(!file){ alert('Ընտրեք վերբեռնվող ֆայլը։'); return }
+  if(file.size > 8*1024*1024){ alert('Ֆայլի չափը չի կարող գերազանցել 8 ՄԲ-ը։'); return }
+
+  const dt = DOC_TYPES.find(item=>item.id===typeId)
+  const issueDate = document.getElementById('upload-issue-date')?.value || ''
+  if(dt?.s90 && !issueDate){ alert('Նշեք փաստաթղթի տրման ամսաթիվը։'); return }
+
+  const button = document.getElementById('upload-submit')
+  button.disabled = true
+  button.innerHTML = '<span class="spinner"></span> Վերբեռնվում է...'
+  try {
+    const base64 = await fileToBase64(file)
+    let doc = currentDocs.find(item=>item.typeId===typeId&&item.subject===subj)
+    const documentId = doc?.id || newId()
+    const expiryDate = dt?.s90 && issueDate ? addDays(issueDate,90) : ''
+    const row = [
+      documentId,currentCase.id,typeId,subj,'received',issueDate,expiryDate,
+      doc?.appliedAt||today(),today()
+    ]
+    const uploaded = await apiPost({
+      action:'uploadDocument',
+      caseId:currentCase.id,
+      documentId,
+      typeId,
+      subject:subj,
+      fileName:file.name,
+      mimeType:file.type||'application/octet-stream',
+      base64
+    })
+    await apiPost({action:'saveDoc',row})
+
+    if(doc) {
+      Object.assign(doc,{status:'received',issueDate,expiryDate,updatedAt:today()})
+    } else {
+      doc={id:documentId,caseId:currentCase.id,typeId,subject:subj,status:'received',issueDate,expiryDate,appliedAt:today(),updatedAt:today()}
+      currentDocs.push(doc)
+    }
+    currentFiles.push({
+      id:newId(),caseId:currentCase.id,documentId,typeId,subject:subj,
+      fileName:uploaded.fileName,fileUrl:uploaded.fileUrl,fileId:uploaded.fileId,
+      folderId:uploaded.folderId,uploadedAt:new Date().toISOString()
+    })
+    closeModal()
+    renderDetail('docs')
+  } catch(e) {
+    alert('Վերբեռնումը չհաջողվեց՝ '+e.message)
+    button.disabled = false
+    button.textContent = 'Վերբեռնել'
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader()
+    reader.onload=()=>resolve(String(reader.result).split(',')[1]||'')
+    reader.onerror=()=>reject(new Error('Չհաջողվեց կարդալ ֆայլը'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function genMotion(typeId, subj, reason) {
+  const dt = DOC_TYPES.find(d=>d.id===typeId)
+  const c = currentCase
+  const doc = currentDocs.find(d=>d.typeId===typeId&&d.subject===subj)
+  const isExp = reason==='expired'
+  const dateStr = new Date().toLocaleDateString('hy-AM')
+
+  const grounds = isExp
+    ? `Հայտնում եմ, որ ներկայացրել եմ ${dt.name.toLowerCase()}՝ տրված ${doc?.issueDate||'—'} թվականին, սակայն դրա 90-օրյա վավերականության ժամկետը լրացել է ${doc?.expiryDate||'—'} թվականին։ Նոր փաստաթղթին սպասելու դեպքում մյուս փաստաթղթերի վավերականության ժամկետները նույնպես կարող են լրանալ։`
+    : `Հայտնում եմ, որ դիմել եմ ${dt.name.toLowerCase()} ստանալու նպատակով, սակայն մինչ այժմ պատասխան կամ փաստաթուղթ չեմ ստացել։ Կից ներկայացվում է դիմելու փաստը հաստատող ապացույցը։`
+
+  const text = `ՀԱՅԱՍՏԱՆԻ ՀԱՆՐԱՊԵՏՈՒԹՅԱՆ ՍՆԱՆԿՈՒԹՅԱՆ ԴԱՏԱՐԱՆԻՆ
+Երևան, Օտյան փողոց 53/2
+
+Դիմող՝ ${c.applicantName}
+${c.passport?'Անձնագիր՝ '+c.passport+', տրված՝ '+(c.passportDate||'—')+', մարմին՝ '+(c.passportBy||'—'):''}
+${c.regAddr?'Հաշվառման հասցե՝ '+c.regAddr:''}
+
+ՄԻՋՆՈՐԴՈՒԹՅՈՒՆ
+(${isExp?dt.name+' փաստաթղթի վավերականության ժամկետը հարգելի համարելու':dt.name+' փաստաթուղթը չներկայացնելու պատճառը հարգելի համարելու'} մասին)
+
+Հարգելի դատարան,
+
+${grounds}
+
+Հաշվի առնելով վերոգրյալը՝
+ՄԻՋՆՈՐԴՈՒՄ ԵՄ
+${isExp?'Հարգելի համարել «'+dt.name+'» փաստաթղթի 90-օրյա վավերականության ժամկետի լրանալը։':'Հարգելի համարել «'+dt.name+'» փաստաթուղթը չներկայացնելու պատճառը։'}
+
+${dateStr}
+Դիմող՝ ${c.applicantName}`
+
+  window._motionText = text
+  openModal(`
+    <div class="modal-title">📄 Միջնորդություն — ${esc(dt.name)}<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <textarea style="width:100%;height:280px;font-size:.76rem;padding:9px;border:1px solid var(--border);border-radius:8px;resize:vertical;font-family:monospace">${esc(text)}</textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Փակել</button>
+      <button class="btn btn-gold" onclick="${inlineCall('dlMotion',dt.name)}">⬇ Ներբեռնել</button>
+    </div>
+  `)
+}
+
+function dlMotion(name) {
+  const blob = new Blob(['\ufeff'+(window._motionText||'')], {type:'text/plain;charset=utf-8'})
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob)
+  a.download = 'Midnord_'+name+'_'+today()+'.txt'; a.click()
+}
+
+function editCaseModal() {
+  const c = currentCase
+  openModal(`
+    <div class="modal-title">✎ Խմբագրել գործի տվյալները<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-row">
+      <div class="field"><label>Անուն *</label><input id="e-fn" value="${esc(c.firstName||'')}"/></div>
+      <div class="field"><label>Ազգանուն *</label><input id="e-ln" value="${esc(c.lastName||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Հայրանուն</label><input id="e-mn" value="${esc(c.middleName||'')}"/></div>
+      <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="e-bd" value="${esc(c.birthDate||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Անձնագրի համարը</label><input id="e-pp" value="${esc(c.passport||'')}"/></div>
+      <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="e-psn" value="${esc(c.psn||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="e-pd" value="${esc(c.passportDate||'')}"/></div>
+      <div class="field"><label>Անձնագիրը տված մարմինը</label><input id="e-pb" value="${esc(c.passportBy||'')}"/></div>
+    </div>
+    <div class="field"><label>Հաշվառման հասցե</label><input id="e-ra" value="${esc(c.regAddr||'')}"/></div>
+    <div class="field"><label>Ծանուցման հասցե</label><input id="e-na" value="${esc(c.notifAddr||'')}"/></div>
+    <div class="form-row">
+      <div class="field"><label>Ամուսնու/կնոջ անուն ազգանուն</label><input id="e-sp" value="${esc(c.spouseName||'')}"/></div>
+      <div class="field"><label>Ներկայացման ամսաթիվ</label><input type="date" id="e-fd" value="${esc(c.filingDate||'')}"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Պահպանել</button>
+    </div>
+  `)
+}
+
+async function saveEdit() {
+  const c = currentCase
+  const fn = document.getElementById('e-fn').value.trim()
+  const ln = document.getElementById('e-ln').value.trim()
+  if(!fn||!ln){alert('Անունը և ազգանունը պարտադիր են։');return}
+  const updated = {...c,
+    firstName:fn, lastName:ln, middleName:document.getElementById('e-mn').value.trim(),
+    applicantName:fn+' '+ln,
+    birthDate:document.getElementById('e-bd').value,
+    passport:document.getElementById('e-pp').value.trim(),
+    psn:document.getElementById('e-psn').value.trim(),
+    passportDate:document.getElementById('e-pd').value,
+    passportBy:document.getElementById('e-pb').value.trim(),
+    regAddr:document.getElementById('e-ra').value.trim(),
+    notifAddr:document.getElementById('e-na').value.trim(),
+    spouseName:document.getElementById('e-sp').value.trim(),
+    filingDate:document.getElementById('e-fd').value,
+  }
+  const row = buildCaseRow(updated)
+  await apiPost({action:'saveCase', row})
+  currentCase = updated
+  const idx = allCases.findIndex(c2=>c2.id===c.id)
+  if(idx!==-1) allCases[idx] = updated
+  closeModal()
+  document.getElementById('detail-title').textContent = updated.applicantName
+  renderDetail('info')
+}
+
+async function approveLawyer() {
+  const updated = {...currentCase, lawyerApproved:'YES', lawyerApprovedAt:today()}
+  await apiPost({action:'saveCase', row:buildCaseRow(updated)})
+  currentCase = updated
+  renderDetail('info')
+}
+
+// ═══════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════
+async function loadCalendar() {
+  document.getElementById('cal-content').innerHTML = '<span class="spinner"></span>'
+  try {
+    if(!allCases.length) allCases = await apiGet('getCases')
+    const allDocs = await apiGet('getDocs')
+    const events = []
+
+    allCases.forEach(c => {
+      if(c.filingDate) events.push({date:c.filingDate, label:'📁 '+c.applicantName, type:'filing', caseId:c.id})
+    })
+
+    allDocs.filter(d=>d.status==='received'&&d.expiryDate).forEach(d => {
+      const c = allCases.find(c=>c.id===d.caseId)
+      const dt = DOC_TYPES.find(t=>t.id===d.typeId)
+      if(!c||!dt) return
+      const dl = daysLeft(d.expiryDate)
+      if(dl<=60) events.push({date:d.expiryDate, label:(dt.name+' — '+c.applicantName), type:dl<=0?'expired':'expiring', caseId:d.caseId})
+    })
+
+    events.sort((a,b)=>a.date.localeCompare(b.date))
+
+    document.getElementById('cal-content').innerHTML = events.length
+      ? `<table class="tbl"><thead><tr><th>Ամսաթիվ</th><th>Նշանակություն</th><th>Կարգավիճակ</th></tr></thead><tbody>
+          ${events.map(e=>`<tr class="clickable" onclick="${inlineCall('openCase',e.caseId)}">
+            <td>${esc(e.date)}</td>
+            <td>${e.type==='filing'?'📁 Դիմումի ներկայացում':'⏰ Փաստաթղթի ժամկետ'}: ${esc(e.label)}</td>
+            <td>${e.type==='expired'?'<span class="badge badge-red">Ժամկետանց</span>':e.type==='expiring'?'<span class="badge badge-amber">Ժամկետը մոտենում է</span>':'<span class="badge badge-blue">Ներկայացման ամսաթիվ</span>'}</td>
+          </tr>`).join('')}
+        </tbody></table>`
+      : '<p class="hint" style="text-align:center;padding:20px">Նշանակված իրադարձություններ չկան</p>'
+  } catch(e) {
+    document.getElementById('cal-content').innerHTML = `<div class="alert alert-red">${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════
+function openModal(html) {
+  document.getElementById('modal-inner').innerHTML = html
+  document.getElementById('modal-bg').style.display = 'flex'
+}
+function closeModal() {
+  document.getElementById('modal-bg').style.display = 'none'
+}
+
+// ═══════════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════════
+let A={}, S={}, qMode='applicant', qFlow=[], qIdx=0, qLocChoice={}
+
+const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl']
+
+function buildCaseRow(c) {
+  return QUIZ_COLS.map(col => {
+    const v = c[col]
+    return (v === undefined || v === null) ? '' : (typeof v === 'object' ? JSON.stringify(v) : v)
+  })
+}
+
+function buildFlow(pfx, isSpouse) {
+  const s = []
+  if(!isSpouse) s.push(pfx+'intro')
+  s.push(pfx+'s1',pfx+'s2',pfx+'s2b',pfx+'s3',pfx+'s4',pfx+'s4b',pfx+'s5',pfx+'s6',pfx+'s7',pfx+'s8',pfx+'s9',pfx+'s10',pfx+'s11',pfx+'s12',pfx+'s13',pfx+'s13b',pfx+'s14',pfx+'s14b',pfx+'s14c',pfx+'s15',pfx+'s15b')
+  if(!isSpouse) s.push(pfx+'marriage',pfx+'was-married')
+  return s
+}
+
+function qH(id,tag,lbl,q,hint,body){
+  return `<div class="step" id="${id}">
+    ${tag?'<div class="section-tag">'+tag+'</div>':''}
+    <div class="step-label">${lbl}</div>
+    <div class="question">${q}</div>
+    ${hint?'<div class="hint">'+hint+'</div>':''}
+    ${body}
+  </div>`
+}
+
+function yn(sid){
+  return `<div class="qbtn-row">
+    <button class="qbtn" onclick="qAns('${sid}','yes','Այո')">Այո</button>
+    <button class="qbtn" onclick="qAns('${sid}','no','Ոչ')">Ոչ</button>
+  </div>`
+}
+
+function buildSteps(pfx, isSp) {
+  const b = isSp ? '<div class="spouse-banner">👫 <strong>Ամուսնու կամ կնոջ տվյալներ</strong> — պատասխանեք նույն ֆինանսական և գույքային հարցերին</div>' : ''
+  let s = ''
+  if(!isSp) s += qH(pfx+'intro','','Քայլ 1','Դիմողի անձնական տվյալները','Լրացրեք դիմողի հիմնական անձնական տվյալները',`
+    <div class="form-row"><div class="field"><label>Անուն *</label><input id="${pfx}fn" placeholder="Անուն"/></div>
+    <div class="field"><label>Ազգանուն *</label><input id="${pfx}ln" placeholder="Ազգանուն"/></div></div>
+    <div class="form-row"><div class="field"><label>Հայրանուն</label><input id="${pfx}mn" placeholder="Հայրանուն"/></div>
+    <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="${pfx}bd"/></div></div>
+    <div class="form-row"><div class="field"><label>Անձնագրի համարը</label><input id="${pfx}pp" placeholder="AN0000000"/></div>
+    <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="${pfx}pd"/></div></div>
+    <div class="form-row"><div class="field"><label>Անձնագիրը տված մարմինը</label><input id="${pfx}pb" placeholder="007"/></div>
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ *</label><input id="${pfx}psn" placeholder="000000000"/></div></div>
+    <div class="field"><label>Հաշվառման հասցե</label><input id="${pfx}ra" placeholder="Երևան..."/></div>
+    <div class="field"><label>Ծանուցման հասցե (եթե տարբեր է)</label><input id="${pfx}na" placeholder="Երևան..."/></div>
+    <div class="field"><label>Ներկայումս գտնվո՞ւմ եք Հայաստանի Հանրապետությունում</label>
+      <div class="qbtn-row" style="margin-top:6px">
+        <button class="qbtn" id="${pfx}loc-y" onclick="setLoc('${pfx}','yes')">Այո</button>
+        <button class="qbtn" id="${pfx}loc-n" onclick="setLoc('${pfx}','no')">Ոչ</button>
+      </div></div>
+    <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <label>Ներկայումս ամուսնացա՞ծ եք</label>
+      <div class="qbtn-row" style="margin-top:6px">
+        <button class="qbtn" id="${pfx}married-y" onclick="setMarried('${pfx}','yes')">Այո, ամուսնացած եմ</button>
+        <button class="qbtn" id="${pfx}married-n" onclick="setMarried('${pfx}','no')">Ոչ</button>
+      </div>
+    </div>
+    <div id="${pfx}spouse-block" style="display:none;margin-top:12px;padding:14px;background:var(--gold-pale);border:1px solid var(--gold-light);border-radius:var(--radius-sm)">
+      <div style="font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-bottom:10px">👫 Ամուսնու կամ կնոջ անձնական տվյալները</div>
+      <div class="form-row">
+        <div class="field"><label>Անուն *</label><input id="${pfx}sp-fn" placeholder="Անուն"/></div>
+        <div class="field"><label>Ազգանուն *</label><input id="${pfx}sp-ln" placeholder="Ազգանուն"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Հայրանուն</label><input id="${pfx}sp-mn" placeholder="Հայրանուն"/></div>
+        <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="${pfx}sp-bd"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Անձնագրի համարը</label><input id="${pfx}sp-pp" placeholder="AN0000000"/></div>
+        <div class="field"><label>Անձնագիրը տրված է ամսաթիվ</label><input type="date" id="${pfx}sp-pd"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Անձնագիրը տված մարմին</label><input id="${pfx}sp-pb" placeholder="007"/></div>
+        <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="${pfx}sp-psn" placeholder="000000000"/></div>
+      </div>
+      <div class="field"><label>Հաշվառման հասցե</label><input id="${pfx}sp-ra" placeholder="Երևան..."/></div>
+    </div>
+    <button class="btn-next" onclick="nextIntro('${pfx}')">Շարունակել →</button>`)
+
+  s += qH(pfx+'s1','💰 Պարտքեր','Հարց 1','Ընդհանուր պարտքը՝ ներառյալ տոկոսները, տույժերը և տուգանքները, գերազանցո՞ւմ է 2,000,000 դրամը։','Հաշվարկեք պարտքի ամբողջ գումարը՝ ներառյալ տոկոսները, տույժերը և տուգանքները։',b+yn(pfx+'s1'))
+  s += qH(pfx+'s2','💰 Պարտքեր','Հարց 2','Հարկային մարմինների նկատմամբ պարտք կա՞։','',yn(pfx+'s2'))
+  s += qH(pfx+'s2b','💰 Պարտքեր','Հարց 2.1','Նշեք հարկային պարտքի չափը։','',`<div class="field"><input type="number" id="${pfx}ta" placeholder="0"/></div><button class="btn-next" onclick="nextTax('${pfx}')">Շարունակել →</button>`)
+  s += qH(pfx+'s3','🏦 Բանկեր և վարկատուներ','Հարց 3','Ո՞ր բանկերի կամ այլ վարկատուների նկատմամբ պարտք կա։','Ընտրեք բոլոր համապատասխան բանկերը կամ ավելացրեք այլ վարկատու։',`<div class="bank-grid" id="${pfx}bg"></div>
+    <div class="field" style="margin-top:8px"><label>Այլ վարկատու, ֆինանսական կազմակերպություն կամ մասնավոր անձ</label><input id="${pfx}oth" placeholder="Գրեք վարկատուի ամբողջական անվանումը"/></div>
+    <button class="btn-next" onclick="nextBanks('${pfx}')">Շարունակել →</button>`)
+  s += qH(pfx+'s4','🏦 Բանկեր և վարկատուներ','Հարց 4','Նշեք պարտքի մոտավոր չափը յուրաքանչյուր վարկատուի համար։','Գումարը պետք է ներառի տոկոսները, տույժերը և տուգանքները։',`<div id="${pfx}di"></div><button class="btn-next" onclick="nextDebts('${pfx}')">Շարունակել →</button>`)
+  s += qH(pfx+'s4b','🏦 Ապահովումներ','Հարց 4.1','Յուրաքանչյուր պարտքի համար նշեք՝ կա՞ գրավ կամ երաշխավորություն։','',`<table class="collateral-table"><thead><tr><th>Վարկատու</th><th>Գրավ</th><th>Երաշխավորություն</th></tr></thead><tbody id="${pfx}cb"></tbody></table><button class="btn-next" onclick="qNext()">Շարունակել →</button>`)
+  s += qH(pfx+'s5','🤝 Պարտավորություններ','Հարց 5','Դուք այլ անձի պարտավորության երաշխավո՞ր եք։','',yn(pfx+'s5'))
+  s += qH(pfx+'s6','🤝 Պարտավորություններ','Հարց 6','Դուք այլ անձի պարտավորության համար գրավատո՞ւ եք։','',yn(pfx+'s6'))
+  s += qH(pfx+'s7','⚖ Իրավական վիճակ','Հարց 7','Ձեր նկատմամբ կա՞ հարուցված կատարողական վարույթ, արգելանք կամ այլ սահմանափակում։','',yn(pfx+'s7'))
+  s += qH(pfx+'s8','🏠 Գույք','Հարց 8','Ձեր անունով անշարժ գույք կա՞։','',yn(pfx+'s8'))
+  s += qH(pfx+'s9','🚗 Գույք','Հարց 9','Ձեր անունով ավտոմեքենա կամ այլ տրանսպորտային միջոց կա՞։','',yn(pfx+'s9'))
+  s += qH(pfx+'s10','🏢 Մասնակցություն կազմակերպություններում','Հարց 10','Դուք որևէ ընկերության բաժնետե՞ր կամ մասնակի՞ց եք։','',yn(pfx+'s10'))
+  s += qH(pfx+'s11','🏢 Ձեռնարկատիրական գործունեություն','Հարց 11','Գրանցված եք որպես անհատ ձեռնարկատե՞ր։','',yn(pfx+'s11'))
+  s += qH(pfx+'s12','🏢 Ձեռնարկատիրական գործունեություն','Հարց 12','Սահմանափակ պատասխանատվությամբ ընկերությունում մասնակցություն ունե՞ք։','',yn(pfx+'s12'))
+  s += qH(pfx+'s13','📜 Ժառանգություն','Հարց 13','Կա՞ չընդունված կամ չձևակերպված ժառանգություն։','',yn(pfx+'s13'))
+  s += qH(pfx+'s13b','🏠 Սեփականաշնորհում','Հարց 13.1','Սեփականաշնորհման արդյունքում գույքային իրավունք ունե՞ք։','',yn(pfx+'s13b'))
+  s += qH(pfx+'s14','📋 Գույքի փոխանցումներ','Հարց 14','Վերջին հինգ տարվա ընթացքում անշարժ գույք կամ տրանսպորտային միջոց օտարե՞լ կամ փոխանցե՞լ եք։','',yn(pfx+'s14'))
+  s += qH(pfx+'s14b','📋 Գույքի փոխանցումներ','Հարց 14.1','Ի՞նչ եղանակով է գույքը փոխանցվել։','',`<div class="qbtn-row"><button class="qbtn" onclick="qAns('${pfx}s14b','gift','Նվիրատվություն')">Նվիրատվություն</button><button class="qbtn" onclick="qAns('${pfx}s14b','sale','Առուվաճառք')">Առուվաճառք</button></div>`)
+  s += qH(pfx+'s14c','📋 Գույքի փոխանցումներ','Հարց 14.2','Վաճառքի գինը համապատասխանե՞լ է շուկայական արժեքին։','',`<div class="qbtn-row"><button class="qbtn" onclick="qAns('${pfx}s14c','market','Համապատասխանել է շուկայական արժեքին')">Շուկայական արժեքով</button><button class="qbtn" onclick="qAns('${pfx}s14c','below','Շուկայական արժեքից ցածր է եղել')">Շուկայականից ցածր արժեքով</button></div>`)
+  s += qH(pfx+'s15','💼 Աշխատանք','Հարց 15','Ներկայումս գրանցված աշխատանք ունե՞ք։','',yn(pfx+'s15'))
+  s += qH(pfx+'s15b','💼 Աշխատանք','Հարց 15.1','Ամսական աշխատավարձը գերազանցո՞ւմ է 150,000 դրամը։','',`<div class="qbtn-row"><button class="qbtn" onclick="qAns('${pfx}s15b','above','150,000 դրամից ավելի')">150,000 դրամից ավելի</button><button class="qbtn" onclick="qAns('${pfx}s15b','below','150,000 դրամ կամ պակաս')">150,000 դրամ կամ պակաս</button></div>`)
+  if(!isSp) {
+    s += qH(pfx+'marriage','👫 Ընտանեկան դրություն','Հարց 16','Ներկայումս ամուսնացա՞ծ եք։','',yn(pfx+'marriage'))
+    s += qH(pfx+'was-married','👫 Ընտանեկան դրություն','Հարց 17','Նախկինում ամուսնացա՞ծ եք եղել։','',yn(pfx+'was-married'))
+  }
+  return s
+}
+
+function initQuiz() {
+  A={}; S={}; qMode='applicant'; qLocChoice={}
+  let s = buildSteps('a_',false) + buildSteps('sp_',true)
+  document.getElementById('q-steps').innerHTML = s
+  buildBankGrid('a_'); buildBankGrid('sp_')
+  qFlow = buildFlow('a_',false)
+  qIdx = 0
+  document.getElementById('quiz-card').style.display = 'block'
+  document.getElementById('quiz-result').style.display = 'none'
+  document.getElementById('btn-save').disabled = false
+  document.getElementById('btn-save').textContent = '📄 Պահպանել և ստեղծել փաստաթղթերը'
+  qShowCurrent()
+}
+
+function buildBankGrid(pfx) {
+  const g = document.getElementById(pfx+'bg')
+  if(g) g.innerHTML = BANKS.map(b=>`<button class="bank-btn" data-bank="${b}" onclick="this.classList.toggle('selected')"><span class="ck">✓</span>${b}</button>`).join('')
+}
+
+function qStore(){ return qMode==='applicant'?A:S }
+
+function qShowCurrent() {
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'))
+  const stepId = qFlow[qIdx]
+  const step = document.getElementById(stepId)
+  if(!step) {
+    console.error('Questionnaire step not found:', stepId)
+    alert('Հարցաշարի քայլը չի գտնվել։ Խնդրում ենք վերագործարկել հարցաշարը։')
+    return
+  }
+  step.classList.add('active')
+  const pct = Math.max(2, Math.round((qIdx/qFlow.length)*100))
+  document.getElementById('q-progress').style.width = pct+'%'
+  const progressText=document.getElementById('q-progress-text')
+  const progressPercent=document.getElementById('q-progress-percent')
+  if(progressText) progressText.textContent=`Քայլ ${Math.min(qIdx+1,qFlow.length)} / ${qFlow.length}`
+  if(progressPercent) progressPercent.textContent=pct+'%'
+  window.scrollTo({top:0,behavior:'smooth'})
+}
+function qNext(){
+  qIdx++
+  if(qIdx>=qFlow.length){
+    if(qMode==='spouse') showQuizResult()
+    return
+  }
+  qShowCurrent()
+}
+function qSkip(n){ qIdx+=(n||1); qShowCurrent() }
+
+function setMarried(p,v){
+  document.getElementById(p+'married-y')?.classList.toggle('selected',v==='yes')
+  document.getElementById(p+'married-n')?.classList.toggle('selected',v==='no')
+  document.getElementById(p+'spouse-block').style.display = v==='yes'?'block':'none'
+  if(p==='a_') A._marriedAnswer = v
+}
+
+function setLoc(p,v){
+  qLocChoice[p]=v
+  document.getElementById(p+'loc-y')?.classList.toggle('selected',v==='yes')
+  document.getElementById(p+'loc-n')?.classList.toggle('selected',v==='no')
+}
+
+function nextIntro(p){
+  const fn=document.getElementById(p+'fn')?.value.trim()
+  const ln=document.getElementById(p+'ln')?.value.trim()
+  if(!fn||!ln){alert('Անունը և ազգանունը պարտադիր են։');return}
+  if(!qLocChoice[p]){alert('Նշեք՝ ներկայումս գտնվում եք Հայաստանի Հանրապետությունում, թե ոչ։');return}
+  A.firstName=fn; A.lastName=ln; A.name=fn+' '+ln
+  A.middleName=document.getElementById(p+'mn')?.value.trim()||''
+  A.birthDate=document.getElementById(p+'bd')?.value||''
+  A.passport=document.getElementById(p+'pp')?.value.trim()||''
+  A.passportDate=document.getElementById(p+'pd')?.value||''
+  A.passportBy=document.getElementById(p+'pb')?.value.trim()||''
+  A.psn=document.getElementById(p+'psn')?.value.trim()||''
+  A.regAddr=document.getElementById(p+'ra')?.value.trim()||''
+  A.notifAddr=document.getElementById(p+'na')?.value.trim()||''
+  A.inArmenia=qLocChoice[p]==='yes'
+
+  // Save married status and spouse data from intro
+  const isMarried = A._marriedAnswer === 'yes'
+  A.married = isMarried
+  if(isMarried){
+    const spFn=document.getElementById(p+'sp-fn')?.value.trim()
+    const spLn=document.getElementById(p+'sp-ln')?.value.trim()
+    if(!spFn||!spLn){alert('Ամուսնու կամ կնոջ անունը և ազգանունը պարտադիր են։');return}
+    S.firstName=spFn; S.lastName=spLn; S.name=spFn+' '+spLn
+    S.middleName=document.getElementById(p+'sp-mn')?.value.trim()||''
+    S.birthDate=document.getElementById(p+'sp-bd')?.value||''
+    S.passport=document.getElementById(p+'sp-pp')?.value.trim()||''
+    S.passportDate=document.getElementById(p+'sp-pd')?.value||''
+    S.passportBy=document.getElementById(p+'sp-pb')?.value.trim()||''
+    S.psn=document.getElementById(p+'sp-psn')?.value.trim()||''
+    S.regAddr=document.getElementById(p+'sp-ra')?.value.trim()||''
+  }
+  qNext()
+}
+
+function nextTax(p){ qStore().taxDebt=parseInt(document.getElementById(p+'ta')?.value)||0; qNext() }
+
+function nextBanks(p){
+  const sel=Array.from(document.querySelectorAll('#'+p+'bg .bank-btn.selected')).map(b=>b.dataset.bank)
+  const oth=document.getElementById(p+'oth')?.value.trim()
+  if(oth) sel.push('Այլ: '+oth)
+  if(!sel.length){alert('Ընտրեք առնվազն մեկ բանկ կամ նշեք այլ վարկատու։');return}
+  qStore().banks=sel
+  const c=document.getElementById(p+'di')
+  if(c) c.innerHTML=sel.map(b=>`<div class="debt-row"><label>${esc(b)}</label><input type="number" id="${p}d_${b.replace(/[\s:]/g,'_')}" placeholder="0" min="0"/><span style="font-size:.71rem;color:var(--ink-muted)">դրամ</span></div>`).join('')
+  qNext()
+}
+
+function nextDebts(p){
+  const d={};let tot=0
+  qStore().banks.forEach(b=>{const v=parseInt(document.getElementById(p+'d_'+b.replace(/[\s:]/g,'_'))?.value)||0;d[b]=v;tot+=v})
+  qStore().debts=d; qStore().totalBankDebt=tot
+  const tb=document.getElementById(p+'cb')
+  if(tb) tb.innerHTML=qStore().banks.map((b,index)=>{const bid='bank'+index;return `<tr>
+    <td style="font-size:.8rem">${esc(b)}</td>
+    <td><div class="toggle-pair"><button type="button" class="tog" id="${p}g${bid}yes" onclick="${inlineCall('togC',p,bid,b,'g','yes')}">Այո</button><button type="button" class="tog" id="${p}g${bid}no" onclick="${inlineCall('togC',p,bid,b,'g','no')}">Ոչ</button></div></td>
+    <td><div class="toggle-pair"><button type="button" class="tog" id="${p}e${bid}yes" onclick="${inlineCall('togC',p,bid,b,'e','yes')}">Այո</button><button type="button" class="tog" id="${p}e${bid}no" onclick="${inlineCall('togC',p,bid,b,'e','no')}">Ոչ</button></div></td>
+  </tr>`}).join('')
+  qNext()
+}
+
+function togC(p,bid,bank,type,val){
+  const oth=val==='yes'?'no':'yes'
+  document.getElementById(p+type+bid+val)?.classList.add('on')
+  document.getElementById(p+type+bid+oth)?.classList.remove('on')
+  if(!qStore().collateral) qStore().collateral={}
+  if(!qStore().collateral[bank]) qStore().collateral[bank]={}
+  qStore().collateral[bank][type]=val
+}
+
+function qAns(sid,val,label){
+  const d=qStore(); d['ans_'+sid]={val,label}
+  const key=sid.replace(/^[a-z]+_/,'')
+  if(key==='s1'){d.debtAboveThreshold=val==='yes';if(val==='no'){showIneligible();return}qNext()}
+  else if(key==='s2'){d.hasTaxDebt=val==='yes';val==='yes'?qNext():qSkip(2)}
+  else if(key==='s5'){d.isGuarantor=val==='yes';qNext()}
+  else if(key==='s6'){d.isPledgor=val==='yes';qNext()}
+  else if(key==='s7'){d.hasEnforcement=val==='yes';qNext()}
+  else if(key==='s8'){d.hasRealEstate=val==='yes';qNext()}
+  else if(key==='s9'){d.hasVehicle=val==='yes';qNext()}
+  else if(key==='s10'){d.isShareholder=val==='yes';qNext()}
+  else if(key==='s11'){d.hasIE=val==='yes';qNext()}
+  else if(key==='s12'){d.hasLLC=val==='yes';qNext()}
+  else if(key==='s13'){d.hasUnclaimed=val==='yes';qNext()}
+  else if(key==='s13b'){d.hasPrivatization=val==='yes';qNext()}
+  else if(key==='s14'){d.hasTransfer=val==='yes';val==='no'?qSkip(3):qNext()}
+  else if(key==='s14b'){d.transferType=val;val==='gift'?qSkip(2):qNext()}
+  else if(key==='s14c'){d.salePrice=val;qNext()}
+  else if(key==='s15'){d.employed=val==='yes';qNext()}
+  else if(key==='s15b'){d.salaryAbove=val==='above';qNext()}
+  else if(key==='marriage'){A.married=A.married||val==='yes'; val==='yes'?startSpouseQuiz():qNext()}
+  else if(key==='was-married'){A.wasMarried=val==='yes'; val==='yes'?startSpouseQuiz():showQuizResult()}
+  else qNext()
+}
+
+function startSpouseQuiz(){
+  // Spouse personal data already collected in intro
+  // Just start the financial/property questions for spouse
+  if(!S.name){
+    // If somehow no spouse data, show modal as fallback
+    spouseModal()
+    return
+  }
+  qMode='spouse'; qFlow=buildFlow('sp_',true); qIdx=0
+  buildBankGrid('sp_'); qShowCurrent()
+}
+
+function spouseModal(){
+  openModal(`
+    <div class="modal-title">👫 Ամուսնու կամ կնոջ անձնական տվյալները<button class="btn btn-sm" onclick="closeModal();showQuizResult()">✕</button></div>
+    <div style="font-size:.78rem;color:var(--ink-muted);margin-bottom:12px">Լրացրեք ամուսնու կամ կնոջ անձնական տվյալները։</div>
+    <div class="form-row"><div class="field"><label>Անուն *</label><input id="sp-fn" placeholder="Անուն"/></div>
+    <div class="field"><label>Ազգանուն *</label><input id="sp-ln" placeholder="Ազգանուն"/></div></div>
+    <div class="form-row"><div class="field"><label>Հայրանուն</label><input id="sp-mn" placeholder="Հայրանուն"/></div>
+    <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="sp-bd"/></div></div>
+    <div class="form-row"><div class="field"><label>Անձնագրի համարը</label><input id="sp-pp" placeholder="AN0000000"/></div>
+    <div class="field"><label>Անձնագիրը տրված ամսաթիվ</label><input type="date" id="sp-pd"/></div></div>
+    <div class="form-row"><div class="field"><label>Անձնագիրը տված մարմին</label><input id="sp-pb" placeholder="007"/></div>
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="sp-psn" placeholder="000000000"/></div></div>
+    <div class="field"><label>Հաշվառման հասցե</label><input id="sp-ra" placeholder="Երևան..."/></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal();showQuizResult()">Բաց թողնել</button>
+      <button class="btn btn-primary" onclick="confirmSpouse()">Հաստատել և շարունակել →</button>
+    </div>
+  `)
+}
+
+function confirmSpouse(){
+  const fn=document.getElementById('sp-fn')?.value.trim()
+  const ln=document.getElementById('sp-ln')?.value.trim()
+  if(!fn||!ln){alert('Լրացրեք անունը և ազգանունը։');return}
+  S.firstName=fn; S.lastName=ln; S.name=fn+' '+ln
+  S.middleName=document.getElementById('sp-mn')?.value.trim()||''
+  S.birthDate=document.getElementById('sp-bd')?.value||''
+  S.passport=document.getElementById('sp-pp')?.value.trim()||''
+  S.passportDate=document.getElementById('sp-pd')?.value||''
+  S.passportBy=document.getElementById('sp-pb')?.value.trim()||''
+  S.psn=document.getElementById('sp-psn')?.value.trim()||''
+  S.regAddr=document.getElementById('sp-ra')?.value.trim()||''
+  closeModal()
+  qMode='spouse'; qFlow=buildFlow('sp_',true); qIdx=0
+  buildBankGrid('sp_'); qShowCurrent()
+}
+
+function showIneligible(){
+  document.getElementById('quiz-card').style.display='none'
+  document.getElementById('quiz-result').style.display='block'
+  document.getElementById('btn-save').style.display='none'
+  document.getElementById('quiz-result-inner').innerHTML=`
+    <div class="result-badge badge-no-q">✕ Չի համապատասխանում նախնական չափանիշին</div>
+    <div class="result-title">Անձնական սնանկության գործընթաց սկսելու նախնական հիմքը չի հաստատվել</div>
+    <div class="ineligible-box">Նշվել է, որ ընդհանուր պարտքը չի գերազանցում 2,000,000 դրամը։ Վերջնական իրավական գնահատումը պետք է կատարի փաստաբանը՝ փաստաթղթերն ուսումնասիրելուց հետո։</div>`
+}
+
+function yesNo(value){ return value ? 'Այո' : 'Ոչ' }
+function money(value){ return (Number(value)||0).toLocaleString('hy-AM')+' դրամ' }
+function reportRow(label,value){
+  return `<div class="srow"><span class="sk">${esc(label)}</span><span class="sv">${esc(value||'—')}</span></div>`
+}
+function collateralReport(data){
+  const entries=Object.entries(data.collateral||{})
+  if(!entries.length) return reportRow('Գրավ և երաշխավորություն','Տվյալներ չեն նշվել')
+  return entries.map(([bank,value])=>
+    reportRow(bank,`Գրավ՝ ${value.g==='yes'?'այո':value.g==='no'?'ոչ':'չի նշվել'}, երաշխավորություն՝ ${value.e==='yes'?'այո':value.e==='no'?'ոչ':'չի նշվել'}`)
+  ).join('')
+}
+function personReport(title,data,includeIdentity){
+  const bankRows=(data.banks||[]).map(bank=>reportRow(bank,money(data.debts?.[bank]))).join('')
+  const total=(data.totalBankDebt||0)+(data.taxDebt||0)
+  return `<div class="summary-block">
+    <div class="summary-block-title">${esc(title)}</div>
+    ${includeIdentity?[
+      reportRow('Անուն, ազգանուն',data.name),
+      reportRow('Հայրանուն',data.middleName),
+      reportRow('Ծննդյան ամսաթիվ',data.birthDate),
+      reportRow('Անձնագիր',data.passport),
+      reportRow('Անձնագրի տրման ամսաթիվ',data.passportDate),
+      reportRow('Անձնագիրը տված մարմին',data.passportBy),
+      reportRow('Հանրային ծառայությունների համարանիշ',data.psn),
+      reportRow('Հաշվառման հասցե',data.regAddr),
+      reportRow('Ծանուցման հասցե',data.notifAddr)
+    ].join(''):''}
+    ${reportRow('Հարկային մարմինների նկատմամբ պարտք',yesNo(data.hasTaxDebt))}
+    ${reportRow('Ընդհանուր պարտքը գերազանցում է 2,000,000 դրամը',yesNo(data.debtAboveThreshold))}
+    ${reportRow('Հարկային պարտքի չափ',money(data.taxDebt))}
+    ${bankRows||reportRow('Բանկային կամ այլ պարտքեր','Չեն նշվել')}
+    ${reportRow('Ընդհանուր նշված պարտք',money(total))}
+    ${collateralReport(data)}
+    ${reportRow('Այլ անձի պարտավորության երաշխավոր է',yesNo(data.isGuarantor))}
+    ${reportRow('Այլ անձի պարտավորության համար գրավատու է',yesNo(data.isPledgor))}
+    ${reportRow('Կատարողական վարույթ, արգելանք կամ սահմանափակում կա',yesNo(data.hasEnforcement))}
+    ${reportRow('Անշարժ գույք ունի',yesNo(data.hasRealEstate))}
+    ${reportRow('Տրանսպորտային միջոց ունի',yesNo(data.hasVehicle))}
+    ${reportRow('Ընկերության բաժնետեր կամ մասնակից է',yesNo(data.isShareholder))}
+    ${reportRow('Գրանցված է որպես անհատ ձեռնարկատեր',yesNo(data.hasIE))}
+    ${reportRow('Սահմանափակ պատասխանատվությամբ ընկերությունում մասնակցություն ունի',yesNo(data.hasLLC))}
+    ${reportRow('Չընդունված կամ չձևակերպված ժառանգություն ունի',yesNo(data.hasUnclaimed))}
+    ${reportRow('Սեփականաշնորհումից գույքային իրավունք ունի',yesNo(data.hasPrivatization))}
+    ${reportRow('Վերջին հինգ տարում գույք է փոխանցել կամ օտարել',yesNo(data.hasTransfer))}
+    ${data.hasTransfer?reportRow('Փոխանցման եղանակ',data.transferType==='gift'?'Նվիրատվություն':'Առուվաճառք'):''}
+    ${data.transferType==='sale'?reportRow('Վաճառքի գին',data.salePrice==='below'?'Շուկայական արժեքից ցածր':'Շուկայական արժեքին համապատասխան'):''}
+    ${reportRow('Գրանցված աշխատանք ունի',yesNo(data.employed))}
+    ${reportRow('Ամսական աշխատավարձը գերազանցում է 150,000 դրամը',yesNo(data.salaryAbove))}
+  </div>`
+}
+
+function showQuizResult(){
+  document.getElementById('quiz-card').style.display='none'
+  document.getElementById('quiz-result').style.display='block'
+  document.getElementById('btn-save').style.display='inline-flex'
+  const cost=A.employed?650000:600000
+  const grand=(A.totalBankDebt||0)+(A.taxDebt||0)+(S.totalBankDebt||0)+(S.taxDebt||0)
+  const warns=[]
+  if(A.transferType==='gift') warns.push('Դիմողի գույքի նվիրատվությունը պահանջում է լրացուցիչ իրավական գնահատում')
+  if(A.salePrice==='below') warns.push('Դիմողի գույքը վաճառվել է շուկայական արժեքից ցածր գնով')
+  if(A.hasEnforcement) warns.push('Դիմողի նկատմամբ առկա է կատարողական վարույթ, արգելանք կամ սահմանափակում')
+  if(S.transferType==='gift') warns.push('Ամուսնու կամ կնոջ գույքի նվիրատվությունը պահանջում է լրացուցիչ իրավական գնահատում')
+  if(S.salePrice==='below') warns.push('Ամուսնու կամ կնոջ գույքը վաճառվել է շուկայական արժեքից ցածր գնով')
+  document.getElementById('quiz-result-inner').innerHTML=`
+    <div class="result-badge badge-ok-q">✓ Համապատասխանում է նախնական գնահատման չափանիշին</div>
+    <div class="result-title">Անձնական սնանկության գործ սկսելու նախնական հնարավորություն կա</div>
+    <div class="result-desc"><strong>${esc(A.name)}</strong> · Գտնվելու վայր՝ ${A.inArmenia?'Հայաստանի Հանրապետություն':'Հայաստանի Հանրապետությունից դուրս'} · Ընտանեկան դրություն՝ ${A.married?'ամուսնացած':A.wasMarried?'նախկինում ամուսնացած':'ամուսնացած չէ'}</div>
+    ${warns.length?'<div class="warn-box">⚠ '+warns.join(' · ')+'</div>':''}
+    <div class="cost-box">
+      <div class="cost-label">Ծառայության արժեք</div>
+      <div class="cost-amount">${money(cost)}</div>
+      <div class="cost-details">Կանխավճար՝ <strong>200,000 դրամ</strong> · Մնացած գումարը՝ ${money(cost-200000)}, վճարման ժամկետը՝ 12 ամիս</div>
+    </div>
+    <div class="summary-block">
+      <div class="summary-block-title">Գործի ընդհանուր տվյալներ</div>
+      ${reportRow('Հայաստանի Հանրապետությունում է',yesNo(A.inArmenia))}
+      ${reportRow('Ներկայումս ամուսնացած է',yesNo(A.married))}
+      ${reportRow('Նախկինում ամուսնացած է եղել',yesNo(A.wasMarried))}
+      ${reportRow('Դիմողի և ամուսնու կամ կնոջ ընդհանուր նշված պարտքը',money(grand))}
+    </div>
+    ${personReport('Դիմողի ամբողջական տվյալները',A,true)}
+    ${(A.married||A.wasMarried)&&S.name?personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները',S,true):''}
+  `
+}
+
+// ═══════════════════════════════════════════════
+// SAVE + GENERATE DOCS
+// ═══════════════════════════════════════════════
+async function saveAndGenerate(){
+  const btn = document.getElementById('btn-save')
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Պահպանվում է...'
+  try {
+    const caseId = newId()
+    const caseData = {
+      id:caseId, applicantName:A.name, firstName:A.firstName, lastName:A.lastName,
+      middleName:A.middleName||'', birthDate:A.birthDate||'', passport:A.passport||'',
+      passportDate:A.passportDate||'', passportBy:A.passportBy||'',
+      regAddr:A.regAddr||'', notifAddr:A.notifAddr||'', psn:A.psn||'',
+      isMarried:A.married?'YES':'NO', spouseName:S.name||'', filingDate:'',
+      employed:A.employed?'YES':'NO', salaryAbove:A.salaryAbove?'YES':'NO',
+      banks:JSON.stringify(A.banks||[]), debts:JSON.stringify(A.debts||{}),
+      spouseBanks:JSON.stringify(S.banks||[]), spouseDebts:JSON.stringify(S.debts||{}),
+      lawyerApproved:'NO', lawyerApprovedBy:'', lawyerApprovedAt:'',
+      createdAt:today(), createdBy:'',
+      spouseFirstName:S.firstName||'', spouseLastName:S.lastName||'',
+      spouseMiddleName:S.middleName||'', spouseBirthDate:S.birthDate||'',
+      spousePassport:S.passport||'', spousePassportDate:S.passportDate||'',
+      spousePassportBy:S.passportBy||'', spousePsn:S.psn||'',
+      spouseRegAddr:S.regAddr||'', spouseNotifAddr:S.notifAddr||'',
+      assessmentJson:JSON.stringify({applicant:A,spouse:S}),
+      driveFolderId:'',driveFolderUrl:''
+    }
+    const savedCase = await apiPost({action:'saveCase', row:buildCaseRow(caseData)})
+    caseData.driveFolderId = savedCase.driveFolderId||''
+    caseData.driveFolderUrl = savedCase.driveFolderUrl||''
+    allCases.push(caseData)
+    dlText(genContract(caseData), 'Paymanagir_'+A.name+'_'+today()+'.txt')
+    await new Promise(r=>setTimeout(r,400))
+    dlText(genAppendix(caseData), 'Havaelvadz_'+A.name+'_'+today()+'.txt')
+    btn.textContent='✅ Պահպանված է'
+    setTimeout(()=>{ currentCase=caseData; currentDocs=[]; showPage('case-detail'); document.getElementById('detail-title').textContent=A.name; renderDetailTabs(); renderDetail('info') }, 800)
+  } catch(e){
+    alert('Սխալ՝ '+e.message)
+    btn.disabled=false; btn.textContent='📄 Պահպանել և ստեղծել փաստաթղթերը'
+  }
+}
+
+function dlText(text, filename){
+  const blob=new Blob(['\ufeff'+text],{type:'text/plain;charset=utf-8'})
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click()
+}
+
+function n2w(n){
+  const ones=['','մեկ','երկու','երեք','չորս','հինգ','վեց','յոթ','ութ','ինը','տասը','տասնմեկ','տասներկու','տասներեք','տասնչորս','տասնհինգ','տասնվեց','տասնյոթ','տասնութ','տասնինը']
+  const tens=['','','քսան','երեսուն','քառասուն','հիսուն','վաթսուն','յոթանասուն','ութսուն','իննսուն']
+  if(n===0)return 'զրո'
+  if(n<20)return ones[n]
+  if(n<100)return tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'')
+  if(n<1000)return (n<200?'հարյուր':ones[Math.floor(n/100)]+' հարյուր')+(n%100?' '+n2w(n%100):'')
+  if(n<1000000)return n2w(Math.floor(n/1000))+' հազար'+(n%1000?' '+n2w(n%1000):'')
+  return n.toString()
+}
+
+function genContract(c){
+  const cost=c.employed==='YES'?650000:600000
+  const adv=200000, rem=cost-adv, mo=Math.round(rem/12)
+  const d=new Date().toLocaleDateString('hy-AM')
+  return `ԾԱՌԱՅՈՒԹՅՈՒՆՆԵՐԻ ՄԱՏՈՒՑՄԱՆ ՊԱՅՄԱՆԱԳԻՐ
+
+Երևան                                    ${d}
+
+${COMPANY.name} (հարկ վճարողի հաշվառման համար՝ ${COMPANY.hvhh}), ի դեմս տնօրեն ${COMPANY.director}-ի, այսուհետ՝ «Կատարող», մի կողմից,
+
+${c.applicantName} ${c.middleName||''}
+${c.passport?'անձնական փաստաթուղթ՝ '+c.passport+', տրված՝ '+(c.passportDate||'—')+', մարմին՝ '+(c.passportBy||'—'):''}
+${c.psn?'հանրային ծառայությունների համարանիշ՝ '+c.psn:''}
+հաշվառման հասցե՝ ${c.regAddr||'—'},
+այսուհետ՝ «Պատվիրատու», մյուս կողմից, կնքեցին սույն պայմանագիրը հետևյալի մասին։
+
+ՀՈԴՎԱԾ 1. ԱՌԱՐԿԱ
+1.1 Կատարողը պարտավորվում է Պատվիրատուին մատուցել անձնական սնանկության գործընթացի իրավական և կազմակերպչական ծառայություններ, իսկ Պատվիրատուն պարտավորվում է ընդունել և վճարել մատուցված ծառայությունների համար։
+
+ՀՈԴՎԱԾ 2. ԱՐԺԵՔ
+2.1 Ծառայության ընդհանուր արժեքը կազմում է ${cost.toLocaleString('hy-AM')} (${n2w(cost)}) դրամ։
+2.2 Կանխավճարը կազմում է ${adv.toLocaleString('hy-AM')} դրամ և վճարվում է պայմանագրի կնքման օրը։
+2.3 Մնացած ${rem.toLocaleString('hy-AM')} դրամը վճարվում է տասներկու ամսվա ընթացքում՝ ամսական մոտավորապես ${mo.toLocaleString('hy-AM')} դրամ։
+
+ՀՈԴՎԱԾ 3. ԿՈՂՄԵՐԻ ԻՐԱՎՈՒՆՔՆԵՐԸ ԵՎ ՊԱՐՏԱԿԱՆՈՒԹՅՈՒՆՆԵՐԸ
+3.1 Կատարողը պարտավորվում է բարեխղճորեն կազմակերպել փաստաթղթերի հավաքագրումը, տրամադրել իրավական խորհրդատվություն և պատրաստել անհրաժեշտ դատավարական փաստաթղթերը։
+3.2 Պատվիրատուն պարտավորվում է ժամանակին տրամադրել ամբողջական և ճշգրիտ տվյալներ, ներկայացնել պահանջվող փաստաթղթերը և կատարել պայմանագրով նախատեսված վճարումները։
+
+ՀՈԴՎԱԾ 4. ԺԱՄԿԵՏ
+4.1 Պայմանագիրն ուժի մեջ է մտնում ստորագրման օրվանից և գործում է մինչև կողմերի պարտավորությունների ամբողջական կատարումը։
+
+ԿԱՏԱՐՈՂ                    ՊԱՏՎԻՐԱՏՈՒ
+${COMPANY.name}              ${c.applicantName}
+Տնօրեն՝ ${COMPANY.director}
+____________________       ____________________`
+}
+
+function textYesNo(value){ return value?'Այո':'Ոչ' }
+function textCollateral(data){
+  const entries=Object.entries(data.collateral||{})
+  return entries.length
+    ? entries.map(([bank,value])=>`${bank}: գրավ՝ ${value.g==='yes'?'այո':value.g==='no'?'ոչ':'չի նշվել'}, երաշխավորություն՝ ${value.e==='yes'?'այո':value.e==='no'?'ոչ':'չի նշվել'}`).join('\n')
+    : 'Տվյալներ չեն նշվել'
+}
+function textPersonReport(title,data){
+  const bankLines=(data.banks||[]).map(bank=>`${bank}: ${money(data.debts?.[bank])}`).join('\n')||'Բանկային կամ այլ պարտքեր չեն նշվել'
+  return `${title}
+Անուն, ազգանուն, հայրանուն՝ ${data.name||'—'} ${data.middleName||''}
+Ծննդյան ամսաթիվ՝ ${data.birthDate||'—'}
+Անձնագիր կամ նույնականացման քարտ՝ ${data.passport||'—'}
+Փաստաթղթի տրման ամսաթիվ՝ ${data.passportDate||'—'}
+Փաստաթուղթը տված մարմին՝ ${data.passportBy||'—'}
+Հանրային ծառայությունների համարանիշ՝ ${data.psn||'—'}
+Հաշվառման հասցե՝ ${data.regAddr||'—'}
+Ծանուցման հասցե՝ ${data.notifAddr||data.regAddr||'—'}
+
+ՊԱՐՏՔԵՐ
+Ընդհանուր պարտքը գերազանցում է 2,000,000 դրամը՝ ${textYesNo(data.debtAboveThreshold)}
+Հարկային մարմինների նկատմամբ պարտք՝ ${textYesNo(data.hasTaxDebt)}
+Հարկային պարտքի չափ՝ ${money(data.taxDebt)}
+${bankLines}
+Ընդհանուր նշված պարտք՝ ${money((data.totalBankDebt||0)+(data.taxDebt||0))}
+
+ԳՐԱՎ ԵՎ ԵՐԱՇԽԱՎՈՐՈՒԹՅՈՒՆ
+${textCollateral(data)}
+
+ԻՐԱՎԱԿԱՆ, ԳՈՒՅՔԱՅԻՆ ԵՎ ԱՇԽԱՏԱՆՔԱՅԻՆ ՏՎՅԱԼՆԵՐ
+Այլ անձի պարտավորության երաշխավոր է՝ ${textYesNo(data.isGuarantor)}
+Այլ անձի պարտավորության համար գրավատու է՝ ${textYesNo(data.isPledgor)}
+Կատարողական վարույթ, արգելանք կամ այլ սահմանափակում կա՝ ${textYesNo(data.hasEnforcement)}
+Անշարժ գույք ունի՝ ${textYesNo(data.hasRealEstate)}
+Տրանսպորտային միջոց ունի՝ ${textYesNo(data.hasVehicle)}
+Ընկերության բաժնետեր կամ մասնակից է՝ ${textYesNo(data.isShareholder)}
+Գրանցված է որպես անհատ ձեռնարկատեր՝ ${textYesNo(data.hasIE)}
+Սահմանափակ պատասխանատվությամբ ընկերությունում մասնակցություն ունի՝ ${textYesNo(data.hasLLC)}
+Չընդունված կամ չձևակերպված ժառանգություն ունի՝ ${textYesNo(data.hasUnclaimed)}
+Սեփականաշնորհումից գույքային իրավունք ունի՝ ${textYesNo(data.hasPrivatization)}
+Վերջին հինգ տարում գույք է փոխանցել կամ օտարել՝ ${textYesNo(data.hasTransfer)}
+Փոխանցման եղանակ՝ ${data.hasTransfer?(data.transferType==='gift'?'նվիրատվություն':'առուվաճառք'):'կիրառելի չէ'}
+Վաճառքի գին՝ ${data.transferType==='sale'?(data.salePrice==='below'?'շուկայական արժեքից ցածր':'շուկայական արժեքին համապատասխան'):'կիրառելի չէ'}
+Գրանցված աշխատանք ունի՝ ${textYesNo(data.employed)}
+Ամսական աշխատավարձը գերազանցում է 150,000 դրամը՝ ${textYesNo(data.salaryAbove)}`
+}
+
+function genAppendix(c){
+  const d=new Date().toLocaleDateString('hy-AM')
+  return `ՀԱՎԵԼՎԱԾ ԹԻՎ 1
+ԾԱՌԱՅՈՒԹՅՈՒՆՆԵՐԻ ՄԱՏՈՒՑՄԱՆ ՊԱՅՄԱՆԱԳՐԻՆ
+${COMPANY.name}-ի և ${c.applicantName}-ի միջև
+Կնքված՝ ${d}
+
+ՀԱՃԱԽՈՐԴԻ ՀԱՅՏԱՐԱՐՈՒԹՅՈՒՆ ԵՎ ՆԱԽՆԱԿԱՆ ԳՆԱՀԱՏՄԱՆ ԱՄԲՈՂՋԱԿԱՆ ՀԱՇՎԵՏՎՈՒԹՅՈՒՆ
+
+Ես՝ ${c.applicantName} ${c.middleName||''}, հայտարարում եմ, որ հարցման ընթացքում տրամադրել եմ ստորև ներկայացված տվյալները։
+
+ԳՈՐԾԻ ԸՆԴՀԱՆՈՒՐ ՏՎՅԱԼՆԵՐ
+Դիմողը գտնվում է Հայաստանի Հանրապետությունում՝ ${textYesNo(A.inArmenia)}
+Ներկայումս ամուսնացած է՝ ${textYesNo(A.married)}
+Նախկինում ամուսնացած է եղել՝ ${textYesNo(A.wasMarried)}
+Դիմողի և ամուսնու կամ կնոջ ընդհանուր նշված պարտքը՝ ${money((A.totalBankDebt||0)+(A.taxDebt||0)+(S.totalBankDebt||0)+(S.taxDebt||0))}
+
+${textPersonReport('ԴԻՄՈՂԻ ԱՄԲՈՂՋԱԿԱՆ ՏՎՅԱԼՆԵՐ',A)}
+
+${(A.married||A.wasMarried)&&S.name?textPersonReport('ԱՄՈՒՍՆՈՒ ԿԱՄ ԿՆՈՋ ԱՄԲՈՂՋԱԿԱՆ ՏՎՅԱԼՆԵՐ',S):''}
+
+Հայտարարում եմ, որ ներկայացված տվյալները ճշգրիտ և ամբողջական են։ Գիտակցում եմ, որ թերի կամ սխալ տվյալները կարող են ազդել իրավական գնահատման և սնանկության գործընթացի արդյունքի վրա։
+
+${d}
+
+Հաճախորդի ստորագրություն՝ _____________________
+${c.applicantName}
+
+Կատարողի ստորագրություն՝ _____________________
+${COMPANY.name}, տնօրեն՝ ${COMPANY.director}`
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', ()=>{
+  loadDashboard()
+})
+</script>
+</body>
+</html>
