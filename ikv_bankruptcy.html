@@ -393,6 +393,7 @@ let allCases = []
 let allDocuments = []
 let currentCase = null
 let currentDocs = []
+let currentDebts = []
 let currentFiles = []
 let currentTab = 'info'
 
@@ -509,10 +510,12 @@ async function loadCases() {
 async function openCase(caseId) {
   currentCase = allCases.find(c=>c.id===caseId) || (await apiGet('getCases')).find(c=>c.id===caseId)
   if(!currentCase) return
-  ;[currentDocs, currentFiles] = await Promise.all([
+  ;[currentDocs, currentDebts, currentFiles] = await Promise.all([
     apiGet('getDocs', {caseId}),
+    apiGet('getDebts', {caseId}),
     apiGet('getFiles', {caseId})
   ])
+  if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
   showPage('case-detail')
   document.getElementById('detail-title').textContent = currentCase.applicantName
   renderDetailTabs()
@@ -590,16 +593,7 @@ function renderDetail(tab) {
   }
 
   if(tab === 'credits') {
-    let banks = [], debts = {}
-    try { banks = JSON.parse(currentCase.banks||'[]') } catch(e){}
-    try { debts = JSON.parse(currentCase.debts||'{}') } catch(e){}
-    const total = Object.values(debts).reduce((s,v)=>s+(Number(v)||0),0)
-    html = `<div class="card">
-      <div class="card-title">💰 Պարտքերն ըստ բանկերի և վարկատուների</div>
-      ${banks.length?banks.map(b=>`
-        <div class="srow"><span class="sk">${esc(b)}</span><span class="sv">${(Number(debts[b])||0).toLocaleString('hy-AM')} դրամ</span></div>
-      `).join('')+'<div class="srow"><span class="sk"><strong>Ընդհանուր պարտք</strong></span><span class="sv"><strong>'+total.toLocaleString('hy-AM')+' դրամ</strong></span></div>':'<p class="hint">Տվյալներ չկան</p>'}
-    </div>`
+    html = renderDebtsTab()
   }
 
   if(tab === 'report') {
@@ -615,6 +609,257 @@ function renderDetail(tab) {
   }
 
   document.getElementById('detail-content').innerHTML = html
+}
+
+function legacyDebtsForCase(caseData) {
+  let banks = [], amounts = {}
+  try { banks = JSON.parse(caseData.banks||'[]') } catch(e){}
+  try { amounts = JSON.parse(caseData.debts||'{}') } catch(e){}
+  return banks.map((creditor,index)=>({
+    id:`legacy-${index}`,caseId:caseData.id,subject:caseData.applicantName,
+    creditor,totalAmount:String(Number(amounts[creditor])||0),currency:'AMD',
+    contractNumber:'',contractDate:'',principal:'',interest:'',penalty:'',
+    dueDate:'',claimBasis:'',collateral:'',enforcementInfo:'',notes:'',
+    createdAt:'',updatedAt:'',isLegacy:true
+  }))
+}
+
+function debtMoney(value, currency='AMD') {
+  const amount = (Number(value)||0).toLocaleString('hy-AM')
+  return currency==='AMD' ? `${amount} դրամ` : `${amount} ${currency}`
+}
+
+function renderDebtsTab() {
+  const total = currentDebts.reduce((sum,debt)=>sum+(Number(debt.totalAmount)||0),0)
+  const cards = currentDebts.map(debt=>renderDebtCard(debt)).join('')
+  return `
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <span>Պարտքերն ըստ բանկերի և վարկատուների</span>
+        <button class="btn btn-sm btn-primary" onclick="openDebtModal()">Ավելացնել պարտք</button>
+      </div>
+      <div class="alert alert-blue">Այստեղ պահպանված տվյալները փոխանցվում են գործի հաշվետվությանը և սնանկության դիմումի տվյալներին։ Յուրաքանչյուր պարտքի համար կարող եք կցել հաշվի քաղվածքը և վարկային պայմանագիրը։</div>
+      ${cards||'<p class="hint">Պարտքեր դեռ չեն ավելացվել։</p>'}
+      <div class="srow" style="margin-top:12px"><span class="sk"><strong>Ընդհանուր պարտք</strong></span><span class="sv"><strong>${debtMoney(total)}</strong></span></div>
+    </div>`
+}
+
+function renderDebtCard(debt) {
+  const files = currentFiles.filter(file=>file.subject===debt.id)
+  const statement = files.filter(file=>file.typeId==='debt_account_statement')
+  const agreement = files.filter(file=>file.typeId==='debt_loan_agreement')
+  const detail = [
+    debt.contractNumber ? `Պայմանագիր՝ ${esc(debt.contractNumber)}` : '',
+    debt.contractDate ? `ամսաթիվ՝ ${esc(debt.contractDate)}` : '',
+    debt.dueDate ? `վերջնաժամկետ՝ ${esc(debt.dueDate)}` : ''
+  ].filter(Boolean).join(' · ')
+  return `<div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;background:var(--surface)">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+      <div>
+        <div class="doc-title">${esc(debt.creditor||'Չնշված վարկատու')}</div>
+        <div style="font-size:.78rem;color:var(--ink-muted);margin-top:3px">${detail||'Պայմանագրի տվյալները նշված չեն'}</div>
+      </div>
+      <div style="font-weight:800;color:var(--navy)">${debtMoney(debt.totalAmount,debt.currency)}</div>
+    </div>
+    <div class="case-info-grid" style="margin-top:10px">
+      <div>
+        <div class="srow"><span class="sk">Մայր գումար</span><span class="sv">${debtMoney(debt.principal,debt.currency)}</span></div>
+        <div class="srow"><span class="sk">Տոկոսներ</span><span class="sv">${debtMoney(debt.interest,debt.currency)}</span></div>
+        <div class="srow"><span class="sk">Տույժ և տուգանք</span><span class="sv">${debtMoney(debt.penalty,debt.currency)}</span></div>
+      </div>
+      <div>
+        <div class="srow"><span class="sk">Պահանջի հիմք</span><span class="sv">${esc(debt.claimBasis||'—')}</span></div>
+        <div class="srow"><span class="sk">Գրավ կամ ապահովում</span><span class="sv">${esc(debt.collateral||'—')}</span></div>
+        <div class="srow"><span class="sk">Կատարողական վարույթ</span><span class="sv">${esc(debt.enforcementInfo||'—')}</span></div>
+      </div>
+    </div>
+    ${debt.notes?`<div class="hint" style="margin-top:8px">${esc(debt.notes)}</div>`:''}
+    <div class="doc-files" style="margin-top:10px">
+      ${statement.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">Վարկային հաշվի քաղվածք՝ ${esc(file.fileName)}</a>`).join('')}
+      ${agreement.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">Վարկային պայմանագիր՝ ${esc(file.fileName)}</a>`).join('')}
+    </div>
+    <div class="doc-actions" style="margin-top:10px">
+      <button class="btn btn-sm" onclick="${inlineCall('openDebtModal',debt.id)}">Խմբագրել</button>
+      <button class="btn btn-sm btn-gold" onclick="${inlineCall('openDebtFileModal',debt.id,'debt_account_statement')}">Վերբեռնել հաշվի քաղվածք</button>
+      <button class="btn btn-sm btn-gold" onclick="${inlineCall('openDebtFileModal',debt.id,'debt_loan_agreement')}">Վերբեռնել պայմանագիր</button>
+      <button class="btn btn-sm" onclick="${inlineCall('generateDebtMotion',debt.id)}">Ստեղծել միջնորդություն</button>
+    </div>
+  </div>`
+}
+
+function openDebtModal(debtId='') {
+  const debt = currentDebts.find(item=>item.id===debtId) || {
+    id:'',creditor:'',contractNumber:'',contractDate:'',currency:'AMD',
+    principal:'',interest:'',penalty:'',totalAmount:'',dueDate:'',
+    claimBasis:'',collateral:'',enforcementInfo:'',notes:''
+  }
+  openModal(`
+    <div class="modal-title">${debt.id?'Խմբագրել պարտքը':'Ավելացնել պարտք'}<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <input type="hidden" id="debt-id" value="${esc(debt.id||'')}"/>
+    <div class="form-row">
+      <div class="field"><label>Բանկ կամ վարկատու *</label><input id="debt-creditor" value="${esc(debt.creditor||'')}"/></div>
+      <div class="field"><label>Արժույթ</label><select id="debt-currency"><option value="AMD"${debt.currency==='AMD'?' selected':''}>AMD</option><option value="USD"${debt.currency==='USD'?' selected':''}>USD</option><option value="EUR"${debt.currency==='EUR'?' selected':''}>EUR</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Պայմանագրի համարը</label><input id="debt-contract-number" value="${esc(debt.contractNumber||'')}"/></div>
+      <div class="field"><label>Պայմանագրի ամսաթիվը</label><input type="date" id="debt-contract-date" value="${esc(debt.contractDate||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Մայր գումար</label><input type="number" min="0" id="debt-principal" value="${esc(debt.principal||'')}"/></div>
+      <div class="field"><label>Տոկոսներ</label><input type="number" min="0" id="debt-interest" value="${esc(debt.interest||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Տույժ և տուգանք</label><input type="number" min="0" id="debt-penalty" value="${esc(debt.penalty||'')}"/></div>
+      <div class="field"><label>Ընդհանուր պարտք *</label><input type="number" min="0" id="debt-total" value="${esc(debt.totalAmount||'')}"/></div>
+    </div>
+    <div class="field"><label>Վճարման վերջնաժամկետը</label><input type="date" id="debt-due-date" value="${esc(debt.dueDate||'')}"/></div>
+    <div class="field"><label>Պահանջի հիմքը՝ դիմումի համար</label><textarea id="debt-claim-basis" style="width:100%;min-height:70px">${esc(debt.claimBasis||'')}</textarea></div>
+    <div class="field"><label>Գրավ, երաշխավորություն կամ այլ ապահովում</label><textarea id="debt-collateral" style="width:100%;min-height:60px">${esc(debt.collateral||'')}</textarea></div>
+    <div class="field"><label>Կատարողական վարույթի տվյալները</label><textarea id="debt-enforcement" style="width:100%;min-height:60px">${esc(debt.enforcementInfo||'')}</textarea></div>
+    <div class="field"><label>Լրացուցիչ նշումներ</label><textarea id="debt-notes" style="width:100%;min-height:60px">${esc(debt.notes||'')}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="debt-save-button" onclick="saveDebt()">Պահպանել պարտքը</button>
+    </div>
+  `)
+}
+
+async function saveDebt() {
+  const existingId = document.getElementById('debt-id').value
+  const existing = currentDebts.find(item=>item.id===existingId)
+  const creditor = document.getElementById('debt-creditor').value.trim()
+  const totalAmount = document.getElementById('debt-total').value
+  if(!creditor||!totalAmount){ alert('Նշեք վարկատուին և ընդհանուր պարտքի չափը։'); return }
+  const now = new Date().toISOString()
+  const debt = {
+    id:existingId&&!existingId.startsWith('legacy-')?existingId:newId(),
+    caseId:currentCase.id,subject:currentCase.applicantName,creditor,
+    contractNumber:document.getElementById('debt-contract-number').value.trim(),
+    contractDate:document.getElementById('debt-contract-date').value,
+    currency:document.getElementById('debt-currency').value,
+    principal:document.getElementById('debt-principal').value,
+    interest:document.getElementById('debt-interest').value,
+    penalty:document.getElementById('debt-penalty').value,
+    totalAmount,dueDate:document.getElementById('debt-due-date').value,
+    claimBasis:document.getElementById('debt-claim-basis').value.trim(),
+    collateral:document.getElementById('debt-collateral').value.trim(),
+    enforcementInfo:document.getElementById('debt-enforcement').value.trim(),
+    notes:document.getElementById('debt-notes').value.trim(),
+    createdAt:existing?.createdAt||now,updatedAt:now
+  }
+  const row = ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'].map(key=>debt[key]||'')
+  const button = document.getElementById('debt-save-button')
+  button.disabled = true
+  try {
+    await apiPost({action:'saveDebt',row})
+    const index = currentDebts.findIndex(item=>item.id===existingId)
+    if(index===-1) currentDebts.push(debt)
+    else currentDebts[index] = debt
+    await syncDebtApplicationData()
+    closeModal()
+    renderDetail('credits')
+  } catch(e) {
+    button.disabled = false
+    alert('Պարտքը չպահպանվեց՝ '+e.message)
+  }
+}
+
+async function syncDebtApplicationData() {
+  const banks = [...new Set(currentDebts.map(debt=>debt.creditor))]
+  const amounts = currentDebts.reduce((result,debt)=>{
+    result[debt.creditor] = (result[debt.creditor]||0) + (Number(debt.totalAmount)||0)
+    return result
+  },{})
+  let assessment = null
+  try { assessment = JSON.parse(currentCase.assessmentJson||'null') } catch(e){}
+  if(assessment?.applicant) {
+    assessment.applicant.banks = banks
+    assessment.applicant.debts = amounts
+    assessment.applicant.totalBankDebt = currentDebts.reduce((sum,debt)=>sum+(Number(debt.totalAmount)||0),0)
+    assessment.applicant.debtDetails = currentDebts
+  }
+  const updated = {
+    ...currentCase,banks:JSON.stringify(banks),debts:JSON.stringify(amounts),
+    assessmentJson:assessment?JSON.stringify(assessment):currentCase.assessmentJson
+  }
+  await apiPost({action:'saveCase',row:buildCaseRow(updated)})
+  currentCase = updated
+  const caseIndex = allCases.findIndex(item=>item.id===updated.id)
+  if(caseIndex!==-1) allCases[caseIndex] = updated
+}
+
+function openDebtFileModal(debtId,typeId) {
+  const debt = currentDebts.find(item=>item.id===debtId)
+  if(!debt||debt.id.startsWith('legacy-')) {
+    alert('Նախ բացեք պարտքը, լրացրեք տվյալները և պահպանեք։')
+    return
+  }
+  const label = typeId==='debt_account_statement'?'Վարկային հաշվի քաղվածք':'Վարկային պայմանագիր'
+  openModal(`
+    <div class="modal-title">${label}<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">${esc(debt.creditor)} պարտքի ֆայլը կպահպանվի տվյալ պարտքի առանձին Drive պանակում։</div>
+    <div class="field"><label>Ընտրեք ֆայլը</label><input type="file" id="debt-upload-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"/></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="debt-upload-button" onclick="${inlineCall('submitDebtFile',debtId,typeId)}">Վերբեռնել</button>
+    </div>
+  `)
+}
+
+async function submitDebtFile(debtId,typeId) {
+  const debt = currentDebts.find(item=>item.id===debtId)
+  const file = document.getElementById('debt-upload-file')?.files?.[0]
+  if(!file){ alert('Ընտրեք ֆայլը։'); return }
+  if(file.size>8*1024*1024){ alert('Ֆայլը չի կարող գերազանցել 8 ՄԲ-ը։'); return }
+  const button = document.getElementById('debt-upload-button')
+  button.disabled = true
+  try {
+    const uploaded = await apiPost({
+      action:'uploadDocument',caseId:currentCase.id,documentId:debtId,
+      typeId,subject:debtId,folderName:`${debt.creditor} - ${debt.contractNumber||debt.id}`,
+      fileName:file.name,mimeType:file.type||'application/octet-stream',
+      base64:await fileToBase64(file)
+    })
+    currentFiles.push({
+      id:newId(),caseId:currentCase.id,documentId:debtId,typeId,subject:debtId,
+      fileName:uploaded.fileName,fileUrl:uploaded.fileUrl,fileId:uploaded.fileId,
+      folderId:uploaded.folderId,uploadedAt:new Date().toISOString()
+    })
+    closeModal()
+    renderDetail('credits')
+  } catch(e) {
+    button.disabled = false
+    alert('Ֆայլը չվերբեռնվեց՝ '+e.message)
+  }
+}
+
+function generateDebtMotion(debtId) {
+  const debt = currentDebts.find(item=>item.id===debtId)
+  const files = currentFiles.filter(file=>file.subject===debtId)
+  const missing = []
+  if(!files.some(file=>file.typeId==='debt_account_statement')) missing.push('վարկային հաշվի քաղվածքը')
+  if(!files.some(file=>file.typeId==='debt_loan_agreement')) missing.push('վարկային պայմանագիրը')
+  const text = `ՄԻՋՆՈՐԴՈՒԹՅՈՒՆ
+
+Դիմող՝ ${currentCase.applicantName}
+Վարկատու՝ ${debt.creditor}
+Պայմանագիր՝ ${debt.contractNumber||'նշված չէ'} ${debt.contractDate||''}
+Ընդհանուր պարտք՝ ${debtMoney(debt.totalAmount,debt.currency)}
+
+Հարգելի դատարան,
+
+Տվյալ պարտավորության վերաբերյալ ${missing.length?missing.join(' և ')+' դեռևս չի ստացվել կամ հնարավոր չի եղել ներկայացնել։':'անհրաժեշտ ֆինանսական փաստաթղթերը ներկայացվում են գործին կից։'}
+
+Խնդրում եմ նշված հանգամանքը համարել հարգելի և անհրաժեշտության դեպքում տրամադրել լրացուցիչ ժամկետ փաստաթղթերը ներկայացնելու համար։
+
+${new Date().toLocaleDateString('hy-AM')}
+Դիմող՝ ${currentCase.applicantName}`
+  window._motionText = text
+  openModal(`
+    <div class="modal-title">Պարտքի միջնորդություն<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <textarea style="width:100%;height:300px;padding:10px">${esc(text)}</textarea>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Փակել</button><button class="btn btn-primary" onclick="${inlineCall('dlMotion',debt.creditor)}">Ներբեռնել</button></div>
+  `)
 }
 
 function renderDocRow(dt, subj, doc) {
@@ -1342,7 +1587,19 @@ function collateralReport(data){
   ).join('')
 }
 function personReport(title,data,includeIdentity){
-  const bankRows=(data.banks||[]).map(bank=>reportRow(bank,money(data.debts?.[bank]))).join('')
+  const bankRows=(data.debtDetails?.length
+    ? data.debtDetails.map(debt=>[
+        reportRow('Վարկատու',debt.creditor),
+        reportRow('Պայմանագիր',[debt.contractNumber,debt.contractDate].filter(Boolean).join(' · ')),
+        reportRow('Մայր գումար',debtMoney(debt.principal,debt.currency)),
+        reportRow('Տոկոսներ',debtMoney(debt.interest,debt.currency)),
+        reportRow('Տույժ և տուգանք',debtMoney(debt.penalty,debt.currency)),
+        reportRow('Ընդհանուր պարտք',debtMoney(debt.totalAmount,debt.currency)),
+        reportRow('Պահանջի հիմք',debt.claimBasis),
+        reportRow('Գրավ կամ ապահովում',debt.collateral),
+        reportRow('Կատարողական վարույթ',debt.enforcementInfo)
+      ].join('')).join('')
+    : (data.banks||[]).map(bank=>reportRow(bank,money(data.debts?.[bank]))).join(''))
   const total=(data.totalBankDebt||0)+(data.taxDebt||0)
   return `<div class="summary-block">
     <div class="summary-block-title">${esc(title)}</div>
@@ -1450,7 +1707,7 @@ async function saveAndGenerate(){
     await new Promise(r=>setTimeout(r,400))
     dlText(genAppendix(caseData), 'Havaelvadz_'+A.name+'_'+today()+'.txt')
     btn.textContent='✅ Պահպանված է'
-    setTimeout(()=>{ currentCase=caseData; currentDocs=[]; showPage('case-detail'); document.getElementById('detail-title').textContent=A.name; renderDetailTabs(); renderDetail('info') }, 800)
+    setTimeout(()=>{ currentCase=caseData; currentDocs=[]; currentDebts=[]; currentFiles=[]; showPage('case-detail'); document.getElementById('detail-title').textContent=A.name; renderDetailTabs(); renderDetail('info') }, 800)
   } catch(e){
     alert('Սխալ՝ '+e.message)
     btn.disabled=false; btn.textContent='📄 Պահպանել և ստեղծել փաստաթղթերը'
@@ -1518,7 +1775,17 @@ function textCollateral(data){
     : 'Տվյալներ չեն նշվել'
 }
 function textPersonReport(title,data){
-  const bankLines=(data.banks||[]).map(bank=>`${bank}: ${money(data.debts?.[bank])}`).join('\n')||'Բանկային կամ այլ պարտքեր չեն նշվել'
+  const bankLines=(data.debtDetails?.length
+    ? data.debtDetails.map(debt=>`${debt.creditor}
+Պայմանագիր՝ ${debt.contractNumber||'—'} ${debt.contractDate||''}
+Մայր գումար՝ ${debtMoney(debt.principal,debt.currency)}
+Տոկոսներ՝ ${debtMoney(debt.interest,debt.currency)}
+Տույժ և տուգանք՝ ${debtMoney(debt.penalty,debt.currency)}
+Ընդհանուր պարտք՝ ${debtMoney(debt.totalAmount,debt.currency)}
+Պահանջի հիմք՝ ${debt.claimBasis||'—'}
+Գրավ կամ ապահովում՝ ${debt.collateral||'—'}
+Կատարողական վարույթ՝ ${debt.enforcementInfo||'—'}`).join('\n\n')
+    : (data.banks||[]).map(bank=>`${bank}: ${money(data.debts?.[bank])}`).join('\n'))||'Բանկային կամ այլ պարտքեր չեն նշվել'
   return `${title}
 Անուն, ազգանուն, հայրանուն՝ ${data.name||'—'} ${data.middleName||''}
 Ծննդյան ամսաթիվ՝ ${data.birthDate||'—'}
