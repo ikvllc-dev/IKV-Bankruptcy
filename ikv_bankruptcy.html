@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm7cJwcI5rRb91LVXFZjtVCQpyAqEaEZxrqZQ3FHsCBu4pWHrAKkPJ6wZrQJJop_kg/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDKbUVU5V5ywtykkCVhefcyPUh-Yu-cgUBR0FeTEHrnvc_M182MgqwGd3JREyhx0c86w/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -593,6 +593,7 @@ function renderDetailTabs() {
   const tabs = [
     {id:'info',label:'👤 Տեղեկություններ'},
     {id:'docs',label:'📋 Փաստաթղթեր'},
+    {id:'court',label:'⚖ Դատական փաստաթղթեր'},
     {id:'credits',label:'💰 Պարտքեր'},
     {id:'report',label:'📄 Ամբողջական հաշվետվություն'},
   ]
@@ -649,6 +650,10 @@ function renderDetail(tab) {
     html += '</div>'
   }
 
+  if(tab === 'court') {
+    html = renderCourtDocuments()
+  }
+
   if(tab === 'credits') {
     html = renderDebtsTab()
   }
@@ -670,9 +675,24 @@ function renderDetail(tab) {
 }
 
 function renderPersonDocumentSections(subject,isSpouse) {
+  const documentCategoryOrder = [
+    'Անձնական փաստաթղթեր',
+    'Իրավական փաստաթղթեր'
+  ]
   const allowedCategories = (isSpouse
     ? ['Բանկային փաստաթղթեր','Պետական մարմինների տեղեկանքներ']
-    : [...new Set(DOC_TYPES.map(item=>item.cat))]).sort(armenianCompare)
+    : [...new Set(DOC_TYPES
+        .filter(item=>item.cat!=='Դատական փաստաթղթեր')
+        .map(item=>item.cat))])
+    .sort((a,b)=>{
+      const aIndex=documentCategoryOrder.indexOf(a)
+      const bIndex=documentCategoryOrder.indexOf(b)
+      if(aIndex!==-1||bIndex!==-1) {
+        return (aIndex===-1?documentCategoryOrder.length:aIndex)
+          -(bIndex===-1?documentCategoryOrder.length:bIndex)
+      }
+      return armenianCompare(a,b)
+    })
   let html = `<div class="summary-block-title" style="font-size:.8rem;margin-top:${isSpouse?'22px':'0'}">${isSpouse?'Ամուսնու կամ կնոջ փաստաթղթերը':'Դիմողի փաստաթղթերը'} · ${esc(subject)}</div>`
   allowedCategories.forEach(category=>{
     const types = DOC_TYPES
@@ -691,6 +711,30 @@ function renderPersonDocumentSections(subject,isSpouse) {
     html += '</div>'
   })
   return html
+}
+
+function renderCourtDocuments() {
+  const category = 'Դատական փաստաթղթեր'
+  const types = DOC_TYPES
+    .filter(item=>item.cat===category)
+    .sort((a,b)=>armenianCompare(a.name,b.name))
+  const rows = types.map(type=>{
+    const doc = currentDocs.find(item=>
+      item.typeId===type.id&&item.subject===currentCase.applicantName
+    )
+    return renderDocRow(type,currentCase.applicantName,doc)
+  }).join('')
+  return `<div class="card">
+    <div class="summary-block-title">${category}</div>
+    <div class="alert alert-blue">Դատարան ներկայացվող և դատական վարույթին վերաբերող փաստաթղթերը պահվում են այս առանձին բաժնում։</div>
+    ${rows}
+  </div>`
+}
+
+function documentTabForType(typeId) {
+  return DOC_TYPES.find(item=>item.id===typeId)?.cat==='Դատական փաստաթղթեր'
+    ? 'court'
+    : 'docs'
 }
 
 function legacyDebtsForCase(caseData) {
@@ -1246,7 +1290,7 @@ async function setStatus(typeId, subj, status) {
   } else {
     currentDocs.push({id:row[0],caseId:currentCase.id,typeId,subject:subj,status,issueDate:'',expiryDate:'',appliedAt:today()})
   }
-  renderDetail('docs')
+  renderDetail(documentTabForType(typeId))
 }
 
 function markReceived(typeId, subj) {
@@ -1272,7 +1316,7 @@ async function saveReceived(typeId, subj) {
   if(existing){ existing.status='received'; existing.issueDate=issueDate; existing.expiryDate=expiryDate }
   else currentDocs.push({id:row[0],caseId:currentCase.id,typeId,subject:subj,status:'received',issueDate,expiryDate})
   closeModal()
-  renderDetail('docs')
+  renderDetail(documentTabForType(typeId))
 }
 
 function uploadDocumentModal(typeId, subj) {
@@ -1335,7 +1379,7 @@ async function submitDocumentUpload(typeId, subj) {
       folderId:uploaded.folderId,uploadedAt:new Date().toISOString()
     })
     closeModal()
-    renderDetail('docs')
+    renderDetail(documentTabForType(typeId))
   } catch(e) {
     alert('Վերբեռնումը չհաջողվեց՝ '+e.message)
     button.disabled = false
