@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyihObEc4vja4h97ODcXriL7DNHkyilchzXrzAY_EwAkNmDLPEtHsXze_ckcUVvk3GKbQ/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_mp3HbQLVb7gQK9Z3cvc9PRfdqe8DWrC4BiCclsTy8ZMv8zsPv2eMWQrsWRqjcISe6Q/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -302,7 +302,25 @@ const COMPANY = {
   director: 'Հովհաննես Հարությունյան', phone: '+374 99 648 655'
 }
 
-const BANKS = ['Արարատբանկ','Ամերիաբանկ','Արդշինբանկ','Բիբլոս Բանկ Արմենիա','ԷյչԷսԲիՍի Բանկ Հայաստան','Էվոկաբանկ','Ինեկոբանկ','Կոնվերս Բանկ','Հայէկոնոմբանկ','Հայբիզնեսբանկ','ՎՏԲ-Հայաստան Բանկ','Յունիբանկ','Ֆասթ Բանկ','Արմսվիսբանկ','Ակբա Բանկ','ԱյԴի Բանկ','Մելլաթ Բանկ']
+const BANKS = [
+  '«ԱԿԲԱ ԲԱՆԿ» ԲԲԸ',
+  '«ԱՄԵՐԻԱԲԱՆԿ» ՓԲԸ',
+  '«ԱՄԻՕ ԲԱՆԿ» ՓԲԸ',
+  '«ԱյԴի Բանկ» ՓԲԸ',
+  '«ԱՐԱՐԱՏԲԱՆԿ» ԲԲԸ',
+  '«Արդշինբանկ» ԲԲԸ',
+  '«Արմսվիսբանկ» ՓԲԸ',
+  '«Արցախբանկ» ՓԲԸ',
+  '«ԲԻԲԼՈՍ ԲԱՆԿ ԱՐՄԵՆԻԱ» ՓԲԸ',
+  '«ԷՎՈԿԱԲԱՆԿ» ԲԲԸ',
+  '«Ինեկոբանկ» ՓԲԸ',
+  '«Կոնվերս Բանկ» ՓԲԸ',
+  '«ՀԱՅԷԿՈՆՈՄԲԱՆԿ» ԲԲԸ',
+  '«Մելլաթ Բանկ» ՓԲԸ',
+  '«Յունիբանկ» ԲԲԸ',
+  '«ՎՏԲ-Հայաստան Բանկ» ՓԲԸ',
+  '«Ֆասթ Բանկ» ՓԲԸ'
+]
 
 const DOC_TYPES = [
   {id:'passport',name:'Անձնագիր կամ նույնականացման քարտ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:true},
@@ -310,11 +328,10 @@ const DOC_TYPES = [
   {id:'marriage',name:'Ամուսնության վկայական',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
   {id:'notarial_poa',name:'Նոտարական լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
   {id:'proc_poa',name:'Դատական ներկայացուցչության լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
-  {id:'credit_report',name:'Վարկային զեկույց',cat:'Ֆինանսական փաստաթղթեր',s90:true,spouse:false},
-  {id:'loan_agr',name:'Վարկային պայմանագրեր',cat:'Ֆինանսական փաստաթղթեր',s90:false,spouse:false},
-  {id:'debt_stmt',name:'Պարտքերի վերաբերյալ քաղվածքներ',cat:'Ֆինանսական փաստաթղթեր',s90:true,spouse:false},
-  {id:'cadastre',name:'Կադաստր',cat:'Գույք',s90:true,spouse:true},
+  {id:'cadastre',name:'Կադաստր',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'depository',name:'Կենտրոնական դեպոզիտարիայի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'tax',name:'Պետական եկամուտների կոմիտեի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'tax_personal_account',name:'Անհատական հաշվի քաղվածք Պետական եկամուտների կոմիտեից',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:false},
   {id:'social',name:'Սոցիալական ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'territorial',name:'Տարածքային կառավարման մարմնի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'minfin',name:'Հայաստանի Հանրապետության ֆինանսների նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
@@ -322,7 +339,6 @@ const DOC_TYPES = [
   {id:'mia',name:'Հայաստանի Հանրապետության ներքին գործերի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'traffic',name:'Ճանապարհային ոստիկանության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'state_reg',name:'Պետական ռեգիստրի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
-  {id:'depository',name:'Կենտրոնական դեպոզիտարիայի տեղեկանք',cat:'Ֆինանսական փաստաթղթեր',s90:true,spouse:true},
   {id:'banks_resp',name:'Բանկերի պատասխաններ',cat:'Բանկային փաստաթղթեր',s90:true,spouse:false},
   {id:'court_docs',name:'Դատարան ներկայացվող փաստաթղթեր',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
   {id:'petition',name:'Սնանկության դիմում',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
@@ -394,8 +410,12 @@ let allDocuments = []
 let currentCase = null
 let currentDocs = []
 let currentDebts = []
+let currentBankCertificates = []
 let currentFiles = []
 let currentTab = 'info'
+let dashboardLoadedAt = 0
+const UI_CACHE_MS = 60000
+const caseBundleCache = new Map()
 
 // ═══════════════════════════════════════════════
 // NAV
@@ -417,12 +437,21 @@ function showPage(id) {
 // DASHBOARD
 // ═══════════════════════════════════════════════
 async function loadDashboard() {
+  if(allCases.length && dashboardLoadedAt && Date.now()-dashboardLoadedAt<UI_CACHE_MS) {
+    renderDashboard()
+    return
+  }
   document.getElementById('dash-metrics').innerHTML = '<div class="metric"><div class="spinner"></div><div class="metric-lbl">Բեռնվում է...</div></div>'
   try {
-    ;[allCases, allDocuments] = await Promise.all([
-      apiGet('getCases'),
-      apiGet('getDocs')
-    ])
+    try {
+      const data = await apiGet('getDashboardData')
+      allCases = data.cases||[]
+      allDocuments = data.documents||[]
+    } catch(error) {
+      if(!String(error.message||'').includes('Unknown action')) throw error
+      ;[allCases, allDocuments] = await Promise.all([apiGet('getCases'),apiGet('getDocs')])
+    }
+    dashboardLoadedAt = Date.now()
     renderDashboard()
   } catch(e) {
     document.getElementById('dash-metrics').innerHTML = `<div class="alert alert-red">Սխալ՝ ${esc(e.message)}<br><small>Google Apps Script-ը հասանելի է, սակայն տվյալների կառուցվածքը կամ թույլտվությունները ստուգման կարիք ունեն։</small></div>`
@@ -495,9 +524,14 @@ function filterCases(query) {
 }
 
 async function loadCases() {
+  if(allCases.length && dashboardLoadedAt && Date.now()-dashboardLoadedAt<UI_CACHE_MS) {
+    document.getElementById('cases-list').innerHTML = renderCasesTable(allCases)
+    return
+  }
   document.getElementById('cases-list').innerHTML = '<span class="spinner"></span>'
   try {
     allCases = await apiGet('getCases')
+    dashboardLoadedAt = Date.now()
     document.getElementById('cases-list').innerHTML = renderCasesTable(allCases)
   } catch(e) {
     document.getElementById('cases-list').innerHTML = `<div class="alert alert-red">${e.message}</div>`
@@ -510,12 +544,31 @@ async function loadCases() {
 async function openCase(caseId) {
   currentCase = allCases.find(c=>c.id===caseId) || (await apiGet('getCases')).find(c=>c.id===caseId)
   if(!currentCase) return
-  ;[currentDocs, currentDebts, currentFiles] = await Promise.all([
-    apiGet('getDocs', {caseId}),
-    apiGet('getDebts', {caseId}),
-    apiGet('getFiles', {caseId})
-  ])
+  const cached = caseBundleCache.get(caseId)
+  if(cached && Date.now()-cached.loadedAt<UI_CACHE_MS) {
+    currentDocs = cached.documents
+    currentDebts = cached.debts
+    currentBankCertificates = cached.bankCertificates
+    currentFiles = cached.files
+  } else {
+    ;[currentDocs, currentDebts, currentBankCertificates, currentFiles] = await Promise.all([
+      apiGet('getDocs', {caseId}),
+      apiGet('getDebts', {caseId}).catch(()=>[]),
+      apiGet('getBankCertificates', {caseId}).catch(()=>[]),
+      apiGet('getFiles', {caseId})
+    ])
+    caseBundleCache.set(caseId,{
+      documents:currentDocs,debts:currentDebts,
+      bankCertificates:currentBankCertificates,files:currentFiles,
+      loadedAt:Date.now()
+    })
+  }
   if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
+  caseBundleCache.set(caseId,{
+    documents:currentDocs,debts:currentDebts,
+    bankCertificates:currentBankCertificates,files:currentFiles,
+    loadedAt:Date.now()
+  })
   showPage('case-detail')
   document.getElementById('detail-title').textContent = currentCase.applicantName
   renderDetailTabs()
@@ -580,6 +633,10 @@ function renderDetail(tab) {
       const catTypes = DOC_TYPES.filter(d=>d.cat===cat)
       html += `<div class="doc-group"><div class="summary-block-title">${cat}</div>`
       catTypes.forEach(dt => {
+        if(dt.id==='banks_resp') {
+          html += renderBankCertificates()
+          return
+        }
         const subjs = [currentCase.applicantName]
         if(married && dt.spouse) subjs.push(currentCase.spouseName)
         subjs.forEach(subj => {
@@ -604,6 +661,7 @@ function renderDetail(tab) {
           <div class="card-title">📄 Նախնական գնահատման ամբողջական հաշվետվություն</div>
           ${personReport('Դիմողի ամբողջական տվյալները',assessment.applicant,true)}
           ${assessment.spouse?.name?personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները',assessment.spouse,true):''}
+          ${bankCertificatesReport()}
         </div>`
       : '<div class="card"><div class="alert alert-amber">Այս գործը ստեղծվել է մինչև ամբողջական հաշվետվության պահպանումը։ Նոր գնահատումների բոլոր պատասխանները կպահպանվեն այստեղ։</div></div>'
   }
@@ -860,6 +918,194 @@ ${new Date().toLocaleDateString('hy-AM')}
     <textarea style="width:100%;height:300px;padding:10px">${esc(text)}</textarea>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Փակել</button><button class="btn btn-primary" onclick="${inlineCall('dlMotion',debt.creditor)}">Ներբեռնել</button></div>
   `)
+}
+
+function renderBankCertificates() {
+  const rows = BANKS.map(bank=>{
+    const cert = currentBankCertificates.find(item=>item.bank===bank)
+    return renderBankCertificateRow(bank,cert)
+  }).join('')
+  const received = currentBankCertificates.filter(item=>item.status==='received').length
+  const noAccounts = currentBankCertificates.filter(item=>item.result==='no_accounts').length
+  const accountsFound = currentBankCertificates.filter(item=>item.result==='accounts_found').length
+  return `<div class="alert alert-blue" style="margin-bottom:10px">
+    Պետք է ստացվի առանձին տեղեկանք բոլոր ${BANKS.length} բանկերից։ Ստացված՝ ${received}, հաշիվներ չկան՝ ${noAccounts}, հաշիվներ կան՝ ${accountsFound}։
+  </div>${rows}`
+}
+
+function bankCertificatesReport() {
+  const rows = BANKS.map(bank=>{
+    const cert = currentBankCertificates.find(item=>item.bank===bank)
+    let value = 'Տեղեկանքը դեռ չի ստացվել'
+    if(cert?.result==='no_accounts') value = `Հաշիվներ կամ տվյալներ չկան · ${cert.issueDate||''}`
+    if(cert?.result==='accounts_found') {
+      value = `Հաշիվներ կան · մնացորդ՝ ${debtMoney(cert.balance,cert.currency)}${cert.accountInfo?' · '+cert.accountInfo:''}`
+    }
+    return reportRow(bank,value)
+  }).join('')
+  return `<div class="summary-block"><div class="summary-block-title">Բանկերի տեղեկանքների արդյունքները</div>${rows}</div>`
+}
+
+function renderBankCertificateRow(bank,cert) {
+  const status = cert?.status||'none'
+  const files = cert ? currentFiles.filter(file=>file.typeId==='banks_resp'&&file.subject===cert.id) : []
+  let statusEl = '<span class="status-pill sp-none">Չի դիմվել</span>'
+  if(status==='applied') statusEl = '<span class="status-pill sp-applied">Սպասում ենք պատասխանին</span>'
+  if(status==='received') {
+    statusEl = cert.result==='no_accounts'
+      ? '<span class="status-pill sp-received">Հաշիվներ չկան</span>'
+      : '<span class="status-pill sp-received">Հաշիվներ կան</span>'
+  }
+  const result = cert?.result==='accounts_found'
+    ? `<div style="font-size:.75rem;color:var(--ink-muted);margin-top:4px">${esc(cert.accountInfo||'Հաշվի տվյալները նշված չեն')} · Մնացորդ՝ ${debtMoney(cert.balance,cert.currency)}</div>`
+    : ''
+  const appliedButton = status==='none'
+    ? `<button class="btn btn-sm" onclick="${inlineCall('setBankCertificateApplied',bank)}">Նշել որպես դիմած</button>`
+    : ''
+  const receiveButton = `<button class="btn btn-sm btn-green" onclick="${inlineCall('openBankCertificateModal',bank)}">${status==='received'?'Խմբագրել պատասխանը':'Գրանցել պատասխանը'}</button>`
+  const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('openBankCertificateUpload',cert?.id||'',bank)}">Վերբեռնել տեղեկանքը</button>`
+  return `<div class="doc-row">
+    <div>
+      <div class="doc-title">${esc(bank)}</div>
+      ${result}
+      <div class="doc-files">${files.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">${esc(file.fileName)}</a>`).join('')}</div>
+    </div>
+    ${statusEl}
+    <div class="doc-actions">${appliedButton}${receiveButton}${uploadButton}</div>
+  </div>`
+}
+
+function bankCertificateRow(cert) {
+  return ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt']
+    .map(key=>cert[key]||'')
+}
+
+async function setBankCertificateApplied(bank) {
+  const existing = currentBankCertificates.find(item=>item.bank===bank)
+  const cert = existing || {
+    id:newId(),caseId:currentCase.id,subject:currentCase.applicantName,bank,
+    result:'',accountInfo:'',balance:'',currency:'AMD',issueDate:'',expiryDate:'',
+    notes:'',appliedAt:today()
+  }
+  cert.status = 'applied'
+  cert.appliedAt = cert.appliedAt||today()
+  cert.updatedAt = new Date().toISOString()
+  await apiPost({action:'saveBankCertificate',row:bankCertificateRow(cert)})
+  if(!existing) currentBankCertificates.push(cert)
+  renderDetail('docs')
+}
+
+function openBankCertificateModal(bank) {
+  const cert = currentBankCertificates.find(item=>item.bank===bank) || {
+    id:'',result:'no_accounts',accountInfo:'',balance:'',currency:'AMD',
+    issueDate:'',notes:'',appliedAt:''
+  }
+  openModal(`
+    <div class="modal-title">Բանկի տեղեկանքի տվյալներ<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">${esc(bank)}</div>
+    <input type="hidden" id="bank-cert-id" value="${esc(cert.id||'')}"/>
+    <div class="field"><label>Բանկի պատասխանը *</label>
+      <select id="bank-cert-result" onchange="toggleBankAccountFields()">
+        <option value="no_accounts"${cert.result!=='accounts_found'?' selected':''}>Հաշիվներ կամ տվյալներ չկան</option>
+        <option value="accounts_found"${cert.result==='accounts_found'?' selected':''}>Հաշիվներ կան / առկա է մնացորդ</option>
+      </select>
+    </div>
+    <div id="bank-account-fields" style="${cert.result==='accounts_found'?'':'display:none'}">
+      <div class="field"><label>Հաշիվների և այլ տվյալների նկարագրությունը</label><textarea id="bank-account-info" style="width:100%;min-height:70px">${esc(cert.accountInfo||'')}</textarea></div>
+      <div class="form-row">
+        <div class="field"><label>Մնացորդ</label><input type="number" step="0.01" id="bank-balance" value="${esc(cert.balance||'')}"/></div>
+        <div class="field"><label>Արժույթ</label><select id="bank-currency"><option value="AMD"${cert.currency==='AMD'?' selected':''}>AMD</option><option value="USD"${cert.currency==='USD'?' selected':''}>USD</option><option value="EUR"${cert.currency==='EUR'?' selected':''}>EUR</option></select></div>
+      </div>
+    </div>
+    <div class="field"><label>Տեղեկանքի տրման ամսաթիվը *</label><input type="date" id="bank-issue-date" value="${esc(cert.issueDate||'')}"/></div>
+    <div class="field"><label>Նշումներ</label><textarea id="bank-notes" style="width:100%;min-height:60px">${esc(cert.notes||'')}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="bank-cert-save" onclick="${inlineCall('saveBankCertificate',bank)}">Պահպանել պատասխանը</button>
+    </div>
+  `)
+}
+
+function toggleBankAccountFields() {
+  const show = document.getElementById('bank-cert-result').value==='accounts_found'
+  document.getElementById('bank-account-fields').style.display = show?'block':'none'
+}
+
+async function saveBankCertificate(bank) {
+  const issueDate = document.getElementById('bank-issue-date').value
+  if(!issueDate){ alert('Նշեք տեղեկանքի տրման ամսաթիվը։'); return }
+  const id = document.getElementById('bank-cert-id').value || newId()
+  const existing = currentBankCertificates.find(item=>item.id===id)
+  const result = document.getElementById('bank-cert-result').value
+  const cert = {
+    id,caseId:currentCase.id,subject:currentCase.applicantName,bank,status:'received',result,
+    accountInfo:result==='accounts_found'?document.getElementById('bank-account-info').value.trim():'',
+    balance:result==='accounts_found'?document.getElementById('bank-balance').value:'',
+    currency:document.getElementById('bank-currency')?.value||'AMD',
+    issueDate,expiryDate:addDays(issueDate,90),appliedAt:existing?.appliedAt||today(),
+    notes:document.getElementById('bank-notes').value.trim(),updatedAt:new Date().toISOString()
+  }
+  const button = document.getElementById('bank-cert-save')
+  button.disabled = true
+  try {
+    await apiPost({action:'saveBankCertificate',row:bankCertificateRow(cert)})
+    const index = currentBankCertificates.findIndex(item=>item.bank===bank)
+    if(index===-1) currentBankCertificates.push(cert)
+    else currentBankCertificates[index] = cert
+    closeModal()
+    renderDetail('docs')
+  } catch(e) {
+    button.disabled = false
+    alert('Բանկի պատասխանը չպահպանվեց՝ '+e.message)
+  }
+}
+
+function openBankCertificateUpload(certId,bank) {
+  openModal(`
+    <div class="modal-title">Վերբեռնել բանկի տեղեկանքը<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">${esc(bank)}</div>
+    <div class="field"><label>Ընտրեք տեղեկանքի ֆայլը</label><input type="file" id="bank-cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"/></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="bank-cert-upload" onclick="${inlineCall('submitBankCertificateUpload',certId,bank)}">Վերբեռնել</button>
+    </div>
+  `)
+}
+
+async function submitBankCertificateUpload(certId,bank) {
+  const file = document.getElementById('bank-cert-file')?.files?.[0]
+  if(!file){ alert('Ընտրեք տեղեկանքի ֆայլը։'); return }
+  if(file.size>8*1024*1024){ alert('Ֆայլը չի կարող գերազանցել 8 ՄԲ-ը։'); return }
+  const button = document.getElementById('bank-cert-upload')
+  button.disabled = true
+  try {
+    let cert = currentBankCertificates.find(item=>item.bank===bank)
+    if(!cert) {
+      cert = {
+        id:certId||newId(),caseId:currentCase.id,subject:currentCase.applicantName,
+        bank,status:'applied',result:'',accountInfo:'',balance:'',currency:'AMD',
+        issueDate:'',expiryDate:'',appliedAt:today(),notes:'',
+        updatedAt:new Date().toISOString()
+      }
+      await apiPost({action:'saveBankCertificate',row:bankCertificateRow(cert)})
+      currentBankCertificates.push(cert)
+    }
+    const uploaded = await apiPost({
+      action:'uploadDocument',caseId:currentCase.id,documentId:cert.id,
+      typeId:'banks_resp',subject:cert.id,folderName:bank,fileName:file.name,
+      mimeType:file.type||'application/octet-stream',base64:await fileToBase64(file)
+    })
+    currentFiles.push({
+      id:newId(),caseId:currentCase.id,documentId:cert.id,typeId:'banks_resp',subject:cert.id,
+      fileName:uploaded.fileName,fileUrl:uploaded.fileUrl,fileId:uploaded.fileId,
+      folderId:uploaded.folderId,uploadedAt:new Date().toISOString()
+    })
+    closeModal()
+    renderDetail('docs')
+  } catch(e) {
+    button.disabled = false
+    alert('Տեղեկանքը չվերբեռնվեց՝ '+e.message)
+  }
 }
 
 function renderDocRow(dt, subj, doc) {
@@ -1707,7 +1953,7 @@ async function saveAndGenerate(){
     await new Promise(r=>setTimeout(r,400))
     dlText(genAppendix(caseData), 'Havaelvadz_'+A.name+'_'+today()+'.txt')
     btn.textContent='✅ Պահպանված է'
-    setTimeout(()=>{ currentCase=caseData; currentDocs=[]; currentDebts=[]; currentFiles=[]; showPage('case-detail'); document.getElementById('detail-title').textContent=A.name; renderDetailTabs(); renderDetail('info') }, 800)
+    setTimeout(()=>{ currentCase=caseData; currentDocs=[]; currentDebts=[]; currentBankCertificates=[]; currentFiles=[]; showPage('case-detail'); document.getElementById('detail-title').textContent=A.name; renderDetailTabs(); renderDetail('info') }, 800)
   } catch(e){
     alert('Սխալ՝ '+e.message)
     btn.disabled=false; btn.textContent='📄 Պահպանել և ստեղծել փաստաթղթերը'
