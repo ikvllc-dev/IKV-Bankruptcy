@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_mp3HbQLVb7gQK9Z3cvc9PRfdqe8DWrC4BiCclsTy8ZMv8zsPv2eMWQrsWRqjcISe6Q/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm7cJwcI5rRb91LVXFZjtVCQpyAqEaEZxrqZQ3FHsCBu4pWHrAKkPJ6wZrQJJop_kg/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -303,24 +303,38 @@ const COMPANY = {
 }
 
 const BANKS = [
-  '«ԱԿԲԱ ԲԱՆԿ» ԲԲԸ',
-  '«ԱՄԵՐԻԱԲԱՆԿ» ՓԲԸ',
-  '«ԱՄԻՕ ԲԱՆԿ» ՓԲԸ',
-  '«ԱյԴի Բանկ» ՓԲԸ',
-  '«ԱՐԱՐԱՏԲԱՆԿ» ԲԲԸ',
-  '«Արդշինբանկ» ԲԲԸ',
-  '«Արմսվիսբանկ» ՓԲԸ',
-  '«Արցախբանկ» ՓԲԸ',
-  '«ԲԻԲԼՈՍ ԲԱՆԿ ԱՐՄԵՆԻԱ» ՓԲԸ',
-  '«ԷՎՈԿԱԲԱՆԿ» ԲԲԸ',
-  '«Ինեկոբանկ» ՓԲԸ',
-  '«Կոնվերս Բանկ» ՓԲԸ',
-  '«ՀԱՅԷԿՈՆՈՄԲԱՆԿ» ԲԲԸ',
-  '«Մելլաթ Բանկ» ՓԲԸ',
-  '«Յունիբանկ» ԲԲԸ',
-  '«ՎՏԲ-Հայաստան Բանկ» ՓԲԸ',
-  '«Ֆասթ Բանկ» ՓԲԸ'
+  'ԱԿԲԱ ԲԱՆԿ ԲԲԸ',
+  'ԱՄԵՐԻԱԲԱՆԿ ՓԲԸ',
+  'ԱՄԻՕ ԲԱՆԿ ՓԲԸ',
+  'ԱյԴի Բանկ ՓԲԸ',
+  'ԱՐԱՐԱՏԲԱՆԿ ԲԲԸ',
+  'Արդշինբանկ ԲԲԸ',
+  'Արմսվիսբանկ ՓԲԸ',
+  'Արցախբանկ ՓԲԸ',
+  'ԲԻԲԼՈՍ ԲԱՆԿ ԱՐՄԵՆԻԱ ՓԲԸ',
+  'ԷՎՈԿԱԲԱՆԿ ԲԲԸ',
+  'Ինեկոբանկ ՓԲԸ',
+  'Կոնվերս Բանկ ՓԲԸ',
+  'ՀԱՅԷԿՈՆՈՄԲԱՆԿ ԲԲԸ',
+  'Մելլաթ Բանկ ՓԲԸ',
+  'Յունիբանկ ԲԲԸ',
+  'ՎՏԲ-Հայաստան Բանկ ՓԲԸ',
+  'Ֆասթ Բանկ ՓԲԸ'
 ]
+
+function armenianCompare(a,b) {
+  return String(a||'').localeCompare(String(b||''),'hy',{sensitivity:'base'})
+}
+
+function normalizeBankName(value) {
+  return String(value||'').replace(/[«»"]/g,'').replace(/\s+/g,' ').trim()
+}
+
+function findBankCertificate(bank,subject) {
+  return currentBankCertificates.find(item=>
+    normalizeBankName(item.bank)===normalizeBankName(bank)&&item.subject===subject
+  )
+}
 
 const DOC_TYPES = [
   {id:'passport',name:'Անձնագիր կամ նույնականացման քարտ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:true},
@@ -656,12 +670,14 @@ function renderDetail(tab) {
 }
 
 function renderPersonDocumentSections(subject,isSpouse) {
-  const allowedCategories = isSpouse
+  const allowedCategories = (isSpouse
     ? ['Բանկային փաստաթղթեր','Պետական մարմինների տեղեկանքներ']
-    : [...new Set(DOC_TYPES.map(item=>item.cat))]
+    : [...new Set(DOC_TYPES.map(item=>item.cat))]).sort(armenianCompare)
   let html = `<div class="summary-block-title" style="font-size:.8rem;margin-top:${isSpouse?'22px':'0'}">${isSpouse?'Ամուսնու կամ կնոջ փաստաթղթերը':'Դիմողի փաստաթղթերը'} · ${esc(subject)}</div>`
   allowedCategories.forEach(category=>{
-    const types = DOC_TYPES.filter(item=>item.cat===category && (!isSpouse||item.spouse))
+    const types = DOC_TYPES
+      .filter(item=>item.cat===category && (!isSpouse||item.spouse))
+      .sort((a,b)=>armenianCompare(a.name,b.name))
     if(!types.length) return
     html += `<div class="doc-group"><div class="summary-block-title">${esc(category)}</div>`
     types.forEach(type=>{
@@ -697,7 +713,9 @@ function debtMoney(value, currency='AMD') {
 
 function renderDebtsTab() {
   const total = currentDebts.reduce((sum,debt)=>sum+(Number(debt.totalAmount)||0),0)
-  const cards = currentDebts.map(debt=>renderDebtCard(debt)).join('')
+  const cards = [...currentDebts]
+    .sort((a,b)=>armenianCompare(a.creditor,b.creditor))
+    .map(debt=>renderDebtCard(debt)).join('')
   return `
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -882,7 +900,8 @@ async function submitDebtFile(debtId,typeId) {
   try {
     const uploaded = await apiPost({
       action:'uploadDocument',caseId:currentCase.id,documentId:debtId,
-      typeId,subject:debtId,folderName:`${debt.creditor} - ${debt.contractNumber||debt.id}`,
+      typeId,subject:debtId,
+      folderPath:[currentCase.applicantName,`${debt.creditor} - ${debt.contractNumber||debt.id}`],
       fileName:file.name,mimeType:file.type||'application/octet-stream',
       base64:await fileToBase64(file)
     })
@@ -929,8 +948,8 @@ ${new Date().toLocaleDateString('hy-AM')}
 }
 
 function renderBankCertificates(subject=currentCase.applicantName) {
-  const rows = BANKS.map(bank=>{
-    const cert = currentBankCertificates.find(item=>item.bank===bank&&item.subject===subject)
+  const rows = [...BANKS].sort(armenianCompare).map(bank=>{
+    const cert = findBankCertificate(bank,subject)
     return renderBankCertificateRow(bank,cert,subject)
   }).join('')
   const subjectCertificates = currentBankCertificates.filter(item=>item.subject===subject)
@@ -943,8 +962,8 @@ function renderBankCertificates(subject=currentCase.applicantName) {
 }
 
 function bankCertificatesReport() {
-  const rows = BANKS.map(bank=>{
-    const cert = currentBankCertificates.find(item=>item.bank===bank&&item.subject===currentCase.applicantName)
+  const rows = [...BANKS].sort(armenianCompare).map(bank=>{
+    const cert = findBankCertificate(bank,currentCase.applicantName)
     let value = 'Տեղեկանքը դեռ չի ստացվել'
     if(cert?.result==='no_accounts') value = `Հաշիվներ կամ տվյալներ չկան · ${cert.issueDate||''}`
     if(cert?.result==='accounts_found') {
@@ -990,7 +1009,7 @@ function bankCertificateRow(cert) {
 }
 
 async function setBankCertificateApplied(bank,subject) {
-  const existing = currentBankCertificates.find(item=>item.bank===bank&&item.subject===subject)
+  const existing = findBankCertificate(bank,subject)
   const cert = existing || {
     id:newId(),caseId:currentCase.id,subject,bank,
     result:'',accountInfo:'',balance:'',currency:'AMD',issueDate:'',expiryDate:'',
@@ -1005,7 +1024,7 @@ async function setBankCertificateApplied(bank,subject) {
 }
 
 function openBankCertificateModal(bank,subject) {
-  const cert = currentBankCertificates.find(item=>item.bank===bank&&item.subject===subject) || {
+  const cert = findBankCertificate(bank,subject) || {
     id:'',result:'no_accounts',accountInfo:'',balance:'',currency:'AMD',
     issueDate:'',notes:'',appliedAt:''
   }
@@ -1058,7 +1077,9 @@ async function saveBankCertificate(bank,subject) {
   button.disabled = true
   try {
     await apiPost({action:'saveBankCertificate',row:bankCertificateRow(cert)})
-    const index = currentBankCertificates.findIndex(item=>item.bank===bank&&item.subject===subject)
+    const index = currentBankCertificates.findIndex(item=>
+      normalizeBankName(item.bank)===normalizeBankName(bank)&&item.subject===subject
+    )
     if(index===-1) currentBankCertificates.push(cert)
     else currentBankCertificates[index] = cert
     closeModal()
@@ -1088,7 +1109,7 @@ async function submitBankCertificateUpload(certId,bank,subject) {
   const button = document.getElementById('bank-cert-upload')
   button.disabled = true
   try {
-    let cert = currentBankCertificates.find(item=>item.bank===bank&&item.subject===subject)
+    let cert = findBankCertificate(bank,subject)
     if(!cert) {
       cert = {
         id:certId||newId(),caseId:currentCase.id,subject,
@@ -1101,7 +1122,8 @@ async function submitBankCertificateUpload(certId,bank,subject) {
     }
     const uploaded = await apiPost({
       action:'uploadDocument',caseId:currentCase.id,documentId:cert.id,
-      typeId:'banks_resp',subject:cert.id,folderName:bank,fileName:file.name,
+      typeId:'banks_resp',subject:cert.id,
+      folderPath:[subject,normalizeBankName(bank)],fileName:file.name,
       mimeType:file.type||'application/octet-stream',base64:await fileToBase64(file)
     })
     currentFiles.push({
@@ -1632,7 +1654,7 @@ function initQuiz() {
 
 function buildBankGrid(pfx) {
   const g = document.getElementById(pfx+'bg')
-  if(g) g.innerHTML = BANKS.map(b=>`<button class="bank-btn" data-bank="${b}" onclick="this.classList.toggle('selected')"><span class="ck">✓</span>${b}</button>`).join('')
+  if(g) g.innerHTML = [...BANKS].sort(armenianCompare).map(b=>`<button class="bank-btn" data-bank="${b}" onclick="this.classList.toggle('selected')"><span class="ck">✓</span>${b}</button>`).join('')
 }
 
 function qStore(){ return qMode==='applicant'?A:S }
