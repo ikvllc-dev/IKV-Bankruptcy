@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDKbUVU5V5ywtykkCVhefcyPUh-Yu-cgUBR0FeTEHrnvc_M182MgqwGd3JREyhx0c86w/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1KOSLKpXeTaTvyFGkQzf9AoK1JwHWRHYCPVJ7oSNQO1MvRiKLtkdrMTywLARAVTcCMw/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -565,12 +565,17 @@ async function openCase(caseId) {
     currentBankCertificates = cached.bankCertificates
     currentFiles = cached.files
   } else {
-    ;[currentDocs, currentDebts, currentBankCertificates, currentFiles] = await Promise.all([
-      apiGet('getDocs', {caseId}),
-      apiGet('getDebts', {caseId}).catch(()=>[]),
-      apiGet('getBankCertificates', {caseId}).catch(()=>[]),
-      apiGet('getFiles', {caseId})
-    ])
+    const bundle = await apiGet('getCaseBundle', {caseId})
+    currentDocs = bundle.documents||[]
+    currentDebts = bundle.debts||[]
+    currentBankCertificates = bundle.bankCertificates||[]
+    currentFiles = bundle.files||[]
+    if(bundle.driveFolderId) {
+      currentCase.driveFolderId = bundle.driveFolderId
+      currentCase.driveFolderUrl = bundle.driveFolderUrl
+      const caseIndex = allCases.findIndex(item=>item.id===caseId)
+      if(caseIndex!==-1) allCases[caseIndex] = currentCase
+    }
     caseBundleCache.set(caseId,{
       documents:currentDocs,debts:currentDebts,
       bankCertificates:currentBankCertificates,files:currentFiles,
@@ -626,6 +631,7 @@ function renderDetail(tab) {
           <button class="btn btn-sm btn-gold" onclick="editCaseModal()">✎ Խմբագրել</button>
           ${c.driveFolderUrl?`<a class="btn btn-sm" href="${esc(c.driveFolderUrl)}" target="_blank" rel="noopener">📁 Բացել Drive պանակը</a>`:''}
           ${c.lawyerApproved==='YES'?'<span class="badge badge-green">✓ Հաստատված</span>':'<button class="btn btn-sm btn-green" onclick="approveLawyer()">⚖ Հաստատել</button>'}
+          <button class="btn btn-sm btn-red" onclick="openDeleteCaseModal()">Ջնջել գործը</button>
         </div>
       </div>
       ${married?`<div class="card">
@@ -1511,6 +1517,58 @@ async function approveLawyer() {
   await apiPost({action:'saveCase', row:buildCaseRow(updated)})
   currentCase = updated
   renderDetail('info')
+}
+
+function openDeleteCaseModal() {
+  const c = currentCase
+  if(!c) return
+  openModal(`
+    <div class="modal-title">Ջնջել գործը<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-red">
+      Կջնջվեն գործը և դրա հետ կապված փաստաթղթերի, պարտքերի, բանկային տեղեկանքների ու ֆայլերի գրառումները։
+      Drive պանակը կտեղափոխվի Աղբարկղ և անհրաժեշտության դեպքում հնարավոր կլինի վերականգնել։
+    </div>
+    <div class="field">
+      <label>Հաստատելու համար ճշգրիտ գրեք հաճախորդի անունը՝ ${esc(c.applicantName)}</label>
+      <input id="delete-case-confirmation" autocomplete="off"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-red" id="delete-case-button" onclick="confirmDeleteCase()">Ջնջել գործը</button>
+    </div>
+  `)
+}
+
+async function confirmDeleteCase() {
+  const c = currentCase
+  if(!c) return
+  const confirmationName = document.getElementById('delete-case-confirmation')?.value.trim()||''
+  if(confirmationName!==c.applicantName.trim()) {
+    alert('Հաճախորդի անունը չի համընկնում։')
+    return
+  }
+  const button = document.getElementById('delete-case-button')
+  button.disabled = true
+  button.textContent = 'Ջնջվում է...'
+  try {
+    await apiPost({action:'deleteCase',caseId:c.id,confirmationName})
+    allCases = allCases.filter(item=>item.id!==c.id)
+    allDocuments = allDocuments.filter(item=>item.caseId!==c.id)
+    caseBundleCache.delete(c.id)
+    currentCase = null
+    currentDocs = []
+    currentDebts = []
+    currentBankCertificates = []
+    currentFiles = []
+    dashboardLoadedAt = Date.now()
+    closeModal()
+    showPage('cases')
+    document.getElementById('cases-list').innerHTML = renderCasesTable(allCases)
+  } catch(e) {
+    button.disabled = false
+    button.textContent = 'Ջնջել գործը'
+    alert('Գործը չջնջվեց՝ '+e.message)
+  }
 }
 
 // ═══════════════════════════════════════════════
