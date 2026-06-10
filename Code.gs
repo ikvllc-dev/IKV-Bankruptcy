@@ -56,7 +56,7 @@ function authorizeDocumentGeneration() {
 }
 
 const HEADERS = {
-  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity'],
+  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy'],
   Documents: ['id','caseId','typeId','subject','status','issueDate','expiryDate','appliedAt','updatedAt'],
   Debts: ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'],
   BankCertificates: ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt'],
@@ -679,6 +679,10 @@ function importIngaApplicantVahagnSpouseCase() {
     passport: source.spousePassport,
     passportDate: source.spousePassportDate,
     passportBy: source.spousePassportBy,
+    noPassport: source.spouseNoPassport,
+    idCard: source.spouseIdCard,
+    idCardDate: source.spouseIdCardDate,
+    idCardBy: source.spouseIdCardBy,
     additionalIdentity: source.spouseAdditionalIdentity,
     regAddr: source.spouseRegAddr,
     notifAddr: source.spouseNotifAddr || source.spouseRegAddr,
@@ -691,6 +695,10 @@ function importIngaApplicantVahagnSpouseCase() {
     spousePassport: source.passport,
     spousePassportDate: source.passportDate,
     spousePassportBy: source.passportBy,
+    spouseNoPassport: source.noPassport,
+    spouseIdCard: source.idCard,
+    spouseIdCardDate: source.idCardDate,
+    spouseIdCardBy: source.idCardBy,
     spouseAdditionalIdentity: source.additionalIdentity,
     spousePsn: source.psn,
     spouseRegAddr: source.regAddr,
@@ -984,6 +992,10 @@ function getCaseRequestPerson(caseRow, subject) {
     identityNumber: caseRow.passport,
     identityIssueDate: caseRow.passportDate,
     identityIssuer: caseRow.passportBy,
+    noPassport: caseRow.noPassport,
+    idCard: caseRow.idCard,
+    idCardDate: caseRow.idCardDate,
+    idCardBy: caseRow.idCardBy,
     registrationAddress: caseRow.regAddr,
     psn: caseRow.psn,
     additionalIdentity: caseRow.additionalIdentity
@@ -994,6 +1006,10 @@ function getCaseRequestPerson(caseRow, subject) {
     identityNumber: caseRow.spousePassport,
     identityIssueDate: caseRow.spousePassportDate,
     identityIssuer: caseRow.spousePassportBy,
+    noPassport: caseRow.spouseNoPassport,
+    idCard: caseRow.spouseIdCard,
+    idCardDate: caseRow.spouseIdCardDate,
+    idCardBy: caseRow.spouseIdCardBy,
     registrationAddress: caseRow.spouseRegAddr,
     psn: caseRow.spousePsn,
     additionalIdentity: caseRow.spouseAdditionalIdentity
@@ -1001,9 +1017,8 @@ function getCaseRequestPerson(caseRow, subject) {
   person.fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject
   person.fullNameGenitive = person.fullName + '-ի'
   person.identityIssueDate = formatRequestDate(person.identityIssueDate)
-  const primaryIdentity = 'անձնագիր կամ նույնականացման քարտ՝ ' + person.identityNumber + ', տրված՝ ' +
-    person.identityIssueDate + 'թ. ' + person.identityIssuer + '-ի կողմից'
-  const identityParts = [primaryIdentity, person.additionalIdentity].filter(Boolean)
+  person.idCardDate = formatRequestDate(person.idCardDate)
+  const identityParts = getPersonIdentityParts(person)
   person.identityInline = '/' + identityParts.join(', ') + '/'
   person.identityWithPsnAndAddress = '/' + identityParts.concat([
     'ՀԾՀ՝ ' + person.psn,
@@ -1017,16 +1032,32 @@ function getCaseRequestPerson(caseRow, subject) {
 }
 
 function validateRequestPerson(person) {
+  const identityParts = getPersonIdentityParts(person)
   const required = [
     ['full name', person.fullName],
-    ['identity document number', person.identityNumber],
-    ['identity document issue date', person.identityIssueDate],
-    ['identity document issuer', person.identityIssuer],
+    ['passport or identification card', identityParts.length ? 'YES' : ''],
     ['registration address', person.registrationAddress],
     ['public services number', person.psn]
   ]
   const missing = required.filter(item => !item[1]).map(item => item[0])
   if (missing.length) throw new Error('Missing client data: ' + missing.join(', '))
+}
+
+function getPersonIdentityParts(person) {
+  const parts = []
+  const hasPassport = String(person.noPassport || '').toUpperCase() !== 'YES' &&
+    (person.identityNumber || person.identityIssueDate || person.identityIssuer)
+  if (hasPassport) {
+    parts.push('անձնագիր՝ ' + (person.identityNumber || '') +
+      (person.identityIssueDate ? ', տրված՝ ' + person.identityIssueDate + 'թ.' : '') +
+      (person.identityIssuer ? ' ' + person.identityIssuer + '-ի կողմից' : ''))
+  }
+  if (person.idCard || person.idCardDate || person.idCardBy) {
+    parts.push('նույնականացման քարտ՝ ' + (person.idCard || '') +
+      (person.idCardDate ? ', տրված՝ ' + person.idCardDate + 'թ.' : '') +
+      (person.idCardBy ? ' ' + person.idCardBy + '-ի կողմից' : ''))
+  }
+  return parts.filter(part => !/չկա/i.test(part))
 }
 
 function getRequestRepresentative(input) {
