@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznHYagBNnA8_XxYI7IY3vUzl7NKxLR6bsbsEzMHY8-StclVXy5uzp-hvQjqqdKawZUFw/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmzHlsDM56RHbqT9bQvUBk_Urv7wecYREg2LcT6eWqDMXQH66CnlmSXEfA7mpCp9f-hw/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -518,14 +518,25 @@ function renderDashboard() {
     <div class="metric"><div class="metric-val" style="color:var(--amber)">${expiring.length}</div><div class="metric-lbl">Մինչև 14 օր</div></div>
     <div class="metric"><div class="metric-val" style="color:var(--green)">${cases.filter(c=>c.lawyerApproved==='YES').length}</div><div class="metric-lbl">Փաստաբանի կողմից հաստատված</div></div>
   `
-  const urgent = [...expired, ...expiring].slice(0,8)
+  const urgent = [...expired, ...expiring]
+  const urgentByCase = cases.map(caseData=>{
+    const items = urgent.filter(item=>item.caseId===caseData.id)
+    return {
+      caseData,
+      items,
+      overdue:items.filter(item=>item.days<0).length,
+      expiring:items.filter(item=>item.days>=0).length
+    }
+  }).filter(group=>group.items.length)
+    .sort((a,b)=>a.items[0].days-b.items[0].days)
   document.getElementById('dash-alerts').innerHTML = `<div class="card">
     <div class="card-title">⏱ Ուշադրություն պահանջող ժամկետներ</div>
-    ${urgent.length?urgent.map(d=>`
-      <div class="alert ${d.days<0?'alert-red':'alert-amber'} clickable" onclick="${inlineCall('openCase',d.caseId)}" style="cursor:pointer">
-        <strong>${d.days<0?'Ժամկետանց':'Մոտ ժամկետ'}:</strong>
-        <span>${esc(d.title)} · ${esc(d.subject||d.caseData.applicantName)} · Գործ՝ ${esc(d.caseData.applicantName)} · ${esc(d.expiryDate)}
-        (${d.days<0?Math.abs(d.days)+' օր անցած':d.days+' օր մնացած'})</span>
+    ${urgentByCase.length?urgentByCase.map(group=>`
+      <div class="alert ${group.overdue?'alert-red':'alert-amber'} clickable" onclick="${inlineCall('openCase',group.caseData.id)}" style="cursor:pointer;display:block">
+        <strong>${esc(group.caseData.applicantName)} — ${group.overdue?group.overdue+' ժամկետանց':''}${group.overdue&&group.expiring?', ':''}${group.expiring?group.expiring+' մոտ ժամկետ':''}</strong>
+        <span style="display:block;margin-top:5px">${group.items.slice(0,3).map(item=>
+          `${esc(item.title)} · ${esc(item.subject||group.caseData.applicantName)} · ${esc(item.expiryDate)} (${item.days<0?Math.abs(item.days)+' օր անցած':item.days+' օր մնացած'})`
+        ).join('<br>')}${group.items.length>3?`<br>և ևս ${group.items.length-3} փաստաթուղթ կամ տեղեկանք`:''}</span>
       </div>
     `).join(''):'<div class="alert alert-green"><strong>Ամեն ինչ կարգին է։</strong><span>Առաջիկա 14 օրվա ընթացքում ժամկետանց կամ մոտեցող փաստաթուղթ չկա։</span></div>'}
   </div>`
@@ -1052,6 +1063,7 @@ function bankCertificatesReport() {
 function renderBankCertificateRow(bank,cert,subject) {
   const status = cert?.status||'none'
   const files = cert ? currentFiles.filter(file=>file.typeId==='banks_resp'&&file.subject===cert.id) : []
+  let expiryEl = ''
   let statusEl = '<span class="status-pill sp-none">Չի դիմվել</span>'
   if(status==='applied') statusEl = '<span class="status-pill sp-applied">Սպասում ենք պատասխանին</span>'
   if(status==='received') {
@@ -1060,6 +1072,16 @@ function renderBankCertificateRow(bank,cert,subject) {
       : cert.result==='accounts_found'
         ? '<span class="status-pill sp-received">Հաշիվներ կան</span>'
         : '<span class="status-pill sp-applied">Ստացված է, պետք է ստուգել</span>'
+    if(cert.expiryDate) {
+      const dl = daysLeft(cert.expiryDate)
+      if(dl<=0) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--red)">❌ Ժամկետանց · ${esc(cert.expiryDate)} (${Math.abs(dl)} օր անցած)</div>`
+      } else if(dl<=14) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--amber)">⚠ ${dl} օր (${esc(cert.expiryDate)})</div>`
+      } else {
+        expiryEl = `<div style="font-size:.71rem;color:var(--green)">✓ ${dl} օր</div>`
+      }
+    }
   }
   const result = cert?.result==='accounts_found'
     ? `<div style="font-size:.75rem;color:var(--ink-muted);margin-top:4px">${esc(cert.accountInfo||'Հաշվի տվյալները նշված չեն')} · Մնացորդ՝ ${debtMoney(cert.balance,cert.currency)}</div>`
@@ -1072,6 +1094,7 @@ function renderBankCertificateRow(bank,cert,subject) {
   return `<div class="doc-row">
     <div>
       <div class="doc-title">${esc(bank)}</div>
+      ${expiryEl}
       ${result}
       <div class="doc-files">${files.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">${esc(file.fileName)}</a>`).join('')}</div>
     </div>

@@ -233,6 +233,7 @@ function doPost(e) {
     else if (action === 'generateRegisterRequest') result = generateRegisterRequest(data)
     else if (action === 'deleteCase') result = deleteCase(data)
     else if (action === 'importIngaApplicantVahagnSpouseCase') result = importIngaApplicantVahagnSpouseCase()
+    else if (action === 'repairBankCertificateExpiryDates') result = repairBankCertificateExpiryDates()
     else if (action === 'audit') result = appendRow('AuditLog', validateRow('AuditLog', data.row))
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
@@ -580,6 +581,43 @@ function legacyCopyId(kind, caseId, sourceId) {
   return 'legacy-' + digest.slice(0, 12).map(function(byte) {
     return ('0' + ((byte + 256) % 256).toString(16)).slice(-2)
   }).join('')
+}
+
+function repairBankCertificateExpiryDates() {
+  const sheet = getOrCreateSheet('BankCertificates')
+  const values = sheet.getDataRange().getDisplayValues()
+  if (values.length < 2) return { status: 'ok', repaired: 0 }
+
+  const headers = values[0]
+  const statusIndex = headers.indexOf('status')
+  const issueDateIndex = headers.indexOf('issueDate')
+  const expiryDateIndex = headers.indexOf('expiryDate')
+  if ([statusIndex, issueDateIndex, expiryDateIndex].some(function(index) { return index === -1 })) {
+    throw new Error('BankCertificates date columns were not found')
+  }
+
+  let repaired = 0
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex++) {
+    const status = values[rowIndex][statusIndex]
+    const issueDate = values[rowIndex][issueDateIndex]
+    const expiryDate = values[rowIndex][expiryDateIndex]
+    if (status === 'received' && issueDate && !expiryDate) {
+      sheet.getRange(rowIndex + 1, expiryDateIndex + 1)
+        .setValue(addDaysToIsoDate(issueDate, 90))
+      repaired++
+    }
+  }
+  return { status: 'ok', repaired: repaired }
+}
+
+function addDaysToIsoDate(dateText, days) {
+  const parts = String(dateText || '').split('-').map(Number)
+  if (parts.length !== 3 || parts.some(function(value) { return !value })) {
+    throw new Error('Invalid date: ' + dateText)
+  }
+  const date = new Date(parts[0], parts[1] - 1, parts[2])
+  date.setDate(date.getDate() + days)
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd')
 }
 
 function uploadDocument(data) {
