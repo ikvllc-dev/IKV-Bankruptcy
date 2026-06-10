@@ -56,7 +56,7 @@ function authorizeDocumentGeneration() {
 }
 
 const HEADERS = {
-  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl'],
+  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity'],
   Documents: ['id','caseId','typeId','subject','status','issueDate','expiryDate','appliedAt','updatedAt'],
   Debts: ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'],
   BankCertificates: ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt'],
@@ -225,6 +225,34 @@ const STATE_REQUEST_TEMPLATES = {
   }
 }
 
+const POA_TEMPLATES = {
+  proc_poa: {
+    typeId: 'proc_poa',
+    title: '/Լ Ի Ա Զ Ո Ր Ա Գ Ի Ր/',
+    paragraphs: [
+      'Ես՝ {{client.fullNameWithSuffix}} {{client.identityWithPsnAndAddress}} լիազորում եմ {{poa.representatives}} ինձ հետ կապված ցանկացած հարցերով լինել իմ ներկայացուցիչը, իմ փոխարեն հանդես գալ, ներկայացնել և պաշտպանել իմ շահերը Հայաստանի Հանրապետության բոլոր պետական և ոչ պետական մարմիններում, հիմնարկ ձեռնարկություններում, կազմակերպություններում, իրավաբանական անձանց կամ այդպիսի կարգավիճակից օգտվող ցանկացած այլ միավորներում:',
+      'Լիազորում եմ հանդես գալ ՀՀ կադաստրի կոմիտեում, ՀՀ Արդարադատության նախարարությունում, ՀՀ ՔԿԱԳ սպասարկման կենտրոններում, ՀՀ Ոստիկանության «Ճանապարհային ոստիկանություն» ծառայությունում, ՀՀ տարածքային կառավարման և ենթակառուցվածքների նախարարությունում, ՀՀ պետական եկամուտների կոմիտեում, «Կենտրոնական դեպոզիտարիա» ԲԲ ընկերության հետ հարաբերություններում, ՀՀ աշխատանքի և սոցիալական հարցերի նախարարության, ՀՀ իրավաբանական անձանց պետական ռեգիստրի գործակալությունում, ՀՀ էկոնոմիկայի նախարարությունում, ՀՀ ֆինանսների նախարարությունում, ՀՀ Ներքին գործերի նախարարությունում, ՀՀ բարձր տեխնոլոգիական արդյունաբերության նախարարությունում, և հանձնել դիմումներ, բողոքներ, հարցումներ, ստանալ իմ անվամբ ցանկացած գույքի նկատմամբ գրանցված իրավունքների մասին առկայության(բացակայության) վերաբերյալ տեղեկություններ, ինչպես նաև ցանկացած այլ տեսակի տեղեկություններ:',
+      'Լիազորում եմ իմ անունից հանդես գալ բոլոր ատյանների ու տեսակի դատարաններում, ՀՀ Արբիտրաժային դատարաններում՝ կատարելով իմ իրավունքների ու օրինական շահերի պաշտպանությանն ուղղված գործողություններ, այդ թվում նաև՝ դատական նիստի ժամանակի և վայրի, ինչպես նաև ՀՀ քաղաքացիական դատավարության օրենսգրքով նախատեսված դեպքերում՝ առանձին դատավարական գործողություններ կատարելու մասին ծանուցումներ ստանալը, հանձնելու դիմումներ ու այլ փաստաթղթեր, ստանալու ինձ առնչվող փաստաթղթեր ու տեղեկություններ՝ օժտելով ՀՀ վարչական դատավարության օրենսգրքի 22 հոդվածով, ՀՀ քաղաքացիական դատավարության օրենսգրքի 56 հոդվածի 1-ին մասի 1-12 կետերով սահմանված բոլոր իրավունքներով՝ 1) հայցադիմումը ստորագրելու. 2) արբիտրաժային համաձայնություն կնքելու և վեճն արբիտրաժ հանձնելու վերաբերյալ համաձայնություն տալու. 3) հայցապահանջներից ամբողջովին կամ մասնակիորեն հրաժարվելու. 4) հայցապահանջներն ամբողջովին կամ մասնակիորեն ընդունելու. 5) հայցի առարկան և հիմքը կամ դրանցից յուրաքանչյուրը փոխելու. 6) հաշտության համաձայնություն կնքելու. 7) հաշտարարության վերաբերյալ համաձայնություն կնքելու. 8) արտոնագրված հաշտարարի մասնակցությամբ հաշտարարական գործընթացին մասնակցելու. 9) լիազորություններն այլ անձի փոխանցելու (վերալիազորում կատարելու). 10) դատական ծանուցումները և դատավարական փաստաթղթերն ստանալու. 11) դատական ակտը բողոքարկելու. 12) կատարողական թերթ տալու վերաբերյալ դիմում ներկայացնելու, 14) բողոքարկելու դատական ակտը և դիմելու իրավասու անձանց` վճռաբեկ բողոք բերելու խնդրանքով:',
+      'Լիազորում եմ լինել իմ ներկայացուցիչը «ԱՔՌԱ Քրեդիտ Ռեփորթինգ» ՓԲԸ-ում կատարել ցանկացած անհրաժեշտ գործողություն՝ կապված իմ վարկային պատմության ճշգրտման, տեղեկությունների վիճարկման և այլ հարցերով, ստանալ ցանկացած վարկային զեկույց։ Ինչպես նաև լիազորում եմ իմ անունից «ՀԱՅՓՈՍՏ» ՓԲԸ-ից ստանալու ինձ հասցեագրված ցանկացած առաքանի և նամակ:',
+      'Լիազորում եմ լինել իմ ներկայացուցիչը ՀՀ Հարկադիր կատարումն ապահովող ծառայությունում, իմ փոխարեն մասնակցելու ինձ կամ ինձ լիազորած ցանկացած անձի հետ կապված ցանկացած կատարողական վարույթին, դատական ծանուցումները և դատավարական փաստաթղթերն ստանալ, կատարողական թերթ տալու վերաբերյալ դիմում ներկայացնել, ներկայացնել կատարողական թերթ և հետ վերցնել, բռնագանձված գույքն ու (կամ) դրամն ստանալ և հարկադիր կատարողի գործողությունների դեմ բողոքարկել: Լիազորում եմ նաև ֆինանսական համակարգի հաշտարարի հետ ցանկացած տեսակի իրավահարաբերություններում լինել իմ ներկայացուցիչը։',
+      'Լիազորագիրը տրված է երեք տարի ժամկետով, վերալիազորման իրավունքով:'
+    ]
+  },
+  notarial_poa: {
+    typeId: 'notarial_poa',
+    title: '/Լ Ի Ա Զ Ո Ր Ա Գ Ի Ր/',
+    paragraphs: [
+      'Ես՝ {{client.fullNameWithSuffix}} {{client.identityWithPsnAndAddress}} լիազորում եմ {{poa.representatives}} ինձ հետ կապված ցանկացած հարցերով լինել իմ ներկայացուցիչը, իմ անունից հանդես գալ ՀՀ պետական և ոչ պետական մարմիններում և կազմակերպություններում, ՀՀ Կենտրոնական Բանկում, ՀՀ Կենտրոնական Բանկի կողմից վերահսկվող բոլոր առևտրային բանկերում և վարկային կազմակերպություններում։ Լիազորում եմ հանդես գալ Պետական եկամուտների կոմիտեում, ստանալ հարկային գաղտնիք կազմող ցանկացած տեղեկատվություն, անհատական հաշվի քաղվածքներ, կատարել վճարումներ, ներկայացնել դիմումներ: Լիազորում եմ ստանալ և/կամ ներկայացնել փաստաթղթեր, պայմանագրեր, վարկային պայմանագրեր, այդ թվում՝ երաշխավորության պայմանագրեր, այդ պայմանագրերի լուծման, փոփոխման, լրացման համաձայնագրեր, ծանուցումներ, պայմանագրի լուծման առաջարկներ, դիմումներ, համաձայնություններ, տեղեկանքներ, թույլտվություններ, հայտարարություններ, տրամադրել տեղեկություններ, կատարել վճարումներ, ստանալ տեղեկություններ, տեղեկանքներ, ցանկացած բնույթի ինֆորմացիա՝ հաշվի և հաշվով կատարված գործառնությունների վերաբերյալ: Լիազորում եմ իմ անունից բացել և/կամ փակել բանկային հաշիվներ, իրականացնել տվյալների փոփոխություն, KYC փաստաթղթերի ստորագրություն, ստանալու «Բանկային ավանդների ներգրավման մասին» Հայաստանի Հանրապետության օրենքի 6-րդ հոդվածով նախատեսված հաշվի քաղվածք, վարկի քաղվածք կամ «Սպառողական կրեդիտավորման մասին» Հայաստանի Հանրապետության օրենքի 17-րդ հոդվածի 2-րդ մասով նախատեսված տեղեկատվություն պարունակող փաստաթուղթ, իրացնելու «Սպառողական կրեդիտավորման մասին» Հայաստանի Հանրապետության օրենքի 17-րդ հոդվածով ինձ վերապահված բոլոր իրավունքները, այդ թվում նաև լիազորում եմ հրաժարվելու «Սպառողական կրեդիտավորման մասին» Հայաստանի Հանրապետության օրենքի 17-րդ հոդվածի 1-ին և 2-րդ մասերով սահմանված տեղեկատվությունն էլեկտրոնային կապի միջոցով ստանալու իրավունքից՝ պարտադիր ներկայացման տեղեկատվությունը իր կողմից մատնանշված փոստային կամ կապի այլ միջոցներով ստանալու պայմանով, միակողմանի փոփոխելու հաղորդակցման միջոցը, «Սպառողական կրեդիտավորման մասին» Հայաստանի Հանրապետության օրենքի 17-րդ հոդվածի 1-ին և 2-րդ մասերով սահմանված տեղեկատվությունն ստանալու կրեդիտավորողի տարածքում՝ առձեռն:',
+      'Լիազորում եմ ստանալ ինձ՝ որպես բանկի հաճախորդին սպասարկելու կապակցությամբ տվյալ բանկին հայտնի դարձած իմ հաշիվների վերաբերյալ տեղեկությունները, իմ հանձնարարությամբ կամ հօգուտ ինձ կատարված գործառնությունների վերաբերյալ տեղեկությունները, ինչպես նաև իմ առևտրային գաղտնիքը, գործունեության ցանկացած ծրագրի կամ մշակման, գյուտի, արդյունաբերական դիզայնի մասին տեղեկությունները և իմ վերաբերյալ ցանկացած այլ տեղեկություն, որը ես մտադիր եմ եղել գաղտնի պահել, և բանկը տեղյակ է կամ կարող էր տեղյակ լինել այդ մտադրության վերաբերյալ: Լիազորում եմ լինել իմ ներկայացուցիչը ԱՔՌԱ վարկային բյուրոյում ստանալ ցանկացած վարկային զեկույց։ Լիազորում եմ նաև իմ անունից հանդես գալ ՀՀ կենտրոնական դեպոզիտարիայում, կատարել հարցումներ, հանձնել և ստանալ ցանկացած փաստաթուղթ։ Ինչպես նաև լիազորում եմ իմ անունից «ՀԱՅՓՈՍՏ» ՓԲԸ-ից ստանալու ինձ հասցեագրված ցանկացած առաքանի և նամակ:',
+      'Լիազորում եմ ինձ ներկայացնելու Հայաստանի Հանրապետության հարկադիր կատարման ծառայությունում իմ՝ որպես պահանջատեր և/կամ պարտապան և/կամ երրորդ անձ մասնակցությամբ հարուցված կամ հարուցվելիք բոլոր կատարողական վարույթներով։ Ներկայացուցչին վերապահում եմ կատարողական վարույթի հետ կապված օրենքով թույլատրելի բոլոր գործողությունների կատարման լիազորություն, այդ թվում՝ ծանոթանալ կատարողական վարույթի նյութերին, ստանալ դրանց պատճենները, կատարել քաղվածքներ, լուսապատճեններ և լուսանկարներ, մասնակցել բոլոր կատարողական գործողություններին, ներկայացնել դիմումներ, միջնորդություններ, ապացույցներ, բացատրություններ և դիրքորոշումներ, հայտնել բացարկներ, ստանալ կատարողական վարույթի բոլոր փաստաթղթերը, ծանուցումները և ակտերը։ Լիազորում եմ բողոքարկել հարկադիր կատարողի որոշումները, գործողությունները և անգործությունը, ինչպես նաև ներկայացնել համապատասխան դիմումներ և բողոքներ, լիազորում եմ վիճարկումն ու բողոքարկումն իրականացնել նաև դատական կարգով։ Լիազորում եմ ներկայացնել կատարման ենթակա ակտի հարկադիր կատարման դիմում։ Ներկայացնել միջնորդություն պահանջատիրոջ իրավահաջորդությամբ փոխարինման վերաբերյալ (պահանջի զիջման հիմքով)։ Լիազորում եմ ներկայացնել միջնորդություններ հարկադիր կատարողին՝ կատարման հետաձգման, տարաժամկետման, կատարման եղանակի կամ կարգի սահմանման կամ փոփոխման վերաբերյալ, ինչպես նաև ներկայացնել համապատասխան դիմումներ, հայցեր կամ հայցադիմումներ դատարան։ Լիազորում եմ իմ անունից հրաժարվել պահանջից ամբողջությամբ կամ մասնակիորեն, ստանալ պահանջատիրոջը հասանելիք գույքը, ներառյալ դրամական միջոցները, կնքել բռնագանձման հերթականությունը փոփոխելու մասին համաձայնություն։ Կնքել հաշտության համաձայնություն, իրականացնել օրենքով նախատեսված կամ չարգելված այլ բոլոր գործողությունները, որոնք առնչվում են կատարողական վարույթին, իրացնել բոլոր իրավունքներն ու լիազորությունները, որոնք բխում են կատարողական վարույթում այդ պահին իմ ունեցած իրավական կարգավիճակից: Լիազորում եմ կատարել օրենքով չարգելված բոլոր այլ գործողությունները, որոնք անհրաժեշտ են իմ իրավունքների և օրինական շահերի պաշտպանության համար կատարողական վարույթում:',
+      'Լիազորագիրը տրված է երեք տարի ժամկետով, վերալիազորման իրավունքով:'
+    ]
+  }
+}
+
+const POA_REPRESENTATIVES_TEXT =
+  'փաստաբան Հովհաննես Գրիգորի Հարությունյանին /նույնականացման քարտ 009987561, տրված 20.02.2018թ. 011-ի կողմից, անձնագիր՝ AR0598051, տրված՝ 21.02.2018, 011-ի կողմից, հաշվառված ք. Երևան, Արհեստավորների 2-րդ փողոց տուն 8 հասցեում, փաստաբանական գործունեության արտոնագիր N2332/, և/կամ Կարինե Նաիրիի Ավետիսյանին /անձնագիր AR0610106, տրված 08.01.2018, 001-ի կողմից, նույնականացման քարտ՝ 013922554, տրված՝ 27.01.2022թ., 011-ի կողմից, հաշվառված Գեղարքունիքի մարզ, գ. Կարճաղբյուր 15 փ. 5-րդ տուն հասցեում/, և/կամ Գրիգոր Նիկոլի Հարությունյանին /անձնագիր՝ AO0421258, տրված՝ 05.12.2025թ., 067-ի կողմից, նույնականացման քարտ՝ 011598737, տրված՝ 07.12.2020թ., 011-ի կողմից, հաշվառված ք. Վանաձոր, Երևանյան խճղ., 147, 2շ., 5բնկ. հասցեում/'
+
 const ALLOWED_SHEETS = Object.freeze(Object.keys(HEADERS))
 let spreadsheetCache = null
 
@@ -370,6 +398,7 @@ function doPost(e) {
     else if (action === 'uploadDocument') result = uploadDocument(data)
     else if (action === 'generateRegisterRequest') result = generateRegisterRequest(data)
     else if (action === 'generateStateRequest') result = generateStateRequest(data)
+    else if (action === 'generatePoa') result = generatePoa(data)
     else if (action === 'deleteCase') result = deleteCase(data)
     else if (action === 'importIngaApplicantVahagnSpouseCase') result = importIngaApplicantVahagnSpouseCase()
     else if (action === 'repairBankCertificateExpiryDates') result = repairBankCertificateExpiryDates()
@@ -650,6 +679,7 @@ function importIngaApplicantVahagnSpouseCase() {
     passport: source.spousePassport,
     passportDate: source.spousePassportDate,
     passportBy: source.spousePassportBy,
+    additionalIdentity: source.spouseAdditionalIdentity,
     regAddr: source.spouseRegAddr,
     notifAddr: source.spouseNotifAddr || source.spouseRegAddr,
     psn: source.spousePsn,
@@ -661,6 +691,7 @@ function importIngaApplicantVahagnSpouseCase() {
     spousePassport: source.passport,
     spousePassportDate: source.passportDate,
     spousePassportBy: source.passportBy,
+    spouseAdditionalIdentity: source.additionalIdentity,
     spousePsn: source.psn,
     spouseRegAddr: source.regAddr,
     spouseNotifAddr: source.notifAddr || source.regAddr,
@@ -841,6 +872,109 @@ function generateStateRequest(data) {
   }
 }
 
+function generatePoa(data) {
+  const caseId = String(data.caseId || '')
+  const typeId = String(data.typeId || '')
+  const subject = String(data.subject || '')
+  if (!caseId || !typeId || !subject) throw new Error('Missing case, POA type, or subject')
+
+  const template = POA_TEMPLATES[typeId]
+  if (!template) throw new Error('No POA template is configured for: ' + typeId)
+
+  const caseRow = getRows('Cases').find(row => row.id === caseId)
+  if (!caseRow) throw new Error('Case not found')
+
+  const person = getCaseRequestPerson(caseRow, subject)
+  validateRequestPerson(person)
+
+  const caseFolder = resolveCaseFolder(caseRow)
+  const generatedFolder = getOrCreateChildFolder(caseFolder, '07 Generated Documents')
+  const poaFolder = getOrCreateChildFolder(generatedFolder, 'Powers of Attorney')
+  const subjectFolder = getOrCreateChildFolder(poaFolder, sanitizeDriveName(subject))
+  const outputName = sanitizeDriveName(
+    (typeId === 'notarial_poa' ? 'Նոտարական լիազորագիր - ' : 'Դատավարական լիազորագիր - ') +
+    person.fullName + ' - ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')
+  )
+
+  const document = createPoaDocument(outputName, subjectFolder, template, person)
+  const file = DriveApp.getFileById(document.getId())
+  const fileRow = [
+    Utilities.getUuid(), caseId, '', typeId, subject, outputName,
+    file.getMimeType(), file.getId(), file.getUrl(), subjectFolder.getId(), new Date().toISOString()
+  ]
+  appendRow('CaseFiles', validateRow('CaseFiles', fileRow))
+  return {
+    status: 'generated',
+    fileId: file.getId(),
+    fileUrl: file.getUrl(),
+    fileName: outputName,
+    folderId: subjectFolder.getId()
+  }
+}
+
+function createPoaDocument(outputName, folder, template, person) {
+  const document = DocumentApp.create(outputName)
+  const file = DriveApp.getFileById(document.getId())
+  file.moveTo(folder)
+  const body = document.getBody()
+  body.clear()
+
+  const center = DocumentApp.HorizontalAlignment.CENTER
+  const justified = DocumentApp.HorizontalAlignment.JUSTIFY
+  addPoaParagraph(body, template.title, center, true)
+  addPoaParagraph(body, '')
+  addPoaParagraph(body, formatPoaDateText(new Date()), center)
+  template.paragraphs.forEach(text => {
+    addPoaParagraph(body, replacePoaPlaceholders(text, person), justified)
+  })
+  addPoaParagraph(body, '')
+  addPoaParagraph(body, '_________________________________________________________________________', center)
+  addPoaParagraph(body, '(Լիազորողի, անուն, ազգանուն, ստորագրություն)', center)
+
+  document.saveAndClose()
+  return document
+}
+
+function addPoaParagraph(body, text, alignment, bold) {
+  const paragraph = body.appendParagraph(text || '')
+  if (alignment) paragraph.setAlignment(alignment)
+  const editable = paragraph.editAsText()
+  editable.setFontFamily('Merriweather')
+  editable.setFontSize(12)
+  editable.setBold(!!bold)
+  return paragraph
+}
+
+function replacePoaPlaceholders(text, person) {
+  return String(text || '')
+    .split('{{client.fullNameWithSuffix}}').join(person.fullName + 'ս')
+    .split('{{client.identityWithPsnAndAddress}}').join(person.identityWithPsnAndAddress)
+    .split('{{poa.representatives}}').join(POA_REPRESENTATIVES_TEXT)
+}
+
+function formatPoaDateText(date) {
+  const years = {
+    2024: 'երկու հազար քսանչորս',
+    2025: 'երկու հազար քսանհինգ',
+    2026: 'երկու հազար քսանվեց',
+    2027: 'երկու հազար քսանյոթ',
+    2028: 'երկու հազար քսանութ'
+  }
+  const months = [
+    'հունվարի','փետրվարի','մարտի','ապրիլի','մայիսի','հունիսի',
+    'հուլիսի','օգոստոսի','սեպտեմբերի','հոկտեմբերի','նոյեմբերի','դեկտեմբերի'
+  ]
+  const days = {
+    1:'մեկ',2:'երկուս',3:'երեք',4:'չորս',5:'հինգ',6:'վեց',7:'յոթ',8:'ութ',9:'ինը',10:'տաս',
+    11:'տասնմեկ',12:'տասներկուս',13:'տասներեք',14:'տասնչորս',15:'տասնհինգ',16:'տասնվեց',
+    17:'տասնյոթ',18:'տասնութ',19:'տասնինը',20:'քսան',21:'քսանմեկ',22:'քսաներկուս',
+    23:'քսաներեք',24:'քսանչորս',25:'քսանհինգ',26:'քսանվեց',27:'քսանյոթ',
+    28:'քսանութ',29:'քսանինը',30:'երեսուն',31:'երեսունմեկ'
+  }
+  return (years[date.getFullYear()] || String(date.getFullYear())) + ' թվականի ' +
+    months[date.getMonth()] + ' ' + (days[date.getDate()] || date.getDate())
+}
+
 function getCaseRequestPerson(caseRow, subject) {
   const isApplicant = subject === caseRow.applicantName
   const person = isApplicant ? {
@@ -851,7 +985,8 @@ function getCaseRequestPerson(caseRow, subject) {
     identityIssueDate: caseRow.passportDate,
     identityIssuer: caseRow.passportBy,
     registrationAddress: caseRow.regAddr,
-    psn: caseRow.psn
+    psn: caseRow.psn,
+    additionalIdentity: caseRow.additionalIdentity
   } : {
     firstName: caseRow.spouseFirstName,
     middleName: caseRow.spouseMiddleName,
@@ -860,15 +995,24 @@ function getCaseRequestPerson(caseRow, subject) {
     identityIssueDate: caseRow.spousePassportDate,
     identityIssuer: caseRow.spousePassportBy,
     registrationAddress: caseRow.spouseRegAddr,
-    psn: caseRow.spousePsn
+    psn: caseRow.spousePsn,
+    additionalIdentity: caseRow.spouseAdditionalIdentity
   }
   person.fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject
   person.fullNameGenitive = person.fullName + '-ի'
   person.identityIssueDate = formatRequestDate(person.identityIssueDate)
-  person.identityInline = '/նույնականացման քարտ՝ ' + person.identityNumber + ', տրված՝ ' +
-    person.identityIssueDate + 'թ. ' + person.identityIssuer + '-ի կողմից/'
-  person.requestBodyIdentity = person.identityInline.slice(0, -1) + ', ՀԾՀ՝ ' + person.psn +
-    ', հաշվառման հասցե՝ ' + person.registrationAddress + '/'
+  const primaryIdentity = 'անձնագիր կամ նույնականացման քարտ՝ ' + person.identityNumber + ', տրված՝ ' +
+    person.identityIssueDate + 'թ. ' + person.identityIssuer + '-ի կողմից'
+  const identityParts = [primaryIdentity, person.additionalIdentity].filter(Boolean)
+  person.identityInline = '/' + identityParts.join(', ') + '/'
+  person.identityWithPsnAndAddress = '/' + identityParts.concat([
+    'ՀԾՀ՝ ' + person.psn,
+    'հաշվառված ' + person.registrationAddress + ' հասցեում'
+  ]).join(', ') + '/'
+  person.requestBodyIdentity = '/' + identityParts.concat([
+    'ՀԾՀ՝ ' + person.psn,
+    'հաշվառման հասցե՝ ' + person.registrationAddress
+  ]).join(', ') + '/'
   return person
 }
 
@@ -1012,7 +1156,8 @@ function generateRegisterRequest(data) {
     identityIssueDate: caseRow.passportDate,
     identityIssuer: caseRow.passportBy,
     registrationAddress: caseRow.regAddr,
-    psn: caseRow.psn
+    psn: caseRow.psn,
+    additionalIdentity: caseRow.additionalIdentity
   } : {
     firstName: caseRow.spouseFirstName,
     middleName: caseRow.spouseMiddleName,
@@ -1021,7 +1166,8 @@ function generateRegisterRequest(data) {
     identityIssueDate: caseRow.spousePassportDate,
     identityIssuer: caseRow.spousePassportBy,
     registrationAddress: caseRow.spouseRegAddr,
-    psn: caseRow.spousePsn
+    psn: caseRow.spousePsn,
+    additionalIdentity: caseRow.spouseAdditionalIdentity
   }
 
   const fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject

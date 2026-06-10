@@ -368,6 +368,8 @@ const STATE_REQUEST_TEMPLATE_IDS = new Set([
   'minfin','mineco','traffic','enforcement_service','rescue_service','state_reg'
 ])
 
+const POA_TEMPLATE_IDS = new Set(['notarial_poa','proc_poa'])
+
 const REPRESENTATIVES = {
   hovhannes: {
     label:'Հովհաննես Հարությունյան',
@@ -413,6 +415,13 @@ function esc(value){
   return String(value??'').replace(/[&<>"']/g, ch=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   })[ch])
+}
+function identityText(data, prefix='') {
+  const main = data[prefix+'passport']
+    ? `անձը հաստատող փաստաթուղթ՝ ${data[prefix+'passport']}, տրված՝ ${data[prefix+'passportDate']||'—'}, մարմին՝ ${data[prefix+'passportBy']||'—'}`
+    : ''
+  const extra = data[prefix+'additionalIdentity'] || ''
+  return [main, extra].filter(Boolean).join(', ')
 }
 function inlineCall(name,...args){
   return esc(`${name}(${args.map(arg=>JSON.stringify(arg)).join(',')})`)
@@ -599,7 +608,7 @@ function renderCasesTable(cases) {
 function filterCases(query) {
   const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
   const filtered=!value?allCases:allCases.filter(c=>
-    [c.applicantName,c.spouseName,c.passport,c.psn,c.id]
+    [c.applicantName,c.spouseName,c.passport,c.additionalIdentity,c.spousePassport,c.spouseAdditionalIdentity,c.psn,c.id]
       .some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value))
   )
   document.getElementById('cases-list').innerHTML=renderCasesTable(filtered)
@@ -689,7 +698,8 @@ function renderDetail(tab) {
         <div class="card-title">👤 Դիմողի տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.applicantName)} ${esc(c.middleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.birthDate||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${esc(c.passport||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձը հաստատող փաստաթուղթ</span><span class="sv">${esc(c.passport||'—')}</span></div>
+        <div class="srow"><span class="sk">Լրացուցիչ փաստաթուղթ</span><span class="sv">${esc(c.additionalIdentity||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(c.passportBy||'')}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.psn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.regAddr||'—')}</span></div>
@@ -706,7 +716,8 @@ function renderDetail(tab) {
         <div class="card-title">👫 Ամուսնու կամ կնոջ տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.spouseName||'—')} ${esc(c.spouseMiddleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.spouseBirthDate||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${esc(c.spousePassport||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձը հաստատող փաստաթուղթ</span><span class="sv">${esc(c.spousePassport||'—')}</span></div>
+        <div class="srow"><span class="sk">Լրացուցիչ փաստաթուղթ</span><span class="sv">${esc(c.spouseAdditionalIdentity||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(c.spousePassportBy||'')}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.spousePsn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.spouseRegAddr||'—')}</span></div>
@@ -1283,9 +1294,12 @@ function renderDocRow(dt, subj, doc) {
   let expiryEl = ''
   const files = currentFiles.filter(file=>file.typeId===dt.id&&file.subject===subj)
   const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('uploadDocumentModal',dt.id,subj)}">⬆ Վերբեռնել ֆայլ</button>`
-  const generateButton = STATE_REQUEST_TEMPLATE_IDS.has(dt.id)
-    ? `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateStateRequestModal',dt.id,subj)}">Ստեղծել հարցում</button>`
-    : ''
+  let generateButton = ''
+  if(STATE_REQUEST_TEMPLATE_IDS.has(dt.id)) {
+    generateButton = `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateStateRequestModal',dt.id,subj)}">Ստեղծել հարցում</button>`
+  } else if(POA_TEMPLATE_IDS.has(dt.id)) {
+    generateButton = `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generatePoaModal',dt.id,subj)}">Ստեղծել լիազորագիր</button>`
+  }
 
   if(status==='none') {
     statusEl = '<span class="status-pill sp-none">Չի դիմվել</span>'
@@ -1441,6 +1455,52 @@ async function submitRegisterRequest(subj) {
   return submitStateRequest('state_reg',subj)
 }
 
+function generatePoaModal(typeId, subj) {
+  const dt = DOC_TYPES.find(item=>item.id===typeId)
+  openModal(`
+    <div class="modal-title">Ստեղծել լիազորագիր<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">
+      ${esc(dt?.name||'Լիազորագիր')} փաստաթուղթը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
+      Եթե անձը ունի և՛ անձնագիր, և՛ նույնականացման քարտ, լրացրեք լրացուցիչ փաստաթուղթը գործի անձնական տվյալներում։
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="poa-generate-submit" onclick="${inlineCall('submitPoa',typeId,subj)}">Ստեղծել լիազորագիրը</button>
+    </div>
+  `)
+}
+
+async function submitPoa(typeId, subj) {
+  const button = document.getElementById('poa-generate-submit')
+  button.disabled = true
+  button.innerHTML = '<span class="spinner"></span> Ստեղծվում է...'
+  try {
+    const generated = await apiPost({
+      action:'generatePoa',
+      caseId:currentCase.id,
+      typeId,
+      subject:subj
+    })
+    currentFiles.push({
+      id:newId(),caseId:currentCase.id,documentId:'',typeId,subject:subj,
+      fileName:generated.fileName,fileUrl:generated.fileUrl,fileId:generated.fileId,
+      folderId:generated.folderId,uploadedAt:new Date().toISOString()
+    })
+    openModal(`
+      <div class="modal-title">Լիազորագիրը ստեղծված է<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+      <div class="alert alert-green">Փաստաթուղթը լրացվել և պահպանվել է գործի Google Drive պանակում։</div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal();renderDetail('docs')">Վերադառնալ փաստաթղթերին</button>
+        <a class="btn btn-primary" href="${esc(generated.fileUrl)}" target="_blank" rel="noopener">Բացել լիազորագիրը</a>
+      </div>
+    `)
+  } catch(e) {
+    button.disabled = false
+    button.textContent = 'Ստեղծել լիազորագիրը'
+    alert('Լիազորագիրը չստեղծվեց՝ '+e.message)
+  }
+}
+
 async function setStatus(typeId, subj, status) {
   const existing = currentDocs.find(d=>d.typeId===typeId&&d.subject===subj)
   const row = existing
@@ -1573,7 +1633,7 @@ function genMotion(typeId, subj, reason) {
 Երևան, Օտյան փողոց 53/2
 
 Դիմող՝ ${c.applicantName}
-${c.passport?'Անձնագիր՝ '+c.passport+', տրված՝ '+(c.passportDate||'—')+', մարմին՝ '+(c.passportBy||'—'):''}
+${identityText(c)}
 ${c.regAddr?'Հաշվառման հասցե՝ '+c.regAddr:''}
 
 ՄԻՋՆՈՐԴՈՒԹՅՈՒՆ
@@ -1620,13 +1680,14 @@ function editCaseModal() {
       <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="e-bd" value="${esc(c.birthDate||'')}"/></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Անձնագրի համարը</label><input id="e-pp" value="${esc(c.passport||'')}"/></div>
+      <div class="field"><label>Հիմնական փաստաթղթի համարը</label><input id="e-pp" value="${esc(c.passport||'')}"/></div>
       <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="e-psn" value="${esc(c.psn||'')}"/></div>
     </div>
     <div class="form-row">
       <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="e-pd" value="${esc(c.passportDate||'')}"/></div>
       <div class="field"><label>Անձնագիրը տված մարմինը</label><input id="e-pb" value="${esc(c.passportBy||'')}"/></div>
     </div>
+    <div class="field"><label>Լրացուցիչ անձը հաստատող փաստաթուղթ</label><input id="e-ai" value="${esc(c.additionalIdentity||'')}" placeholder="օր. անձնագիր՝ AR0000000, տրված՝ 01.01.2020թ., 001-ի կողմից"/></div>
     <div class="field"><label>Հաշվառման հասցե</label><input id="e-ra" value="${esc(c.regAddr||'')}"/></div>
     <div class="field"><label>Ծանուցման հասցե</label><input id="e-na" value="${esc(c.notifAddr||'')}"/></div>
     <div class="form-row">
@@ -1653,6 +1714,7 @@ async function saveEdit() {
     psn:document.getElementById('e-psn').value.trim(),
     passportDate:document.getElementById('e-pd').value,
     passportBy:document.getElementById('e-pb').value.trim(),
+    additionalIdentity:document.getElementById('e-ai').value.trim(),
     regAddr:document.getElementById('e-ra').value.trim(),
     notifAddr:document.getElementById('e-na').value.trim(),
     spouseName:document.getElementById('e-sp').value.trim(),
@@ -1799,7 +1861,7 @@ function closeModal() {
 // ═══════════════════════════════════════════════
 let A={}, S={}, qMode='applicant', qFlow=[], qIdx=0, qLocChoice={}
 
-const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl']
+const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity']
 
 function buildCaseRow(c) {
   return QUIZ_COLS.map(col => {
@@ -1844,10 +1906,11 @@ function buildSteps(pfx, isSp) {
     <div class="field"><label>Ազգանուն *</label><input id="${pfx}ln" placeholder="Ազգանուն"/></div></div>
     <div class="form-row"><div class="field"><label>Հայրանուն</label><input id="${pfx}mn" placeholder="Հայրանուն"/></div>
     <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="${pfx}bd"/></div></div>
-    <div class="form-row"><div class="field"><label>Անձնագրի համարը</label><input id="${pfx}pp" placeholder="AN0000000"/></div>
+    <div class="form-row"><div class="field"><label>Հիմնական փաստաթղթի համարը</label><input id="${pfx}pp" placeholder="AN0000000 կամ 000000000"/></div>
     <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="${pfx}pd"/></div></div>
     <div class="form-row"><div class="field"><label>Անձնագիրը տված մարմինը</label><input id="${pfx}pb" placeholder="007"/></div>
     <div class="field"><label>Հանրային ծառայությունների համարանիշ *</label><input id="${pfx}psn" placeholder="000000000"/></div></div>
+    <div class="field"><label>Լրացուցիչ անձը հաստատող փաստաթուղթ</label><input id="${pfx}ai" placeholder="օր. անձնագիր՝ AR0000000, տրված՝ 01.01.2020թ., 001-ի կողմից"/></div>
     <div class="field"><label>Հաշվառման հասցե</label><input id="${pfx}ra" placeholder="Երևան..."/></div>
     <div class="field"><label>Ծանուցման հասցե (եթե տարբեր է)</label><input id="${pfx}na" placeholder="Երևան..."/></div>
     <div class="field"><label>Ներկայումս գտնվո՞ւմ եք Հայաստանի Հանրապետությունում</label>
@@ -1873,13 +1936,14 @@ function buildSteps(pfx, isSp) {
         <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="${pfx}sp-bd"/></div>
       </div>
       <div class="form-row">
-        <div class="field"><label>Անձնագրի համարը</label><input id="${pfx}sp-pp" placeholder="AN0000000"/></div>
+        <div class="field"><label>Հիմնական փաստաթղթի համարը</label><input id="${pfx}sp-pp" placeholder="AN0000000 կամ 000000000"/></div>
         <div class="field"><label>Անձնագիրը տրված է ամսաթիվ</label><input type="date" id="${pfx}sp-pd"/></div>
       </div>
       <div class="form-row">
         <div class="field"><label>Անձնագիրը տված մարմին</label><input id="${pfx}sp-pb" placeholder="007"/></div>
         <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="${pfx}sp-psn" placeholder="000000000"/></div>
       </div>
+      <div class="field"><label>Լրացուցիչ անձը հաստատող փաստաթուղթ</label><input id="${pfx}sp-ai" placeholder="օր. նույնականացման քարտ՝ 000000000, տրված՝ 01.01.2020թ., 001-ի կողմից"/></div>
       <div class="field"><label>Հաշվառման հասցե</label><input id="${pfx}sp-ra" placeholder="Երևան..."/></div>
     </div>
     <button class="btn-next" onclick="nextIntro('${pfx}')">Շարունակել →</button>`)
@@ -1987,6 +2051,7 @@ function nextIntro(p){
   A.passport=document.getElementById(p+'pp')?.value.trim()||''
   A.passportDate=document.getElementById(p+'pd')?.value||''
   A.passportBy=document.getElementById(p+'pb')?.value.trim()||''
+  A.additionalIdentity=document.getElementById(p+'ai')?.value.trim()||''
   A.psn=document.getElementById(p+'psn')?.value.trim()||''
   A.regAddr=document.getElementById(p+'ra')?.value.trim()||''
   A.notifAddr=document.getElementById(p+'na')?.value.trim()||''
@@ -2005,6 +2070,7 @@ function nextIntro(p){
     S.passport=document.getElementById(p+'sp-pp')?.value.trim()||''
     S.passportDate=document.getElementById(p+'sp-pd')?.value||''
     S.passportBy=document.getElementById(p+'sp-pb')?.value.trim()||''
+    S.additionalIdentity=document.getElementById(p+'sp-ai')?.value.trim()||''
     S.psn=document.getElementById(p+'sp-psn')?.value.trim()||''
     S.regAddr=document.getElementById(p+'sp-ra')?.value.trim()||''
   }
@@ -2095,6 +2161,7 @@ function spouseModal(){
     <div class="field"><label>Անձնագիրը տրված ամսաթիվ</label><input type="date" id="sp-pd"/></div></div>
     <div class="form-row"><div class="field"><label>Անձնագիրը տված մարմին</label><input id="sp-pb" placeholder="007"/></div>
     <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="sp-psn" placeholder="000000000"/></div></div>
+    <div class="field"><label>Լրացուցիչ անձը հաստատող փաստաթուղթ</label><input id="sp-ai" placeholder="օր. նույնականացման քարտ՝ 000000000, տրված՝ 01.01.2020թ., 001-ի կողմից"/></div>
     <div class="field"><label>Հաշվառման հասցե</label><input id="sp-ra" placeholder="Երևան..."/></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal();showQuizResult()">Բաց թողնել</button>
@@ -2113,6 +2180,7 @@ function confirmSpouse(){
   S.passport=document.getElementById('sp-pp')?.value.trim()||''
   S.passportDate=document.getElementById('sp-pd')?.value||''
   S.passportBy=document.getElementById('sp-pb')?.value.trim()||''
+  S.additionalIdentity=document.getElementById('sp-ai')?.value.trim()||''
   S.psn=document.getElementById('sp-psn')?.value.trim()||''
   S.regAddr=document.getElementById('sp-ra')?.value.trim()||''
   closeModal()
@@ -2163,7 +2231,8 @@ function personReport(title,data,includeIdentity,includeDebts=true){
       reportRow('Անուն, ազգանուն',data.name),
       reportRow('Հայրանուն',data.middleName),
       reportRow('Ծննդյան ամսաթիվ',data.birthDate),
-      reportRow('Անձնագիր',data.passport),
+      reportRow('Անձը հաստատող փաստաթուղթ',data.passport),
+      reportRow('Լրացուցիչ փաստաթուղթ',data.additionalIdentity),
       reportRow('Անձնագրի տրման ամսաթիվ',data.passportDate),
       reportRow('Անձնագիրը տված մարմին',data.passportBy),
       reportRow('Հանրային ծառայությունների համարանիշ',data.psn),
@@ -2242,6 +2311,7 @@ async function saveAndGenerate(){
       id:caseId, applicantName:A.name, firstName:A.firstName, lastName:A.lastName,
       middleName:A.middleName||'', birthDate:A.birthDate||'', passport:A.passport||'',
       passportDate:A.passportDate||'', passportBy:A.passportBy||'',
+      additionalIdentity:A.additionalIdentity||'',
       regAddr:A.regAddr||'', notifAddr:A.notifAddr||'', psn:A.psn||'',
       isMarried:A.married?'YES':'NO', spouseName:S.name||'', filingDate:'',
       employed:A.employed?'YES':'NO', salaryAbove:A.salaryAbove?'YES':'NO',
@@ -2253,6 +2323,7 @@ async function saveAndGenerate(){
       spouseMiddleName:S.middleName||'', spouseBirthDate:S.birthDate||'',
       spousePassport:S.passport||'', spousePassportDate:S.passportDate||'',
       spousePassportBy:S.passportBy||'', spousePsn:S.psn||'',
+      spouseAdditionalIdentity:S.additionalIdentity||'',
       spouseRegAddr:S.regAddr||'', spouseNotifAddr:S.notifAddr||'',
       assessmentJson:JSON.stringify({applicant:A,spouse:S}),
       driveFolderId:'',driveFolderUrl:''
@@ -2299,7 +2370,7 @@ function genContract(c){
 ${COMPANY.name} (հարկ վճարողի հաշվառման համար՝ ${COMPANY.hvhh}), ի դեմս տնօրեն ${COMPANY.director}-ի, այսուհետ՝ «Կատարող», մի կողմից,
 
 ${c.applicantName} ${c.middleName||''}
-${c.passport?'անձնական փաստաթուղթ՝ '+c.passport+', տրված՝ '+(c.passportDate||'—')+', մարմին՝ '+(c.passportBy||'—'):''}
+${identityText(c)}
 ${c.psn?'հանրային ծառայությունների համարանիշ՝ '+c.psn:''}
 հաշվառման հասցե՝ ${c.regAddr||'—'},
 այսուհետ՝ «Պատվիրատու», մյուս կողմից, կնքեցին սույն պայմանագիրը հետևյալի մասին։
@@ -2347,9 +2418,10 @@ function textPersonReport(title,data,includeDebts=true){
   return `${title}
 Անուն, ազգանուն, հայրանուն՝ ${data.name||'—'} ${data.middleName||''}
 Ծննդյան ամսաթիվ՝ ${data.birthDate||'—'}
-Անձնագիր կամ նույնականացման քարտ՝ ${data.passport||'—'}
+Անձը հաստատող հիմնական փաստաթուղթ՝ ${data.passport||'—'}
 Փաստաթղթի տրման ամսաթիվ՝ ${data.passportDate||'—'}
 Փաստաթուղթը տված մարմին՝ ${data.passportBy||'—'}
+Լրացուցիչ անձը հաստատող փաստաթուղթ՝ ${data.additionalIdentity||'—'}
 Հանրային ծառայությունների համարանիշ՝ ${data.psn||'—'}
 Հաշվառման հասցե՝ ${data.regAddr||'—'}
 Ծանուցման հասցե՝ ${data.notifAddr||data.regAddr||'—'}
