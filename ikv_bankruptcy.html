@@ -487,6 +487,8 @@ function readIdentityFields(prefix) {
     idCardBy:noIdCard?'':normalizeAuthorityCode(document.getElementById(prefix+'idcb')?.value||'')
   }
 }
+window.togglePassportFields = togglePassportFields
+window.toggleIdCardFields = toggleIdCardFields
 function inlineCall(name,...args){
   return esc(`${name}(${args.map(arg=>JSON.stringify(arg)).join(',')})`)
 }
@@ -771,7 +773,7 @@ function renderDetail(tab) {
         <div class="srow"><span class="sk">Ծանուցման հասցե</span><span class="sv">${esc(c.notifAddr||c.regAddr||'—')}</span></div>
         <div class="srow"><span class="sk">Դիմումը ներկայացնելու ամսաթիվ</span><span class="sv">${esc(c.filingDate||'—')}</span></div>
         <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
-          <button class="btn btn-sm btn-gold" onclick="editCaseModal()">✎ Խմբագրել</button>
+          <button class="btn btn-sm btn-gold" onclick="openEditCaseModal()">✎ Խմբագրել</button>
           ${c.driveFolderUrl?`<a class="btn btn-sm" href="${esc(c.driveFolderUrl)}" target="_blank" rel="noopener">📁 Բացել Drive պանակը</a>`:''}
           ${c.lawyerApproved==='YES'?'<span class="badge badge-green">✓ Հաստատված</span>':'<button class="btn btn-sm btn-green" onclick="approveLawyer()">⚖ Հաստատել</button>'}
           <button class="btn btn-sm btn-red" onclick="openDeleteCaseModal()">Ջնջել գործը</button>
@@ -1733,6 +1735,10 @@ function dlMotion(name) {
   a.download = 'Midnord_'+name+'_'+today()+'.txt'; a.click()
 }
 
+function openEditCaseModal() {
+  return editCaseModal()
+}
+
 function editCaseModal() {
   const c = currentCase
   openModal(`
@@ -1790,6 +1796,10 @@ async function saveEdit() {
   document.getElementById('detail-title').textContent = updated.applicantName
   renderDetail('info')
 }
+
+window.openEditCaseModal = openEditCaseModal
+window.editCaseModal = editCaseModal
+window.saveEdit = saveEdit
 
 async function approveLawyer() {
   const updated = {...currentCase, lawyerApproved:'YES', lawyerApprovedAt:today()}

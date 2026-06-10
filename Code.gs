@@ -385,6 +385,7 @@ function doGet(e) {
     else if (action === 'getBankCertificates') result = getRows('BankCertificates', 'caseId', e.parameter.caseId)
     else if (action === 'getFiles') result = getRows('CaseFiles', 'caseId', e.parameter.caseId)
     else if (action === 'getAudit') result = getRows('AuditLog').slice(-100).reverse()
+    else if (action === 'repairIdentityTextCodes') result = repairIdentityTextCodes()
     else if (action === 'ping') result = { status: 'ok', time: new Date().toISOString() }
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
@@ -413,6 +414,7 @@ function doPost(e) {
     else if (action === 'deleteCase') result = deleteCase(data)
     else if (action === 'importIngaApplicantVahagnSpouseCase') result = importIngaApplicantVahagnSpouseCase()
     else if (action === 'repairBankCertificateExpiryDates') result = repairBankCertificateExpiryDates()
+    else if (action === 'repairIdentityTextCodes') result = repairIdentityTextCodes()
     else if (action === 'audit') result = appendRow('AuditLog', validateRow('AuditLog', data.row))
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
@@ -524,6 +526,40 @@ function normalizeCaseTextCodes(row) {
 function normalizeIssuerCode(value) {
   const raw = String(value || '').replace(/^'/, '').trim()
   return /^\d{1,2}$/.test(raw) ? raw.padStart(3, '0') : raw
+}
+
+function repairIdentityTextCodes() {
+  const sheet = getOrCreateSheet('Cases')
+  applySheetTextFormats(sheet)
+  const headers = HEADERS.Cases
+  const codeHeaders = ['passportBy','spousePassportBy','idCardBy','spouseIdCardBy']
+  const textHeaders = ['psn','spousePsn']
+  const columns = codeHeaders.concat(textHeaders).map(function(header) {
+    return { header: header, index: headers.indexOf(header) }
+  }).filter(function(item) {
+    return item.index !== -1
+  })
+  const lastRow = sheet.getLastRow()
+  if (lastRow < 2) return { status: 'ok', updatedCells: 0 }
+
+  const range = sheet.getRange(2, 1, lastRow - 1, headers.length)
+  const values = range.getDisplayValues()
+  let updatedCells = 0
+  values.forEach(function(row) {
+    columns.forEach(function(item) {
+      const raw = String(row[item.index] || '').replace(/^'/, '').trim()
+      const next = codeHeaders.indexOf(item.header) !== -1
+        ? normalizeIssuerCode(raw)
+        : raw
+      if (next && raw !== next) {
+        row[item.index] = "'" + next
+        updatedCells++
+      }
+    })
+  })
+  range.setValues(values)
+  applySheetTextFormats(sheet)
+  return { status: 'ok', updatedCells: updatedCells }
 }
 
 function safeCellValue(value) {
