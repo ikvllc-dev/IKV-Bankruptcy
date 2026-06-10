@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1KOSLKpXeTaTvyFGkQzf9AoK1JwHWRHYCPVJ7oSNQO1MvRiKLtkdrMTywLARAVTcCMw/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzXbPM9hGEd3Eaa4UfWEqpxJXuBGfyORGMSeYpDFIWHThlmTWxih8uHRcyN8Yk1LuZbEw/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -352,6 +352,8 @@ const DOC_TYPES = [
   {id:'mineco',name:'Հայաստանի Հանրապետության էկոնոմիկայի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'mia',name:'Հայաստանի Հանրապետության ներքին գործերի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'traffic',name:'Ճանապարհային ոստիկանության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'rescue_service',name:'Փրկարար ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'civil_status',name:'Քաղաքացիական կացության ակտերի գրանցման գործակալության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'state_reg',name:'Պետական ռեգիստրի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'banks_resp',name:'Բանկերի պատասխաններ',cat:'Բանկային փաստաթղթեր',s90:true,spouse:true},
   {id:'court_docs',name:'Դատարան ներկայացվող փաստաթղթեր',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
@@ -1015,6 +1017,7 @@ function bankCertificatesReport() {
   const rows = [...BANKS].sort(armenianCompare).map(bank=>{
     const cert = findBankCertificate(bank,currentCase.applicantName)
     let value = 'Տեղեկանքը դեռ չի ստացվել'
+    if(cert?.result==='pending_review') value = `Տեղեկանքը ստացված է, արդյունքը պետք է ստուգել · ${cert.issueDate||''}`
     if(cert?.result==='no_accounts') value = `Հաշիվներ կամ տվյալներ չկան · ${cert.issueDate||''}`
     if(cert?.result==='accounts_found') {
       value = `Հաշիվներ կան · մնացորդ՝ ${debtMoney(cert.balance,cert.currency)}${cert.accountInfo?' · '+cert.accountInfo:''}`
@@ -1032,7 +1035,9 @@ function renderBankCertificateRow(bank,cert,subject) {
   if(status==='received') {
     statusEl = cert.result==='no_accounts'
       ? '<span class="status-pill sp-received">Հաշիվներ չկան</span>'
-      : '<span class="status-pill sp-received">Հաշիվներ կան</span>'
+      : cert.result==='accounts_found'
+        ? '<span class="status-pill sp-received">Հաշիվներ կան</span>'
+        : '<span class="status-pill sp-applied">Ստացված է, պետք է ստուգել</span>'
   }
   const result = cert?.result==='accounts_found'
     ? `<div style="font-size:.75rem;color:var(--ink-muted);margin-top:4px">${esc(cert.accountInfo||'Հաշվի տվյալները նշված չեն')} · Մնացորդ՝ ${debtMoney(cert.balance,cert.currency)}</div>`
@@ -1084,7 +1089,8 @@ function openBankCertificateModal(bank,subject) {
     <input type="hidden" id="bank-cert-id" value="${esc(cert.id||'')}"/>
     <div class="field"><label>Բանկի պատասխանը *</label>
       <select id="bank-cert-result" onchange="toggleBankAccountFields()">
-        <option value="no_accounts"${cert.result!=='accounts_found'?' selected':''}>Հաշիվներ կամ տվյալներ չկան</option>
+        <option value="pending_review"${cert.result==='pending_review'?' selected':''}>Ստացված է, արդյունքը պետք է ստուգել</option>
+        <option value="no_accounts"${cert.result==='no_accounts'?' selected':''}>Հաշիվներ կամ տվյալներ չկան</option>
         <option value="accounts_found"${cert.result==='accounts_found'?' selected':''}>Հաշիվներ կան / առկա է մնացորդ</option>
       </select>
     </div>

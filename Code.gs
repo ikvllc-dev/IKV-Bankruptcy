@@ -39,6 +39,8 @@ function authorizeDocumentGeneration() {
 const HEADERS = {
   Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl'],
   Documents: ['id','caseId','typeId','subject','status','issueDate','expiryDate','appliedAt','updatedAt'],
+  Debts: ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'],
+  BankCertificates: ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt'],
   CaseFiles: ['id','caseId','documentId','typeId','subject','fileName','mimeType','fileId','fileUrl','folderId','uploadedAt'],
   AuditLog: ['id','timestamp','user','action','entity','entityId','detail']
 }
@@ -49,33 +51,56 @@ const DOCUMENT_FOLDERS = {
   marriage: '01 Personal Documents',
   notarial_poa: '02 Legal Authorizations',
   proc_poa: '02 Legal Authorizations',
-  credit_report: '03 Financial Documents',
-  loan_agr: '03 Financial Documents',
-  debt_stmt: '03 Financial Documents',
-  depository: '03 Financial Documents',
-  cadastre: '04 Property Documents',
-  tax: '05 Government Certificates',
-  social: '05 Government Certificates',
-  territorial: '05 Government Certificates',
-  minfin: '05 Government Certificates',
-  mineco: '05 Government Certificates',
-  mia: '05 Government Certificates',
-  traffic: '05 Government Certificates',
-  state_reg: '05 Government Certificates',
-  banks_resp: '06 Bank Responses',
-  court_docs: '07 Court Documents',
-  petition: '07 Court Documents',
-  cred_service: '07 Court Documents'
+  credit_report: '03 Debts',
+  loan_agr: '03 Debts',
+  debt_stmt: '03 Debts',
+  debt_account_statement: '03 Debts',
+  debt_loan_agreement: '03 Debts',
+  depository: '04 Government Certificates',
+  cadastre: '04 Government Certificates',
+  tax: '04 Government Certificates',
+  tax_personal_account: '04 Government Certificates',
+  social: '04 Government Certificates',
+  territorial: '04 Government Certificates',
+  minfin: '04 Government Certificates',
+  mineco: '04 Government Certificates',
+  mia: '04 Government Certificates',
+  traffic: '04 Government Certificates',
+  rescue_service: '04 Government Certificates',
+  civil_status: '04 Government Certificates',
+  state_reg: '04 Government Certificates',
+  banks_resp: '05 Bank Certificates',
+  court_docs: '06 Court Documents',
+  petition: '06 Court Documents',
+  cred_service: '06 Court Documents',
+  other_document: '08 Other Documents'
 }
 
+const CASE_FOLDER_NAMES = [
+  '01 Personal Documents',
+  '02 Legal Authorizations',
+  '03 Debts',
+  '04 Government Certificates',
+  '05 Bank Certificates',
+  '06 Court Documents',
+  '07 Generated Documents',
+  '08 Other Documents'
+]
+
 const ALLOWED_SHEETS = Object.freeze(Object.keys(HEADERS))
+let spreadsheetCache = null
+
+function getSpreadsheet() {
+  if (!spreadsheetCache) spreadsheetCache = SpreadsheetApp.openById(SPREADSHEET_ID)
+  return spreadsheetCache
+}
 
 function getOrCreateSheet(name) {
   if (!ALLOWED_SHEETS.includes(name)) {
     throw new Error('Unknown sheet: ' + name)
   }
 
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID)
+  const ss = getSpreadsheet()
   let sheet = ss.getSheetByName(name)
   if (!sheet) {
     sheet = ss.insertSheet(name)
@@ -106,8 +131,8 @@ function migrateSheetSchema(sheet, sheetName) {
     if (lastColumn < expected.length) {
       sheet.getRange(1, lastColumn + 1, 1, expected.length - lastColumn)
         .setValues([expected.slice(lastColumn)])
+      formatHeaderRow(sheet, expected.length)
     }
-    formatHeaderRow(sheet, expected.length)
     return
   }
 
@@ -176,7 +201,11 @@ function doGet(e) {
   try {
     let result
     if (action === 'getCases') result = getRows('Cases')
+    else if (action === 'getDashboardData') result = getDashboardData()
+    else if (action === 'getCaseBundle') result = getCaseBundle(e.parameter.caseId)
     else if (action === 'getDocs') result = getRows('Documents', 'caseId', e.parameter.caseId)
+    else if (action === 'getDebts') result = getRows('Debts', 'caseId', e.parameter.caseId)
+    else if (action === 'getBankCertificates') result = getRows('BankCertificates', 'caseId', e.parameter.caseId)
     else if (action === 'getFiles') result = getRows('CaseFiles', 'caseId', e.parameter.caseId)
     else if (action === 'getAudit') result = getRows('AuditLog').slice(-100).reverse()
     else if (action === 'ping') result = { status: 'ok', time: new Date().toISOString() }
@@ -198,8 +227,11 @@ function doPost(e) {
     let result
     if (action === 'saveCase') result = saveCaseWithFolders(validateRow('Cases', data.row))
     else if (action === 'saveDoc') result = upsertRow('Documents', validateRow('Documents', data.row))
+    else if (action === 'saveDebt') result = upsertRow('Debts', validateRow('Debts', data.row))
+    else if (action === 'saveBankCertificate') result = upsertRow('BankCertificates', validateRow('BankCertificates', data.row))
     else if (action === 'uploadDocument') result = uploadDocument(data)
     else if (action === 'generateRegisterRequest') result = generateRegisterRequest(data)
+    else if (action === 'deleteCase') result = deleteCase(data)
     else if (action === 'audit') result = appendRow('AuditLog', validateRow('AuditLog', data.row))
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
@@ -228,6 +260,29 @@ function getRows(sheetName, filterCol, filterVal) {
     rows = rows.filter(r => r[filterCol] === filterVal)
   }
   return rows
+}
+
+function getDashboardData() {
+  return {
+    cases: getRows('Cases'),
+    documents: getRows('Documents')
+  }
+}
+
+function getCaseBundle(caseId) {
+  if (!caseId) throw new Error('Missing case ID')
+  const caseRow = getRows('Cases').find(row => row.id === caseId)
+  if (!caseRow) throw new Error('Case not found')
+  const folder = resolveCaseFolder(caseRow)
+  return {
+    case: caseRow,
+    driveFolderId: folder.getId(),
+    driveFolderUrl: folder.getUrl(),
+    documents: getRows('Documents', 'caseId', caseId),
+    debts: getRows('Debts', 'caseId', caseId),
+    bankCertificates: getRows('BankCertificates', 'caseId', caseId),
+    files: getRows('CaseFiles', 'caseId', caseId)
+  }
 }
 
 function upsertRow(sheetName, row) {
@@ -288,12 +343,15 @@ function saveCaseWithFolders(row) {
   if (row[folderIdIndex]) {
     try {
       folder = DriveApp.getFolderById(row[folderIdIndex])
+      if (folder.isTrashed()) folder = null
     } catch (err) {}
   }
   if (!folder) {
-    const folder = createCaseFolderTree(row[0], row[1])
+    folder = createCaseFolderTree(row[0], row[1])
     row[folderIdIndex] = folder.getId()
     row[folderUrlIndex] = folder.getUrl()
+  } else {
+    ensureCaseFolderTree(folder)
   }
   const saved = upsertRow('Cases', row)
   saved.driveFolderId = row[folderIdIndex]
@@ -306,17 +364,12 @@ function createCaseFolderTree(caseId, applicantName) {
   const folderName = sanitizeDriveName(applicantName + ' - ' + caseId)
   const existing = root.getFoldersByName(folderName)
   const caseFolder = existing.hasNext() ? existing.next() : root.createFolder(folderName)
-  ;[
-    '01 Personal Documents',
-    '02 Legal Authorizations',
-    '03 Financial Documents',
-    '04 Property Documents',
-    '05 Government Certificates',
-    '06 Bank Responses',
-    '07 Court Documents',
-    '08 Generated Documents',
-    '09 Other Documents'
-  ].forEach(name => getOrCreateChildFolder(caseFolder, name))
+  ensureCaseFolderTree(caseFolder)
+  return caseFolder
+}
+
+function ensureCaseFolderTree(caseFolder) {
+  CASE_FOLDER_NAMES.forEach(name => getOrCreateChildFolder(caseFolder, name))
   return caseFolder
 }
 
@@ -324,7 +377,10 @@ function getOrCreateRootFolder() {
   const props = PropertiesService.getScriptProperties()
   const savedId = props.getProperty('IKV_ROOT_FOLDER_ID')
   if (savedId) {
-    try { return DriveApp.getFolderById(savedId) } catch (err) {}
+    try {
+      const saved = DriveApp.getFolderById(savedId)
+      if (!saved.isTrashed()) return saved
+    } catch (err) {}
   }
   const folders = DriveApp.getFoldersByName(ROOT_FOLDER_NAME)
   const root = folders.hasNext() ? folders.next() : DriveApp.createFolder(ROOT_FOLDER_NAME)
@@ -334,7 +390,11 @@ function getOrCreateRootFolder() {
 
 function getOrCreateChildFolder(parent, name) {
   const folders = parent.getFoldersByName(name)
-  return folders.hasNext() ? folders.next() : parent.createFolder(name)
+  while (folders.hasNext()) {
+    const folder = folders.next()
+    if (!folder.isTrashed()) return folder
+  }
+  return parent.createFolder(name)
 }
 
 function resolveCaseFolder(caseRow) {
@@ -342,9 +402,10 @@ function resolveCaseFolder(caseRow) {
   if (caseRow.driveFolderId) {
     try {
       folder = DriveApp.getFolderById(caseRow.driveFolderId)
+      if (folder.isTrashed()) folder = null
     } catch (err) {}
   }
-  if (folder) return folder
+  if (folder) return ensureCaseFolderTree(folder)
 
   folder = createCaseFolderTree(caseRow.id, caseRow.applicantName)
   const sheet = getOrCreateSheet('Cases')
@@ -363,6 +424,67 @@ function resolveCaseFolder(caseRow) {
   return folder
 }
 
+function deleteCase(data) {
+  const caseId = String(data.caseId || '')
+  const confirmationName = String(data.confirmationName || '').trim()
+  if (!caseId) throw new Error('Missing case ID')
+
+  const caseRow = getRows('Cases').find(row => row.id === caseId)
+  if (!caseRow) throw new Error('Case not found')
+  if (!confirmationName || confirmationName !== String(caseRow.applicantName || '').trim()) {
+    throw new Error('Client name confirmation does not match')
+  }
+
+  const lock = LockService.getScriptLock()
+  lock.waitLock(30000)
+  try {
+    let folderTrashed = false
+    if (caseRow.driveFolderId) {
+      try {
+        const folder = DriveApp.getFolderById(caseRow.driveFolderId)
+        if (!folder.isTrashed()) folder.setTrashed(true)
+        folderTrashed = true
+      } catch (err) {}
+    }
+
+    const deletedRows = {
+      Documents: deleteRowsByValue('Documents', 'caseId', caseId),
+      Debts: deleteRowsByValue('Debts', 'caseId', caseId),
+      BankCertificates: deleteRowsByValue('BankCertificates', 'caseId', caseId),
+      CaseFiles: deleteRowsByValue('CaseFiles', 'caseId', caseId),
+      Cases: deleteRowsByValue('Cases', 'id', caseId)
+    }
+    const user = Session.getActiveUser().getEmail() || 'web-app-user'
+    getOrCreateSheet('AuditLog').appendRow(validateRow('AuditLog', [
+      Utilities.getUuid(), new Date().toISOString(), user, 'DELETE',
+      'Case', caseId, JSON.stringify({
+        applicantName: caseRow.applicantName,
+        folderTrashed: folderTrashed,
+        deletedRows: deletedRows
+      })
+    ]))
+    return { status: 'deleted', caseId: caseId, folderTrashed: folderTrashed }
+  } finally {
+    lock.releaseLock()
+  }
+}
+
+function deleteRowsByValue(sheetName, columnName, value) {
+  const sheet = getOrCreateSheet(sheetName)
+  const values = sheet.getDataRange().getDisplayValues()
+  if (!values.length) return 0
+  const columnIndex = values[0].indexOf(columnName)
+  if (columnIndex === -1) throw new Error('Unknown column: ' + columnName)
+  let deleted = 0
+  for (let rowIndex = values.length - 1; rowIndex >= 1; rowIndex--) {
+    if (values[rowIndex][columnIndex] === value) {
+      sheet.deleteRow(rowIndex + 1)
+      deleted++
+    }
+  }
+  return deleted
+}
+
 function uploadDocument(data) {
   const caseId = String(data.caseId || '')
   const typeId = String(data.typeId || '')
@@ -378,8 +500,14 @@ function uploadDocument(data) {
   const caseRow = getRows('Cases').find(row => row.id === caseId)
   if (!caseRow) throw new Error('Case not found')
   const caseFolder = resolveCaseFolder(caseRow)
-  const categoryFolder = getOrCreateChildFolder(caseFolder, DOCUMENT_FOLDERS[typeId] || '09 Other Documents')
-  const subjectFolder = getOrCreateChildFolder(categoryFolder, sanitizeDriveName(subject))
+  const categoryFolder = getOrCreateChildFolder(caseFolder, DOCUMENT_FOLDERS[typeId] || '08 Other Documents')
+  let subjectFolder = categoryFolder
+  const folderPath = Array.isArray(data.folderPath) && data.folderPath.length
+    ? data.folderPath
+    : [data.folderName || subject]
+  folderPath.forEach(function(folderName) {
+    subjectFolder = getOrCreateChildFolder(subjectFolder, sanitizeDriveName(folderName))
+  })
   const file = subjectFolder.createFile(Utilities.newBlob(bytes, mimeType, fileName))
 
   const documentId = String(data.documentId || '')
@@ -439,7 +567,7 @@ function generateRegisterRequest(data) {
   if (missing.length) throw new Error('Missing client data: ' + missing.join(', '))
 
   const caseFolder = resolveCaseFolder(caseRow)
-  const generatedFolder = getOrCreateChildFolder(caseFolder, '08 Generated Documents')
+  const generatedFolder = getOrCreateChildFolder(caseFolder, '07 Generated Documents')
   const requestFolder = getOrCreateChildFolder(generatedFolder, 'State Register Requests')
   const subjectFolder = getOrCreateChildFolder(requestFolder, sanitizeDriveName(subject))
   const outputName = sanitizeDriveName(
