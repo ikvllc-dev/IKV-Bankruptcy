@@ -232,6 +232,7 @@ function doPost(e) {
     else if (action === 'uploadDocument') result = uploadDocument(data)
     else if (action === 'generateRegisterRequest') result = generateRegisterRequest(data)
     else if (action === 'deleteCase') result = deleteCase(data)
+    else if (action === 'importIngaApplicantVahagnSpouseCase') result = importIngaApplicantVahagnSpouseCase()
     else if (action === 'audit') result = appendRow('AuditLog', validateRow('AuditLog', data.row))
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
@@ -483,6 +484,101 @@ function deleteRowsByValue(sheetName, columnName, value) {
     }
   }
   return deleted
+}
+
+/**
+ * One-time, idempotent import for the second Inga/Vahagn case.
+ * Run from the Apps Script editor after the original legacy import.
+ */
+function importIngaApplicantVahagnSpouseCase() {
+  const source = getRows('Cases').find(function(row) {
+    return row.applicantName === 'Վահագն Գարսեվանի Աբրահամյան' &&
+      row.spouseName === 'Ինգա Արմենի Ամարյան'
+  })
+  if (!source) throw new Error('Source Vahagn/Inga case was not found')
+
+  const targetId = 'legacy-inga-vahagn-reversed'
+  const now = new Date().toISOString()
+  const target = Object.assign({}, source, {
+    id: targetId,
+    applicantName: source.spouseName,
+    firstName: source.spouseFirstName,
+    lastName: source.spouseLastName,
+    middleName: source.spouseMiddleName,
+    birthDate: source.spouseBirthDate,
+    passport: source.spousePassport,
+    passportDate: source.spousePassportDate,
+    passportBy: source.spousePassportBy,
+    regAddr: source.spouseRegAddr,
+    notifAddr: source.spouseNotifAddr || source.spouseRegAddr,
+    psn: source.spousePsn,
+    spouseName: source.applicantName,
+    spouseFirstName: source.firstName,
+    spouseLastName: source.lastName,
+    spouseMiddleName: source.middleName,
+    spouseBirthDate: source.birthDate,
+    spousePassport: source.passport,
+    spousePassportDate: source.passportDate,
+    spousePassportBy: source.passportBy,
+    spousePsn: source.psn,
+    spouseRegAddr: source.regAddr,
+    spouseNotifAddr: source.notifAddr || source.regAddr,
+    createdAt: now,
+    createdBy: 'legacy-reversed-import',
+    assessmentJson: '',
+    driveFolderId: '',
+    driveFolderUrl: ''
+  })
+
+  const caseRow = HEADERS.Cases.map(function(header) {
+    return target[header] || ''
+  })
+  saveCaseWithFolders(validateRow('Cases', caseRow))
+
+  const copied = { documents: 0, bankCertificates: 0 }
+  getRows('Documents', 'caseId', source.id).forEach(function(row) {
+    const copy = Object.assign({}, row, {
+      id: legacyCopyId('document', targetId, row.id),
+      caseId: targetId,
+      updatedAt: now
+    })
+    upsertRow('Documents', validateRow('Documents', HEADERS.Documents.map(function(header) {
+      return copy[header] || ''
+    })))
+    copied.documents++
+  })
+
+  getRows('BankCertificates', 'caseId', source.id).forEach(function(row) {
+    const copy = Object.assign({}, row, {
+      id: legacyCopyId('bank', targetId, row.id),
+      caseId: targetId,
+      updatedAt: now
+    })
+    upsertRow('BankCertificates', validateRow('BankCertificates', HEADERS.BankCertificates.map(function(header) {
+      return copy[header] || ''
+    })))
+    copied.bankCertificates++
+  })
+
+  return {
+    status: 'ok',
+    caseId: targetId,
+    applicantName: target.applicantName,
+    spouseName: target.spouseName,
+    documents: copied.documents,
+    bankCertificates: copied.bankCertificates
+  }
+}
+
+function legacyCopyId(kind, caseId, sourceId) {
+  const digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    [kind, caseId, sourceId].join('|'),
+    Utilities.Charset.UTF_8
+  )
+  return 'legacy-' + digest.slice(0, 12).map(function(byte) {
+    return ('0' + ((byte + 256) % 256).toString(16)).slice(-2)
+  }).join('')
 }
 
 function uploadDocument(data) {
