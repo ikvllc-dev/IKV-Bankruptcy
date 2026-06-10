@@ -362,7 +362,7 @@ function formatHeaderRow(sheet, width) {
 
 function applySheetTextFormats(sheet) {
   if (!sheet || sheet.getName() !== 'Cases') return
-  ;['passportBy','spousePassportBy','idCardBy','spouseIdCardBy','psn','spousePsn'].forEach(function(header) {
+  ;['passport','spousePassport','idCard','spouseIdCard','passportBy','spousePassportBy','idCardBy','spouseIdCardBy','psn','spousePsn'].forEach(function(header) {
     const index = HEADERS.Cases.indexOf(header)
     if (index !== -1) sheet.getRange(1, index + 1, Math.max(sheet.getMaxRows(), 1), 1).setNumberFormat('@')
   })
@@ -516,10 +516,11 @@ function validateRow(sheetName, row) {
 }
 
 function normalizeCaseTextCodes(row) {
-  ;['passportBy','spousePassportBy','idCardBy','spouseIdCardBy','psn','spousePsn'].forEach(function(header) {
+  ;['passport','spousePassport','idCard','spouseIdCard','passportBy','spousePassportBy','idCardBy','spouseIdCardBy','psn','spousePsn'].forEach(function(header) {
     const index = HEADERS.Cases.indexOf(header)
     if (index === -1 || row[index] === '') return
-    row[index] = "'" + normalizeIssuerCode(row[index])
+    const next = /By$/.test(header) ? normalizeIssuerCode(row[index]) : normalizeDocumentNumber(row[index])
+    row[index] = "'" + next
   })
 }
 
@@ -528,12 +529,16 @@ function normalizeIssuerCode(value) {
   return /^\d{1,2}$/.test(raw) ? raw.padStart(3, '0') : raw
 }
 
+function normalizeDocumentNumber(value) {
+  return String(value || '').replace(/^'/, '').trim()
+}
+
 function repairIdentityTextCodes() {
   const sheet = getOrCreateSheet('Cases')
   applySheetTextFormats(sheet)
   const headers = HEADERS.Cases
   const codeHeaders = ['passportBy','spousePassportBy','idCardBy','spouseIdCardBy']
-  const textHeaders = ['psn','spousePsn']
+  const textHeaders = ['passport','spousePassport','idCard','spouseIdCard','psn','spousePsn']
   const columns = codeHeaders.concat(textHeaders).map(function(header) {
     return { header: header, index: headers.indexOf(header) }
   }).filter(function(item) {
@@ -550,7 +555,7 @@ function repairIdentityTextCodes() {
       const raw = String(row[item.index] || '').replace(/^'/, '').trim()
       const next = codeHeaders.indexOf(item.header) !== -1
         ? normalizeIssuerCode(raw)
-        : raw
+        : normalizeDocumentNumber(raw)
       if (next && raw !== next) {
         row[item.index] = "'" + next
         updatedCells++
@@ -1081,6 +1086,8 @@ function getCaseRequestPerson(caseRow, subject) {
   }
   person.fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject
   person.fullNameGenitive = person.fullName + '-ի'
+  person.identityNumber = stripSheetTextPrefix(person.identityNumber)
+  person.idCard = stripSheetTextPrefix(person.idCard)
   person.identityIssuer = stripSheetTextPrefix(person.identityIssuer)
   person.idCardBy = stripSheetTextPrefix(person.idCardBy)
   person.psn = stripSheetTextPrefix(person.psn)

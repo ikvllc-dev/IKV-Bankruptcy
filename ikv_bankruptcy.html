@@ -425,10 +425,10 @@ function identityText(data, prefix='') {
   const noPassport = String(data[prefix+'noPassport']||'').toUpperCase()==='YES'
   const noIdCard = String(data[prefix+'noIdCard']||'').toUpperCase()==='YES'
   const passport = !noPassport && data[prefix+'passport']
-    ? `անձնագիր՝ ${data[prefix+'passport']}, տրված՝ ${data[prefix+'passportDate']||'—'}, մարմին՝ ${cleanTextCode(data[prefix+'passportBy'])||'—'}`
+    ? `անձնագիր՝ ${cleanTextCode(data[prefix+'passport'])}, տրված՝ ${data[prefix+'passportDate']||'—'}, մարմին՝ ${cleanTextCode(data[prefix+'passportBy'])||'—'}`
     : ''
   const idCard = !noIdCard && data[prefix+'idCard']
-    ? `նույնականացման քարտ՝ ${data[prefix+'idCard']}, տրված՝ ${data[prefix+'idCardDate']||'—'}, մարմին՝ ${cleanTextCode(data[prefix+'idCardBy'])||'—'}`
+    ? `նույնականացման քարտ՝ ${cleanTextCode(data[prefix+'idCard'])}, տրված՝ ${data[prefix+'idCardDate']||'—'}, մարմին՝ ${cleanTextCode(data[prefix+'idCardBy'])||'—'}`
     : ''
   return [passport, idCard].filter(Boolean).join(', ')
 }
@@ -444,7 +444,7 @@ function identityFieldsHtml(prefix, data={}, spouse=false) {
     </label>
     <div id="${p}passport-fields" style="${noPassport?'display:none':''}">
       <div class="form-row">
-        <div class="field"><label>Անձնագրի համարը</label><input id="${p}pp" value="${esc(data.passport||'')}" placeholder="AN0000000"/></div>
+        <div class="field"><label>Անձնագրի համարը</label><input id="${p}pp" value="${esc(cleanTextCode(data.passport))}" placeholder="AN0000000"/></div>
         <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="${p}pd" value="${esc(data.passportDate||'')}"/></div>
       </div>
       <div class="field"><label>Անձնագիրը տված մարմինը</label><input id="${p}pb" value="${esc(cleanTextCode(data.passportBy))}" placeholder="007"/></div>
@@ -456,7 +456,7 @@ function identityFieldsHtml(prefix, data={}, spouse=false) {
     </label>
     <div id="${p}id-card-fields" style="${noIdCard?'display:none':''}">
       <div class="form-row">
-        <div class="field"><label>Նույնականացման քարտի համարը</label><input id="${p}idc" value="${esc(data.idCard||'')}" placeholder="000000000"/></div>
+        <div class="field"><label>Նույնականացման քարտի համարը</label><input id="${p}idc" value="${esc(cleanTextCode(data.idCard))}" placeholder="000000000"/></div>
         <div class="field"><label>Քարտի տրման ամսաթիվը</label><input type="date" id="${p}idcd" value="${esc(data.idCardDate||'')}"/></div>
       </div>
       <div class="field"><label>Քարտը տված մարմինը</label><input id="${p}idcb" value="${esc(cleanTextCode(data.idCardBy))}" placeholder="011"/></div>
@@ -477,12 +477,12 @@ function readIdentityFields(prefix) {
   const noPassport = document.getElementById(prefix+'no-passport')?.checked
   const noIdCard = document.getElementById(prefix+'no-id-card')?.checked
   return {
-    passport:noPassport?'':(document.getElementById(prefix+'pp')?.value.trim()||''),
+    passport:noPassport?'':cleanTextCode(document.getElementById(prefix+'pp')?.value||'').trim(),
     passportDate:noPassport?'':(document.getElementById(prefix+'pd')?.value||''),
     passportBy:noPassport?'':normalizeAuthorityCode(document.getElementById(prefix+'pb')?.value||''),
     noPassport:noPassport?'YES':'NO',
     noIdCard:noIdCard?'YES':'NO',
-    idCard:noIdCard?'':(document.getElementById(prefix+'idc')?.value.trim()||''),
+    idCard:noIdCard?'':cleanTextCode(document.getElementById(prefix+'idc')?.value||'').trim(),
     idCardDate:noIdCard?'':(document.getElementById(prefix+'idcd')?.value||''),
     idCardBy:noIdCard?'':normalizeAuthorityCode(document.getElementById(prefix+'idcb')?.value||'')
   }
@@ -764,9 +764,9 @@ function renderDetail(tab) {
         <div class="card-title">👤 Դիմողի տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.applicantName)} ${esc(c.middleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.birthDate||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.noPassport||'').toUpperCase()==='YES'?'Չկա':esc(c.passport||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.noPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.passport)||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(cleanTextCode(c.passportBy))}</span></div>
-        <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.noIdCard||'').toUpperCase()==='YES'?'Չկա':esc(c.idCard||'—')}</span></div>
+        <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.noIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.idCard)||'—')}</span></div>
         <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.idCardDate||'—')} ${esc(cleanTextCode(c.idCardBy))}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.psn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.regAddr||'—')}</span></div>
@@ -783,9 +783,9 @@ function renderDetail(tab) {
         <div class="card-title">👫 Ամուսնու կամ կնոջ տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.spouseName||'—')} ${esc(c.spouseMiddleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.spouseBirthDate||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.spouseNoPassport||'').toUpperCase()==='YES'?'Չկա':esc(c.spousePassport||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.spouseNoPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.spousePassport)||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(cleanTextCode(c.spousePassportBy))}</span></div>
-        <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.spouseNoIdCard||'').toUpperCase()==='YES'?'Չկա':esc(c.spouseIdCard||'—')}</span></div>
+        <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.spouseNoIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.spouseIdCard)||'—')}</span></div>
         <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.spouseIdCardDate||'—')} ${esc(cleanTextCode(c.spouseIdCardBy))}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.spousePsn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.spouseRegAddr||'—')}</span></div>
@@ -2281,10 +2281,10 @@ function personReport(title,data,includeIdentity,includeDebts=true){
       reportRow('Անուն, ազգանուն',data.name),
       reportRow('Հայրանուն',data.middleName),
       reportRow('Ծննդյան ամսաթիվ',data.birthDate),
-      reportRow('Անձնագիր',String(data.noPassport||'').toUpperCase()==='YES'?'Չկա':data.passport),
+      reportRow('Անձնագիր',String(data.noPassport||'').toUpperCase()==='YES'?'Չկա':cleanTextCode(data.passport)),
       reportRow('Անձնագրի տրման ամսաթիվ',data.passportDate),
       reportRow('Անձնագիրը տված մարմին',cleanTextCode(data.passportBy)),
-      reportRow('Նույնականացման քարտ',data.idCard),
+      reportRow('Նույնականացման քարտ',cleanTextCode(data.idCard)),
       reportRow('Քարտի տրման ամսաթիվ',data.idCardDate),
       reportRow('Քարտը տված մարմին',cleanTextCode(data.idCardBy)),
       reportRow('Հանրային ծառայությունների համարանիշ',data.psn),
@@ -2474,10 +2474,10 @@ function textPersonReport(title,data,includeDebts=true){
   return `${title}
 Անուն, ազգանուն, հայրանուն՝ ${data.name||'—'} ${data.middleName||''}
 Ծննդյան ամսաթիվ՝ ${data.birthDate||'—'}
-Անձնագիր՝ ${String(data.noPassport||'').toUpperCase()==='YES'?'Չկա':(data.passport||'—')}
+Անձնագիր՝ ${String(data.noPassport||'').toUpperCase()==='YES'?'Չկա':(cleanTextCode(data.passport)||'—')}
 Անձնագրի տրման ամսաթիվ՝ ${data.passportDate||'—'}
 Անձնագիրը տված մարմին՝ ${cleanTextCode(data.passportBy)||'—'}
-Նույնականացման քարտ՝ ${data.idCard||'—'}
+Նույնականացման քարտ՝ ${cleanTextCode(data.idCard)||'—'}
 Քարտի տրման ամսաթիվ՝ ${data.idCardDate||'—'}
 Քարտը տված մարմին՝ ${cleanTextCode(data.idCardBy)||'—'}
 Հանրային ծառայությունների համարանիշ՝ ${data.psn||'—'}
