@@ -352,6 +352,7 @@ const DOC_TYPES = [
   {id:'mineco',name:'Հայաստանի Հանրապետության էկոնոմիկայի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'mia',name:'Հայաստանի Հանրապետության ներքին գործերի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'traffic',name:'Ճանապարհային ոստիկանության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'enforcement_service',name:'Հարկադիր կատարումն ապահովող ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:false},
   {id:'rescue_service',name:'Փրկարար ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'civil_status',name:'Քաղաքացիական կացության ակտերի գրանցման գործակալության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'state_reg',name:'Պետական ռեգիստրի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
@@ -361,6 +362,38 @@ const DOC_TYPES = [
   {id:'cred_service',name:'Ապացույցներ պարտատերերին ծանուցելու վերաբերյալ',cat:'Դատական փաստաթղթեր',s90:false,spouse:false},
   {id:'other_document',name:'Այլ փաստաթուղթ',cat:'Այլ փաստաթղթեր',s90:false,spouse:false},
 ]
+
+const STATE_REQUEST_TEMPLATE_IDS = new Set([
+  'cadastre','depository','tax','tax_personal_account','social','territorial',
+  'minfin','mineco','traffic','enforcement_service','rescue_service','state_reg'
+])
+
+const REPRESENTATIVES = {
+  hovhannes: {
+    label:'Հովհաննես Հարությունյան',
+    fullNameFrom:'Հովհաննես Գրիգորի Հարությունյանից',
+    identityType:'նույնականացման քարտ',
+    identityNumber:'009987561',
+    identityIssueDate:'20.02.2018',
+    identityIssuer:'011',
+    licenseNumber:'2332',
+    notificationAddress:'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
+    phone:'099-648-655',
+    signatureName:'Հովհաննես Հարությունյան'
+  },
+  karine: {
+    label:'Կարինե Ավետիսյան',
+    fullNameFrom:'Կարինե Նաիրիի Ավետիսյանից',
+    identityType:'անձնագիր',
+    identityNumber:'AR0610106',
+    identityIssueDate:'08.01.2018',
+    identityIssuer:'001',
+    licenseNumber:'',
+    notificationAddress:'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
+    phone:'041-648-656',
+    signatureName:'Կարինե Ավետիսյան'
+  }
+}
 
 function newId(){ return crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2,10) }
 function localDate(d=new Date()){
@@ -1250,8 +1283,8 @@ function renderDocRow(dt, subj, doc) {
   let expiryEl = ''
   const files = currentFiles.filter(file=>file.typeId===dt.id&&file.subject===subj)
   const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('uploadDocumentModal',dt.id,subj)}">⬆ Վերբեռնել ֆայլ</button>`
-  const generateButton = dt.id==='state_reg'
-    ? `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateRegisterRequestModal',subj)}">Ստեղծել ռեգիստրի հարցում</button>`
+  const generateButton = STATE_REQUEST_TEMPLATE_IDS.has(dt.id)
+    ? `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateStateRequestModal',dt.id,subj)}">Ստեղծել հարցում</button>`
     : ''
 
   if(status==='none') {
@@ -1292,32 +1325,100 @@ function renderDocRow(dt, subj, doc) {
   </div>`
 }
 
-function generateRegisterRequestModal(subj) {
-  openModal(`
-    <div class="modal-title">Ստեղծել պետական ռեգիստրի հարցում<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
-    <div class="alert alert-blue">
-      Հարցումը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
-      Հարցման ստեղծումը դեռ չի նշանակում, որ այն ուղարկվել է։
+function representativeFormHtml() {
+  return `
+    <div class="field">
+      <label>Ներկայացուցիչ</label>
+      <select id="request-representative" onchange="applyRepresentativePreset()">
+        <option value="hovhannes">Հովհաննես Հարությունյան</option>
+        <option value="karine">Կարինե Ավետիսյան</option>
+        <option value="custom">Այլ ներկայացուցիչ</option>
+      </select>
     </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Չեղարկել</button>
-      <button class="btn btn-primary" id="register-generate-submit" onclick="${inlineCall('submitRegisterRequest',subj)}">Ստեղծել հարցումը</button>
+    <div class="case-info-grid">
+      <div class="field"><label>Ներկայացուցիչ՝ ումից</label><input id="rep-full-name-from" /></div>
+      <div class="field"><label>Ստորագրության անուն</label><input id="rep-signature-name" /></div>
+      <div class="field"><label>Փաստաթղթի տեսակ</label><input id="rep-identity-type" /></div>
+      <div class="field"><label>Փաստաթղթի համար</label><input id="rep-identity-number" /></div>
+      <div class="field"><label>Տրման ամսաթիվ</label><input id="rep-identity-date" placeholder="20.02.2018" /></div>
+      <div class="field"><label>Տրված է ում կողմից</label><input id="rep-identity-issuer" /></div>
+      <div class="field"><label>Արտոնագրի համար</label><input id="rep-license" placeholder="կարող է դատարկ մնալ" /></div>
+      <div class="field"><label>Հեռախոս</label><input id="rep-phone" /></div>
     </div>
-  `)
+    <div class="field"><label>Ծանուցման հասցե</label><input id="rep-address" /></div>
+  `
 }
 
-async function submitRegisterRequest(subj) {
-  const button = document.getElementById('register-generate-submit')
+function applyRepresentativePreset() {
+  const key = document.getElementById('request-representative')?.value || 'hovhannes'
+  const rep = REPRESENTATIVES[key] || {
+    fullNameFrom:'',identityType:'նույնականացման քարտ',identityNumber:'',
+    identityIssueDate:'',identityIssuer:'',licenseNumber:'',
+    notificationAddress:'',phone:'',signatureName:''
+  }
+  const set = (id,value)=>{ const el=document.getElementById(id); if(el) el.value=value||'' }
+  set('rep-full-name-from',rep.fullNameFrom)
+  set('rep-signature-name',rep.signatureName)
+  set('rep-identity-type',rep.identityType)
+  set('rep-identity-number',rep.identityNumber)
+  set('rep-identity-date',rep.identityIssueDate)
+  set('rep-identity-issuer',rep.identityIssuer)
+  set('rep-license',rep.licenseNumber)
+  set('rep-phone',rep.phone)
+  set('rep-address',rep.notificationAddress)
+}
+
+function readRequestRepresentative() {
+  const key = document.getElementById('request-representative')?.value || 'hovhannes'
+  return {
+    key,
+    fullNameFrom:document.getElementById('rep-full-name-from')?.value.trim()||'',
+    signatureName:document.getElementById('rep-signature-name')?.value.trim()||'',
+    identityType:document.getElementById('rep-identity-type')?.value.trim()||'նույնականացման քարտ',
+    identityNumber:document.getElementById('rep-identity-number')?.value.trim()||'',
+    identityIssueDate:document.getElementById('rep-identity-date')?.value.trim()||'',
+    identityIssuer:document.getElementById('rep-identity-issuer')?.value.trim()||'',
+    licenseNumber:document.getElementById('rep-license')?.value.trim()||'',
+    notificationAddress:document.getElementById('rep-address')?.value.trim()||'',
+    phone:document.getElementById('rep-phone')?.value.trim()||''
+  }
+}
+
+function generateStateRequestModal(typeId, subj) {
+  const dt = DOC_TYPES.find(item=>item.id===typeId)
+  openModal(`
+    <div class="modal-title">Ստեղծել հարցում<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">
+      ${esc(dt?.name||'Հարցում')} փաստաթուղթը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
+      Հարցման ստեղծումը դեռ չի նշանակում, որ այն ուղարկվել է։
+    </div>
+    ${representativeFormHtml()}
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="state-request-generate-submit" onclick="${inlineCall('submitStateRequest',typeId,subj)}">Ստեղծել հարցումը</button>
+    </div>
+  `)
+  applyRepresentativePreset()
+}
+
+function generateRegisterRequestModal(subj) {
+  generateStateRequestModal('state_reg',subj)
+}
+
+async function submitStateRequest(typeId, subj) {
+  const button = document.getElementById('state-request-generate-submit')
   button.disabled = true
   button.innerHTML = '<span class="spinner"></span> Ստեղծվում է...'
   try {
     const generated = await apiPost({
-      action:'generateRegisterRequest',
+      action:'generateStateRequest',
       caseId:currentCase.id,
-      subject:subj
+      typeId,
+      subject:subj,
+      representative:readRequestRepresentative()
     })
     currentFiles.push({
-      id:newId(),caseId:currentCase.id,documentId:'',typeId:'state_reg',subject:subj,
+      id:newId(),caseId:currentCase.id,documentId:'',typeId,subject:subj,
       fileName:generated.fileName,fileUrl:generated.fileUrl,fileId:generated.fileId,
       folderId:generated.folderId,uploadedAt:new Date().toISOString()
     })
@@ -1334,6 +1435,10 @@ async function submitRegisterRequest(subj) {
     button.textContent = 'Ստեղծել հարցումը'
     alert('Հարցումը չստեղծվեց՝ '+e.message)
   }
+}
+
+async function submitRegisterRequest(subj) {
+  return submitStateRequest('state_reg',subj)
 }
 
 async function setStatus(typeId, subj, status) {

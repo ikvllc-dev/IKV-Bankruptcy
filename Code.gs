@@ -12,16 +12,35 @@ const ROOT_FOLDER_NAME = 'IKV Bankruptcy Cases'
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 const REGISTER_TEMPLATE_DOC_ID = '1CfXZsHPy25vPk5i-KcxFvoggtefjYexQhrvhtptUtVE'
 
-const REPRESENTATIVE = {
-  fullNameFrom: 'Հովհաննես Գրիգորի Հարությունյանից',
-  identityNumber: '009987561',
-  identityIssueDate: '20.02.2018',
-  identityIssuer: '011',
-  licenseNumber: '2332',
-  notificationAddress: 'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
-  phone: '099-648-655',
-  signatureName: 'Հովհաննես Հարությունյան'
+const REPRESENTATIVES = {
+  hovhannes: {
+    key: 'hovhannes',
+    label: 'Հովհաննես Հարությունյան',
+    fullNameFrom: 'Հովհաննես Գրիգորի Հարությունյանից',
+    identityType: 'նույնականացման քարտ',
+    identityNumber: '009987561',
+    identityIssueDate: '20.02.2018',
+    identityIssuer: '011',
+    licenseNumber: '2332',
+    notificationAddress: 'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
+    phone: '099-648-655',
+    signatureName: 'Հովհաննես Հարությունյան'
+  },
+  karine: {
+    key: 'karine',
+    label: 'Կարինե Ավետիսյան',
+    fullNameFrom: 'Կարինե Նաիրիի Ավետիսյանից',
+    identityType: 'անձնագիր',
+    identityNumber: 'AR0610106',
+    identityIssueDate: '08.01.2018',
+    identityIssuer: '001',
+    licenseNumber: '',
+    notificationAddress: 'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
+    phone: '041-648-656',
+    signatureName: 'Կարինե Ավետիսյան'
+  }
 }
+const REPRESENTATIVE = REPRESENTATIVES.hovhannes
 
 /**
  * Run this function once from the Apps Script editor.
@@ -66,6 +85,7 @@ const DOCUMENT_FOLDERS = {
   mineco: '04 Government Certificates',
   mia: '04 Government Certificates',
   traffic: '04 Government Certificates',
+  enforcement_service: '04 Government Certificates',
   rescue_service: '04 Government Certificates',
   civil_status: '04 Government Certificates',
   state_reg: '04 Government Certificates',
@@ -86,6 +106,124 @@ const CASE_FOLDER_NAMES = [
   '07 Generated Documents',
   '08 Other Documents'
 ]
+
+const STATE_REQUEST_TEMPLATES = {
+  minfin: {
+    typeId: 'minfin',
+    title: ['ՀՀ ՖԻՆԱՆՍՆԵՐԻ ՆԱԽԱՐԱՐՈՒԹՅՈՒՆ'],
+    heading: 'ԴԻՄՈՒՄ',
+    paragraphs: [
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե արդյոք {{client.fullNameGenitive}} {{client.identityInline}} անվամբ սույն հարցումը ներկայացնելու պահին և դրան նախորդող հինգ տարվա ընթացքում հանդիսացել է ՀՀ ֆինանսների նախարարության վարկառու, ինչպես նաև գրավատու պարտապան և/կամ ստանձնել է քաղաքացիաիրավական հարաբերություններից բխող այլ պարտավորություններ:'
+    ]
+  },
+  rescue_service: {
+    typeId: 'rescue_service',
+    title: ['ՀՀ ՆԵՐՔԻՆ ԳՈՐԾԵՐԻ ՆԱԽԱՐԱՐՈՒԹՅԱՆ', 'ՓՐԿԱՐԱՐ ԾԱՌԱՅՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ ներքին գործերի նախարարության փրկարար ծառայության տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք առկա են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ գրանցված օբյեկտներ։'
+    ]
+  },
+  depository: {
+    typeId: 'depository',
+    title: ['«ՀԱՅԱՍՏԱՆԻ ԿԵՆՏՐՈՆԱԿԱՆ ԴԵՊՈԶԻՏԱՐԻԱ»', 'ԲԲ ԸՆԿԵՐՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե «Հայաստանի կենտրոնական դեպոզիտարիա» ԲԲԸ-ի տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք գրանցված են {{client.fullNameGenitive}} {{client.identityInline}} գույքի (արժեթղթերի), այլ իրավունքների առկայության/բացակայության վերաբերյալ տեղեկություններ, այդ թվում՝ ընկերության անվանումը, արժեթղթերի քանակը, անվանական արժեքը, ինչպես նաև դրանց նկատմամբ որևէ սահմանափակում կիրառված է, թե ոչ:'
+    ],
+    attachments: ['Անձը հաստատող փաստաթղթի սկանը', 'Ինձ տրված լիազորագրի սկանը']
+  },
+  mineco: {
+    typeId: 'mineco',
+    title: ['ՀՀ ԷԿՈՆՈՄԻԿԱՅԻ ՆԱԽԱՐԱՐՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ էկոնոմիկայի նախարարության տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք առկա են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ գույքի, այլ իրավունքների առկայության/բացակայության վերաբերյալ տեղեկություններ:'
+    ]
+  },
+  cadastre: {
+    typeId: 'cadastre',
+    title: ['ՀՀ ԿԱԴԱՍՏՐԻ ԿՈՄԻՏԵ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ կադաստրի կոմիտեի տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք գրանցված են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ սեփականության, ինչպես նաև այլ գույքային իրավունքներ՝ կցելով դրանց պետական գրանցման համար հիմք հանդիսացած փաստաթղթերի վավերացված պատճենները:'
+    ],
+    attachments: ['Անձը հաստատող փաստաթղթի սկանը', 'Ինձ տրված լիազորագրի սկանը']
+  },
+  tax: {
+    typeId: 'tax',
+    title: ['ՀՀ ՊԵՏԱԿԱՆ ԵԿԱՄՈՒՏՆԵՐԻ ԿՈՄԻՏԵ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ պետական եկամուտների կոմիտեում մաքսային հսկողության ներքո գտնվող գույքի վերաբերյալ մաքսային հայտարարագրերի լրացման ավտոմատացված համակարգի տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք առկա են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ տվյալներ:'
+    ]
+  },
+  tax_personal_account: {
+    typeId: 'tax_personal_account',
+    title: ['ՀՀ ՊԵՏԱԿԱՆ ԵԿԱՄՈՒՏՆԵՐԻ ԿՈՄԻՏԵ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել {{client.fullNameGenitive}} {{client.identityInline}} անհատական հաշվի քաղվածքը և առկա հարկային պարտավորությունների վերաբերյալ տեղեկատվությունը:'
+    ]
+  },
+  territorial: {
+    typeId: 'territorial',
+    title: ['ՀՀ ՏԱՐԱԾՔԱՅԻՆ ԿԱՌԱՎԱՐՄԱՆ ԵՎ', 'ԵՆԹԱԿԱՌՈՒՑՎԱԾՔՆԵՐԻ ՆԱԽԱՐԱՐՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ տարածքային կառավարման և ենթակառուցվածքների նախարարության տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք առկա են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ սեփականության, ինչպես նաև այլ գույքային իրավունքներ՝ կցելով դրանց պետական գրանցման համար հիմք հանդիսացած փաստաթղթերի պատճենները:'
+    ]
+  },
+  social: {
+    typeId: 'social',
+    title: ['ՀՀ ՄԻԱՍՆԱԿԱՆ ՍՈՑԻԱԼԱԿԱՆ ԾԱՌԱՅՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ աշխատանքի և սոցիալական հարցերի նախարարության միասնական սոցիալական ծառայության պետական կենսաթոշակային համակարգի տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք առկա են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ գույքի, այլ իրավունքների առկայության/բացակայության վերաբերյալ տեղեկություններ:'
+    ]
+  },
+  traffic: {
+    typeId: 'traffic',
+    title: ['ՀՀ ՆԵՐՔԻՆ ԳՈՐԾԵՐԻ ՆԱԽԱՐԱՐՈՒԹՅԱՆ', 'ՈՍՏԻԿԱՆՈՒԹՅԱՆ «ՃԱՆԱՊԱՐՀԱՅԻՆ', 'ՈՍՏԻԿԱՆՈՒԹՅՈՒՆ» ԾԱՌԱՅՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ ոստիկանության «Ճանապարհային ոստիկանություն» ծառայության տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ և դրան նախորդող հինգ տարվա ընթացքում արդյոք գրանցված են {{client.fullNameGenitive}} {{client.identityInline}} անվամբ սեփականության, ինչպես նաև այլ գույքային իրավունքներ՝ կցելով դրանց պետական գրանցման համար հիմք հանդիսացած փաստաթղթերի պատճենները:'
+    ]
+  },
+  enforcement_service: {
+    typeId: 'enforcement_service',
+    title: ['ՀՀ ՀԱՐԿԱԴԻՐ ԿԱՏԱՐՈՒՄՆ', 'ԱՊԱՀՈՎՈՂ ԾԱՌԱՅՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ թույլ տալ ծանոթանալ {{client.fullNameGenitive}} {{client.identityInline}} վերաբերյալ հարուցված կատարողական վարույթի նյութերին։ Ինչպես նաև խնդրում եմ տրամադրել՝',
+      'Ընթացիկ կատարողական վարույթների ընթացքում ինչ գույք, ակտիվներ կամ գույքային իրավունքներ են հայտնաբերվել և արգելադրվել (իրացվել, բռնագանձվել):',
+      'Սույն հարցմանը պատասխանելու օրվա դրությամբ պարտապանը ինչ գույք կամ գույքային իրավունքներ ունի, որոնց վրա կիրառված են արգելանքներ և սահմանափակումներ:',
+      'Խնդրում եմ տրամադրել գույքի հայտնաբերման ուղղությամբ ձեռնարկված քայլերի (հարցումներ, հայտարարագրեր, ամփոփաթերթեր) և դրանց մասով ստացված պատասխանների, կատարողական վարույթը ավարտելու, կասեցնելու մասին որոշումների պատշաճ վավերացված պատճենները:'
+    ]
+  },
+  state_reg: {
+    typeId: 'state_reg',
+    title: ['ՀՀ ԱՆ ԻՐԱՎԱԲԱՆԱԿԱՆ ԱՆՁԱՆՑ', 'ՊԵՏԱԿԱՆ ՌԵԳԻՍՏՐԻ ԳՈՐԾԱԿԱԼՈՒԹՅՈՒՆ'],
+    heading: 'ՀԱՐՑՈՒՄ',
+    paragraphs: [
+      'Հարգելի գործընկերներ,',
+      'Ղեկավարվելով «Տեղեկատվության ազատության մասին» ՀՀ օրենքի 6-րդ և 9-րդ, «Վարչարարության հիմունքների և վարչական վարույթի մասին» ՀՀ օրենքի 30-րդ, 36-րդ, 39-րդ, 40-րդ և «Փաստաբանության մասին» ՀՀ օրենքի 18-րդ հոդվածներով՝ խնդրում եմ տրամադրել տեղեկատվություն, այն մասին, թե ՀՀ ԱՆ իրավաբանական անձանց պետական ռեգիստրի գործակալության տվյալների շտեմարանում սույն հարցումը ներկայացնելու պահի դրությամբ {{client.fullNameGenitive}} {{client.identityInline}} անվամբ՝',
+      'Արդյո՞ք առկա են գույքի, այլ իրավունքների առկայության/բացակայության վերաբերյալ տեղեկություններ:',
+      'Արդյո՞ք հաշվառված է որպես անհատ ձեռնարկատեր:',
+      'Խնդրում եմ սույն հարցման պատասխանը ուղարկել բնօրինակ տարբերակով՝ {{representative.notificationAddress}} հասցեով։'
+    ]
+  }
+}
 
 const ALLOWED_SHEETS = Object.freeze(Object.keys(HEADERS))
 let spreadsheetCache = null
@@ -231,6 +369,7 @@ function doPost(e) {
     else if (action === 'saveBankCertificate') result = upsertRow('BankCertificates', validateRow('BankCertificates', data.row))
     else if (action === 'uploadDocument') result = uploadDocument(data)
     else if (action === 'generateRegisterRequest') result = generateRegisterRequest(data)
+    else if (action === 'generateStateRequest') result = generateStateRequest(data)
     else if (action === 'deleteCase') result = deleteCase(data)
     else if (action === 'importIngaApplicantVahagnSpouseCase') result = importIngaApplicantVahagnSpouseCase()
     else if (action === 'repairBankCertificateExpiryDates') result = repairBankCertificateExpiryDates()
@@ -660,6 +799,199 @@ function uploadDocument(data) {
   }
 }
 
+function generateStateRequest(data) {
+  const caseId = String(data.caseId || '')
+  const typeId = String(data.typeId || '')
+  const subject = String(data.subject || '')
+  if (!caseId || !typeId || !subject) throw new Error('Missing case, request type, or subject')
+
+  const template = STATE_REQUEST_TEMPLATES[typeId]
+  if (!template) throw new Error('No request template is configured for: ' + typeId)
+
+  const caseRow = getRows('Cases').find(row => row.id === caseId)
+  if (!caseRow) throw new Error('Case not found')
+
+  const person = getCaseRequestPerson(caseRow, subject)
+  const representative = getRequestRepresentative(data.representative || data.representativeKey || '')
+  validateRequestPerson(person)
+
+  const caseFolder = resolveCaseFolder(caseRow)
+  const generatedFolder = getOrCreateChildFolder(caseFolder, '07 Generated Documents')
+  const requestFolder = getOrCreateChildFolder(generatedFolder, 'State Body Requests')
+  const templateFolder = getOrCreateChildFolder(requestFolder, sanitizeDriveName(template.title.join(' ')))
+  const subjectFolder = getOrCreateChildFolder(templateFolder, sanitizeDriveName(subject))
+  const outputName = sanitizeDriveName(
+    'Հարցում - ' + template.title.join(' ') + ' - ' + person.fullName + ' - ' +
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')
+  )
+
+  const document = createStateRequestDocument(outputName, subjectFolder, template, person, representative)
+  const file = DriveApp.getFileById(document.getId())
+  const fileRow = [
+    Utilities.getUuid(), caseId, '', typeId, subject, outputName,
+    file.getMimeType(), file.getId(), file.getUrl(), subjectFolder.getId(), new Date().toISOString()
+  ]
+  appendRow('CaseFiles', validateRow('CaseFiles', fileRow))
+  return {
+    status: 'generated',
+    fileId: file.getId(),
+    fileUrl: file.getUrl(),
+    fileName: outputName,
+    folderId: subjectFolder.getId()
+  }
+}
+
+function getCaseRequestPerson(caseRow, subject) {
+  const isApplicant = subject === caseRow.applicantName
+  const person = isApplicant ? {
+    firstName: caseRow.firstName,
+    middleName: caseRow.middleName,
+    lastName: caseRow.lastName,
+    identityNumber: caseRow.passport,
+    identityIssueDate: caseRow.passportDate,
+    identityIssuer: caseRow.passportBy,
+    registrationAddress: caseRow.regAddr,
+    psn: caseRow.psn
+  } : {
+    firstName: caseRow.spouseFirstName,
+    middleName: caseRow.spouseMiddleName,
+    lastName: caseRow.spouseLastName,
+    identityNumber: caseRow.spousePassport,
+    identityIssueDate: caseRow.spousePassportDate,
+    identityIssuer: caseRow.spousePassportBy,
+    registrationAddress: caseRow.spouseRegAddr,
+    psn: caseRow.spousePsn
+  }
+  person.fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject
+  person.fullNameGenitive = person.fullName + '-ի'
+  person.identityIssueDate = formatRequestDate(person.identityIssueDate)
+  person.identityInline = '/նույնականացման քարտ՝ ' + person.identityNumber + ', տրված՝ ' +
+    person.identityIssueDate + 'թ. ' + person.identityIssuer + '-ի կողմից/'
+  return person
+}
+
+function validateRequestPerson(person) {
+  const required = [
+    ['full name', person.fullName],
+    ['identity document number', person.identityNumber],
+    ['identity document issue date', person.identityIssueDate],
+    ['identity document issuer', person.identityIssuer],
+    ['registration address', person.registrationAddress],
+    ['public services number', person.psn]
+  ]
+  const missing = required.filter(item => !item[1]).map(item => item[0])
+  if (missing.length) throw new Error('Missing client data: ' + missing.join(', '))
+}
+
+function getRequestRepresentative(input) {
+  if (!input) return REPRESENTATIVE
+  if (typeof input === 'string') return REPRESENTATIVES[input] || REPRESENTATIVE
+  const key = String(input.key || '')
+  const base = REPRESENTATIVES[key] || REPRESENTATIVE
+  const merged = Object.assign({}, base, input)
+  merged.identityType = merged.identityType || 'նույնականացման քարտ'
+  merged.fullNameFrom = merged.fullNameFrom || merged.signatureName || base.fullNameFrom
+  merged.signatureName = merged.signatureName || merged.fullNameFrom || base.signatureName
+  merged.notificationAddress = merged.notificationAddress || base.notificationAddress
+  merged.phone = merged.phone || base.phone
+  return merged
+}
+
+function createStateRequestDocument(outputName, folder, template, person, representative) {
+  const document = DocumentApp.create(outputName)
+  const file = DriveApp.getFileById(document.getId())
+  file.moveTo(folder)
+  const body = document.getBody()
+  body.clear()
+
+  const right = DocumentApp.HorizontalAlignment.RIGHT
+  const center = DocumentApp.HorizontalAlignment.CENTER
+  const justified = DocumentApp.HorizontalAlignment.JUSTIFY
+
+  template.title.forEach(line => addRequestParagraph(body, line, right, true))
+  addRequestParagraph(body, '', right)
+  addRequestParagraph(body, person.fullName, right, true)
+  addRequestParagraph(body, person.identityInline, right)
+  addRequestParagraph(body, 'հաշվառված՝ ' + person.registrationAddress + ' հասցեում', right)
+  addRequestParagraph(body, '', right)
+  addRequestParagraph(body, 'ներկայացուցիչ՝ ' + representative.fullNameFrom, right)
+  addRequestParagraph(body, '(' + representative.identityType + '՝ ' + representative.identityNumber +
+    ', տրված ' + formatRequestDate(representative.identityIssueDate) + 'թ. ' +
+    representative.identityIssuer + '-ի կողմից', right)
+  if (representative.licenseNumber) {
+    addRequestParagraph(body, 'փաստաբանական գործունեության արտոնագիր թիվ ' + representative.licenseNumber + ')', right)
+  } else {
+    addRequestParagraph(body, ')', right)
+  }
+  addRequestParagraph(body, 'ԾԱՆՈՒՑՄԱՆ ՀԱՍՑԵ՝ ' + representative.notificationAddress, right, true)
+  addRequestParagraph(body, 'հեռ. ' + representative.phone, right)
+  addRequestParagraph(body, '')
+  addRequestParagraph(body, template.heading || 'ՀԱՐՑՈՒՄ', center, true)
+  addRequestParagraph(body, '')
+
+  template.paragraphs.forEach(text => {
+    addRequestParagraph(body, replaceRequestPlaceholders(text, person, representative), justified)
+  })
+  addRequestParagraph(body, '')
+  addRequestParagraph(body, 'Կից ներկայացնում եմ')
+  ;(template.attachments || defaultRequestAttachments(representative)).forEach(item => {
+    const listItem = body.appendListItem(item)
+    formatRequestText(listItem.editAsText())
+  })
+  addRequestParagraph(body, '')
+  addRequestParagraph(body, 'Հարգանքներով՝')
+  addRequestParagraph(body, '')
+  addRequestParagraph(body, 'ներկայացուցիչ՝ ' + representative.signatureName + '____________')
+
+  document.saveAndClose()
+  return document
+}
+
+function defaultRequestAttachments(representative) {
+  const attachments = ['Անձը հաստատող փաստաթղթի սկանը', 'Ինձ տրված լիազորագրի սկանը']
+  if (representative.licenseNumber) attachments.push('Փաստաբանական գործունեության արտոնագրի սկանը')
+  return attachments
+}
+
+function addRequestParagraph(body, text, alignment, bold, italic) {
+  const paragraph = body.appendParagraph(text || '')
+  if (alignment) paragraph.setAlignment(alignment)
+  const editable = paragraph.editAsText()
+  formatRequestText(editable)
+  if (bold && text) editable.setBold(true)
+  if (italic && text) editable.setItalic(true)
+  return paragraph
+}
+
+function formatRequestText(text) {
+  text.setFontFamily('Merriweather')
+  text.setFontSize(12)
+  text.setBold(false)
+  text.setItalic(false)
+}
+
+function replaceRequestPlaceholders(text, person, representative) {
+  const values = {
+    '{{client.fullName}}': person.fullName,
+    '{{client.fullNameGenitive}}': person.fullNameGenitive,
+    '{{client.identityInline}}': person.identityInline,
+    '{{client.identityNumber}}': person.identityNumber,
+    '{{client.identityIssueDate}}': person.identityIssueDate,
+    '{{client.identityIssuer}}': person.identityIssuer,
+    '{{client.registrationAddress}}': person.registrationAddress,
+    '{{client.psn}}': person.psn,
+    '{{representative.fullNameFrom}}': representative.fullNameFrom,
+    '{{representative.notificationAddress}}': representative.notificationAddress,
+    '{{representative.phone}}': representative.phone,
+    '{{representative.signatureName}}': representative.signatureName
+  }
+  let result = String(text || '')
+  Object.keys(values).forEach(key => {
+    result = result.split(key).join(String(values[key] || ''))
+  })
+  return result
+}
+
 function generateRegisterRequest(data) {
   const caseId = String(data.caseId || '')
   const subject = String(data.subject || '')
@@ -690,6 +1022,7 @@ function generateRegisterRequest(data) {
   }
 
   const fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject
+  const representative = getRequestRepresentative(data.representative || data.representativeKey || '')
   const required = [
     ['full name', fullName],
     ['identity document number', person.identityNumber],
@@ -726,14 +1059,14 @@ function generateRegisterRequest(data) {
     '{{client.identityIssuer}}': person.identityIssuer,
     '{{client.registrationAddress}}': person.registrationAddress,
     '{{client.psn}}': person.psn,
-    '{{representative.fullNameFrom}}': REPRESENTATIVE.fullNameFrom,
-    '{{representative.identityNumber}}': REPRESENTATIVE.identityNumber,
-    '{{representative.identityIssueDate}}': REPRESENTATIVE.identityIssueDate,
-    '{{representative.identityIssuer}}': REPRESENTATIVE.identityIssuer,
-    '{{representative.licenseNumber}}': REPRESENTATIVE.licenseNumber,
-    '{{representative.notificationAddress}}': REPRESENTATIVE.notificationAddress,
-    '{{representative.phone}}': REPRESENTATIVE.phone,
-    '{{representative.signatureName}}': REPRESENTATIVE.signatureName
+    '{{representative.fullNameFrom}}': representative.fullNameFrom,
+    '{{representative.identityNumber}}': representative.identityNumber,
+    '{{representative.identityIssueDate}}': formatRequestDate(representative.identityIssueDate),
+    '{{representative.identityIssuer}}': representative.identityIssuer,
+    '{{representative.licenseNumber}}': representative.licenseNumber,
+    '{{representative.notificationAddress}}': representative.notificationAddress,
+    '{{representative.phone}}': representative.phone,
+    '{{representative.signatureName}}': representative.signatureName
   }
   Object.keys(replacements).forEach(placeholder => {
     body.replaceText(escapeRegex(placeholder), String(replacements[placeholder] || ''))
