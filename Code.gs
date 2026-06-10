@@ -266,7 +266,8 @@ function getRows(sheetName, filterCol, filterVal) {
 function getDashboardData() {
   return {
     cases: getRows('Cases'),
-    documents: getRows('Documents')
+    documents: getRows('Documents'),
+    bankCertificates: getRows('BankCertificates')
   }
 }
 

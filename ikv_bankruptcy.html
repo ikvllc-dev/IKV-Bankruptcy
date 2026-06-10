@@ -293,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsL0bpc88EKZz-lVVQnCQhj4lYrLEmyEqI8Co5feaGRRwtVTN3iv5-cvZZ_fUmX8bWcQ/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznHYagBNnA8_XxYI7IY3vUzl7NKxLR6bsbsEzMHY8-StclVXy5uzp-hvQjqqdKawZUFw/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -423,6 +423,7 @@ async function apiPost(data) {
 // ═══════════════════════════════════════════════
 let allCases = []
 let allDocuments = []
+let allBankCertificates = []
 let currentCase = null
 let currentDocs = []
 let currentDebts = []
@@ -430,6 +431,7 @@ let currentBankCertificates = []
 let currentFiles = []
 let currentTab = 'info'
 let dashboardLoadedAt = 0
+let dashboardDataLoaded = false
 const UI_CACHE_MS = 60000
 const caseBundleCache = new Map()
 
@@ -453,7 +455,7 @@ function showPage(id) {
 // DASHBOARD
 // ═══════════════════════════════════════════════
 async function loadDashboard() {
-  if(allCases.length && dashboardLoadedAt && Date.now()-dashboardLoadedAt<UI_CACHE_MS) {
+  if(dashboardDataLoaded && dashboardLoadedAt && Date.now()-dashboardLoadedAt<UI_CACHE_MS) {
     renderDashboard()
     return
   }
@@ -463,11 +465,17 @@ async function loadDashboard() {
       const data = await apiGet('getDashboardData')
       allCases = data.cases||[]
       allDocuments = data.documents||[]
+      allBankCertificates = data.bankCertificates||[]
     } catch(error) {
       if(!String(error.message||'').includes('Unknown action')) throw error
-      ;[allCases, allDocuments] = await Promise.all([apiGet('getCases'),apiGet('getDocs')])
+      ;[allCases, allDocuments, allBankCertificates] = await Promise.all([
+        apiGet('getCases'),
+        apiGet('getDocs'),
+        apiGet('getBankCertificates')
+      ])
     }
     dashboardLoadedAt = Date.now()
+    dashboardDataLoaded = true
     renderDashboard()
   } catch(e) {
     document.getElementById('dash-metrics').innerHTML = `<div class="alert alert-red">Սխալ՝ ${esc(e.message)}<br><small>Google Apps Script-ը հասանելի է, սակայն տվյալների կառուցվածքը կամ թույլտվությունները ստուգման կարիք ունեն։</small></div>`
@@ -476,15 +484,29 @@ async function loadDashboard() {
 
 function renderDashboard() {
   const cases = allCases
-  const deadlineDocs = allDocuments
+  const documentDeadlines = allDocuments
     .filter(d=>d.status==='received'&&d.expiryDate)
     .map(d=>({
       ...d,
       days:daysLeft(d.expiryDate),
       caseData:cases.find(c=>c.id===d.caseId),
-      typeData:DOC_TYPES.find(t=>t.id===d.typeId)
+      title:DOC_TYPES.find(t=>t.id===d.typeId)?.name||'Փաստաթուղթ',
+      deadlineKind:'document'
     }))
-    .filter(d=>d.caseData&&d.typeData)
+    .filter(d=>d.caseData)
+
+  const bankDeadlines = allBankCertificates
+    .filter(cert=>cert.status==='received'&&cert.expiryDate)
+    .map(cert=>({
+      ...cert,
+      days:daysLeft(cert.expiryDate),
+      caseData:cases.find(c=>c.id===cert.caseId),
+      title:`${cert.bank} բանկի տեղեկանք`,
+      deadlineKind:'bank'
+    }))
+    .filter(cert=>cert.caseData)
+
+  const deadlineDocs = [...documentDeadlines,...bankDeadlines]
     .sort((a,b)=>a.days-b.days)
 
   const expired = deadlineDocs.filter(d=>d.days<0)
@@ -492,7 +514,7 @@ function renderDashboard() {
 
   document.getElementById('dash-metrics').innerHTML = `
     <div class="metric"><div class="metric-val">${cases.length}</div><div class="metric-lbl">Ակտիվ գործեր</div></div>
-    <div class="metric"><div class="metric-val" style="color:var(--red)">${expired.length}</div><div class="metric-lbl">Ժամկետանց փաստաթղթեր</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--red)">${expired.length}</div><div class="metric-lbl">Ժամկետանց փաստաթղթեր և բանկային տեղեկանքներ</div></div>
     <div class="metric"><div class="metric-val" style="color:var(--amber)">${expiring.length}</div><div class="metric-lbl">Մինչև 14 օր</div></div>
     <div class="metric"><div class="metric-val" style="color:var(--green)">${cases.filter(c=>c.lawyerApproved==='YES').length}</div><div class="metric-lbl">Փաստաբանի կողմից հաստատված</div></div>
   `
@@ -502,7 +524,7 @@ function renderDashboard() {
     ${urgent.length?urgent.map(d=>`
       <div class="alert ${d.days<0?'alert-red':'alert-amber'} clickable" onclick="${inlineCall('openCase',d.caseId)}" style="cursor:pointer">
         <strong>${d.days<0?'Ժամկետանց':'Մոտ ժամկետ'}:</strong>
-        <span>${esc(d.typeData.name)} · ${esc(d.caseData.applicantName)} · ${esc(d.expiryDate)}
+        <span>${esc(d.title)} · ${esc(d.subject||d.caseData.applicantName)} · Գործ՝ ${esc(d.caseData.applicantName)} · ${esc(d.expiryDate)}
         (${d.days<0?Math.abs(d.days)+' օր անցած':d.days+' օր մնացած'})</span>
       </div>
     `).join(''):'<div class="alert alert-green"><strong>Ամեն ինչ կարգին է։</strong><span>Առաջիկա 14 օրվա ընթացքում ժամկետանց կամ մոտեցող փաստաթուղթ չկա։</span></div>'}
@@ -1584,7 +1606,10 @@ async function loadCalendar() {
   document.getElementById('cal-content').innerHTML = '<span class="spinner"></span>'
   try {
     if(!allCases.length) allCases = await apiGet('getCases')
-    const allDocs = await apiGet('getDocs')
+    const [allDocs,bankCertificates] = await Promise.all([
+      apiGet('getDocs'),
+      apiGet('getBankCertificates')
+    ])
     const events = []
 
     allCases.forEach(c => {
@@ -1599,13 +1624,28 @@ async function loadCalendar() {
       if(dl<=60) events.push({date:d.expiryDate, label:(dt.name+' — '+c.applicantName), type:dl<=0?'expired':'expiring', caseId:d.caseId})
     })
 
+    bankCertificates.filter(cert=>cert.status==='received'&&cert.expiryDate).forEach(cert => {
+      const c = allCases.find(item=>item.id===cert.caseId)
+      if(!c) return
+      const dl = daysLeft(cert.expiryDate)
+      if(dl<=60) {
+        events.push({
+          date:cert.expiryDate,
+          label:`${cert.bank} բանկի տեղեկանք — ${cert.subject||c.applicantName} — Գործ՝ ${c.applicantName}`,
+          type:dl<=0?'expired':'expiring',
+          caseId:cert.caseId,
+          deadlineKind:'bank'
+        })
+      }
+    })
+
     events.sort((a,b)=>a.date.localeCompare(b.date))
 
     document.getElementById('cal-content').innerHTML = events.length
       ? `<table class="tbl"><thead><tr><th>Ամսաթիվ</th><th>Նշանակություն</th><th>Կարգավիճակ</th></tr></thead><tbody>
           ${events.map(e=>`<tr class="clickable" onclick="${inlineCall('openCase',e.caseId)}">
             <td>${esc(e.date)}</td>
-            <td>${e.type==='filing'?'📁 Դիմումի ներկայացում':'⏰ Փաստաթղթի ժամկետ'}: ${esc(e.label)}</td>
+            <td>${e.type==='filing'?'📁 Դիմումի ներկայացում':e.deadlineKind==='bank'?'🏦 Բանկային տեղեկանքի ժամկետ':'⏰ Փաստաթղթի ժամկետ'}: ${esc(e.label)}</td>
             <td>${e.type==='expired'?'<span class="badge badge-red">Ժամկետանց</span>':e.type==='expiring'?'<span class="badge badge-amber">Ժամկետը մոտենում է</span>':'<span class="badge badge-blue">Ներկայացման ամսաթիվ</span>'}</td>
           </tr>`).join('')}
         </tbody></table>`
