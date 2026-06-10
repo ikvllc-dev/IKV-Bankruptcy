@@ -56,7 +56,7 @@ function authorizeDocumentGeneration() {
 }
 
 const HEADERS = {
-  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy'],
+  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard'],
   Documents: ['id','caseId','typeId','subject','status','issueDate','expiryDate','appliedAt','updatedAt'],
   Debts: ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'],
   BankCertificates: ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt'],
@@ -299,6 +299,7 @@ function migrateSheetSchema(sheet, sheetName) {
         .setValues([expected.slice(lastColumn)])
       formatHeaderRow(sheet, expected.length)
     }
+    applySheetTextFormats(sheet)
     return
   }
 
@@ -329,6 +330,7 @@ function migrateSheetSchema(sheet, sheetName) {
   sheet.getRange(1, 1, migrated.length, expected.length).setValues(migrated)
   sheet.setFrozenRows(1)
   formatHeaderRow(sheet, expected.length)
+  applySheetTextFormats(sheet)
 }
 
 function normalizeHeader(value) {
@@ -355,6 +357,15 @@ function formatHeaderRow(sheet, width) {
     .setBackground('#1a1a2e')
     .setFontColor('#c9a84c')
     .setFontWeight('bold')
+  applySheetTextFormats(sheet)
+}
+
+function applySheetTextFormats(sheet) {
+  if (!sheet || sheet.getName() !== 'Cases') return
+  ;['passportBy','spousePassportBy','idCardBy','spouseIdCardBy','psn','spousePsn'].forEach(function(header) {
+    const index = HEADERS.Cases.indexOf(header)
+    if (index !== -1) sheet.getRange(1, index + 1, Math.max(sheet.getMaxRows(), 1), 1).setNumberFormat('@')
+  })
 }
 
 function repairAllSheetSchemas() {
@@ -497,8 +508,22 @@ function validateRow(sheetName, row) {
   }
 
   const normalized = row.map(safeCellValue)
+  if (sheetName === 'Cases') normalizeCaseTextCodes(normalized)
   if (!normalized[0]) throw new Error(sheetName + ' row is missing an ID')
   return normalized
+}
+
+function normalizeCaseTextCodes(row) {
+  ;['passportBy','spousePassportBy','idCardBy','spouseIdCardBy','psn','spousePsn'].forEach(function(header) {
+    const index = HEADERS.Cases.indexOf(header)
+    if (index === -1 || row[index] === '') return
+    row[index] = "'" + normalizeIssuerCode(row[index])
+  })
+}
+
+function normalizeIssuerCode(value) {
+  const raw = String(value || '').replace(/^'/, '').trim()
+  return /^\d{1,2}$/.test(raw) ? raw.padStart(3, '0') : raw
 }
 
 function safeCellValue(value) {
@@ -683,6 +708,7 @@ function importIngaApplicantVahagnSpouseCase() {
     idCard: source.spouseIdCard,
     idCardDate: source.spouseIdCardDate,
     idCardBy: source.spouseIdCardBy,
+    noIdCard: source.spouseNoIdCard,
     additionalIdentity: source.spouseAdditionalIdentity,
     regAddr: source.spouseRegAddr,
     notifAddr: source.spouseNotifAddr || source.spouseRegAddr,
@@ -699,6 +725,7 @@ function importIngaApplicantVahagnSpouseCase() {
     spouseIdCard: source.idCard,
     spouseIdCardDate: source.idCardDate,
     spouseIdCardBy: source.idCardBy,
+    spouseNoIdCard: source.noIdCard,
     spouseAdditionalIdentity: source.additionalIdentity,
     spousePsn: source.psn,
     spouseRegAddr: source.regAddr,
@@ -996,6 +1023,7 @@ function getCaseRequestPerson(caseRow, subject) {
     idCard: caseRow.idCard,
     idCardDate: caseRow.idCardDate,
     idCardBy: caseRow.idCardBy,
+    noIdCard: caseRow.noIdCard,
     registrationAddress: caseRow.regAddr,
     psn: caseRow.psn,
     additionalIdentity: caseRow.additionalIdentity
@@ -1010,12 +1038,16 @@ function getCaseRequestPerson(caseRow, subject) {
     idCard: caseRow.spouseIdCard,
     idCardDate: caseRow.spouseIdCardDate,
     idCardBy: caseRow.spouseIdCardBy,
+    noIdCard: caseRow.spouseNoIdCard,
     registrationAddress: caseRow.spouseRegAddr,
     psn: caseRow.spousePsn,
     additionalIdentity: caseRow.spouseAdditionalIdentity
   }
   person.fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ') || subject
   person.fullNameGenitive = person.fullName + '-ի'
+  person.identityIssuer = stripSheetTextPrefix(person.identityIssuer)
+  person.idCardBy = stripSheetTextPrefix(person.idCardBy)
+  person.psn = stripSheetTextPrefix(person.psn)
   person.identityIssueDate = formatRequestDate(person.identityIssueDate)
   person.idCardDate = formatRequestDate(person.idCardDate)
   const identityParts = getPersonIdentityParts(person)
@@ -1052,12 +1084,18 @@ function getPersonIdentityParts(person) {
       (person.identityIssueDate ? ', տրված՝ ' + person.identityIssueDate + 'թ.' : '') +
       (person.identityIssuer ? ' ' + person.identityIssuer + '-ի կողմից' : ''))
   }
-  if (person.idCard || person.idCardDate || person.idCardBy) {
+  const hasIdCard = String(person.noIdCard || '').toUpperCase() !== 'YES' &&
+    (person.idCard || person.idCardDate || person.idCardBy)
+  if (hasIdCard) {
     parts.push('նույնականացման քարտ՝ ' + (person.idCard || '') +
       (person.idCardDate ? ', տրված՝ ' + person.idCardDate + 'թ.' : '') +
       (person.idCardBy ? ' ' + person.idCardBy + '-ի կողմից' : ''))
   }
   return parts.filter(part => !/չկա/i.test(part))
+}
+
+function stripSheetTextPrefix(value) {
+  return String(value || '').replace(/^'/, '')
 }
 
 function getRequestRepresentative(input) {
