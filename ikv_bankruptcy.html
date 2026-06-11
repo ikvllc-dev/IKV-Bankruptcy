@@ -7,16 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wght@400;500;600;700&family=Noto+Serif+Armenian:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#111827;--ink-soft:#475569;--ink-muted:#8492a6;
-  --nav:#07111f;--nav-soft:#10233d;--primary:#0ea5e9;--primary-hover:#0284c7;
-  --primary-strong:#2563eb;--accent:#14b8a6;--accent-hover:#0f9f92;
-  --gold:#f97316;--gold-light:#fed7aa;--gold-pale:#fff7ed;
-  --red:#ef4444;--red-pale:#fff1f2;
-  --green:#10b981;--green-pale:#ecfdf5;
-  --amber:#f59e0b;--amber-pale:#fffbeb;
-  --blue:#2563eb;--blue-pale:#eff6ff;
-  --surface:#ffffff;--surface-soft:#f8fafc;--border:#e2e8f0;--border-strong:#cbd5e1;--bg:#f1f5f9;
-  --radius:14px;--radius-sm:10px;--shadow:0 12px 32px rgba(15,23,42,.08);--shadow-lg:0 26px 78px rgba(15,23,42,.24);
+  --ink:#111827;--ink-soft:#4b5563;--ink-muted:#8a94a6;
+  --nav:#0f172a;--nav-soft:#1e293b;--primary:#2563eb;--primary-hover:#1d4ed8;
+  --gold:#f59e0b;--gold-light:#fde68a;--gold-pale:#fffbeb;
+  --red:#dc2626;--red-pale:#fef2f2;
+  --green:#059669;--green-pale:#ecfdf5;
+  --amber:#d97706;--amber-pale:#fffbeb;
+  --blue:#0284c7;--blue-pale:#f0f9ff;
+  --surface:#ffffff;--surface-soft:#f8fafc;--border:#e5e7eb;--border-strong:#cbd5e1;--bg:#eef2f7;
+  --radius:12px;--radius-sm:8px;--shadow:0 10px 30px rgba(15,23,42,.07);--shadow-lg:0 24px 70px rgba(15,23,42,.20);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -24,12 +23,12 @@ body{font-family:'Noto Sans Armenian',sans-serif;background:var(--bg);min-height
 button,input,select,textarea{font:inherit}
 a{color:var(--primary);text-decoration:none}
 a:hover{text-decoration:none}
-.topnav{background:linear-gradient(180deg,#07111f 0%,#10233d 58%,#0f766e 100%);padding:18px 14px;display:flex;flex-direction:column;align-items:stretch;gap:6px;position:fixed;inset:0 auto 0 0;width:236px;z-index:100;box-shadow:8px 0 32px rgba(17,25,45,.08)}
+.topnav{background:var(--nav);padding:18px 14px;display:flex;flex-direction:column;align-items:stretch;gap:6px;position:fixed;inset:0 auto 0 0;width:236px;z-index:100;box-shadow:8px 0 32px rgba(17,25,45,.08)}
 .topnav-logo{font-family:'Noto Serif Armenian',serif;color:#fff;font-size:1.08rem;font-weight:700;padding:8px 12px 24px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap}
 .topnav-logo::after{content:'Գործերի կառավարում';display:block;font-family:'Noto Sans Armenian',sans-serif;font-size:.65rem;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.46);margin-top:4px}
 .nav-tab{color:rgba(255,255,255,.68);padding:11px 13px;font-size:.84rem;font-weight:500;cursor:pointer;border:1px solid transparent;border-radius:10px;transition:background .16s,color .16s,border-color .16s;white-space:nowrap}
 .nav-tab:hover{color:#fff;background:rgba(255,255,255,.07)}
-.nav-tab.active{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);box-shadow:inset 4px 0 0 var(--accent)}
+.nav-tab.active{color:#fff;background:var(--nav-soft);border-color:rgba(255,255,255,.08);box-shadow:inset 3px 0 0 var(--gold)}
 .page{display:none;padding:36px 40px 56px;max-width:1320px;margin:0 auto 0 236px}
 .page.active{display:block;animation:page-in .22s ease-out}
 @keyframes page-in{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:none}}
@@ -49,10 +48,10 @@ a:hover{text-decoration:none}
 .btn:active{transform:translateY(0)}
 .btn:focus-visible,.qbtn:focus-visible,.bank-btn:focus-visible,.tog:focus-visible{outline:3px solid rgba(51,73,160,.2);outline-offset:2px}
 .btn:disabled{opacity:.56;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-primary{background:linear-gradient(135deg,var(--primary-strong),var(--primary));color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(14,165,233,.24)}
-.btn-primary:hover{background:linear-gradient(135deg,#1d4ed8,var(--primary-hover));border-color:transparent}
-.btn-gold{background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;border-color:transparent;font-weight:700;box-shadow:0 8px 20px rgba(20,184,166,.24)}
-.btn-gold:hover{background:linear-gradient(135deg,var(--accent-hover),var(--primary-hover));border-color:transparent}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn-gold{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700}
+.btn-gold:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
 .btn-sm{min-height:34px;padding:5px 10px;font-size:.72rem}
 .btn-green{background:var(--green-pale);color:var(--green);border-color:var(--green)}
 .btn-red{background:var(--red-pale);color:var(--red);border-color:var(--red)}
@@ -79,7 +78,7 @@ a:hover{text-decoration:none}
 .tbl tr.clickable:hover td{background:#f8faff;cursor:pointer}
 .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
 .metric{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:left;box-shadow:var(--shadow)}
-.metric::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--accent),var(--primary))}
+.metric::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
 .metric-val{font-size:2rem;line-height:1;font-weight:700;font-family:'Noto Serif Armenian',serif}
 .metric-lbl{font-size:.69rem;color:var(--ink-muted);margin-top:8px;font-weight:600;line-height:1.35}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
@@ -112,25 +111,11 @@ a:hover{text-decoration:none}
 .doc-files{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
 .doc-file{display:inline-flex;align-items:center;padding:3px 7px;border-radius:6px;background:var(--blue-pale);color:var(--blue);font-size:.65rem;font-weight:600}
 .doc-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
-.doc-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
-.doc-stat{background:var(--surface-soft);border:1px solid var(--border);border-radius:12px;padding:11px 13px}
-.doc-stat-value{font-family:'Noto Serif Armenian',serif;font-size:1.35rem;font-weight:800;line-height:1;color:var(--ink)}
-.doc-stat-label{font-size:.68rem;color:var(--ink-muted);font-weight:700;margin-top:5px}
-.doc-filters{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.doc-filter{border:1px solid var(--border-strong);background:#fff;color:var(--ink-soft);border-radius:100px;padding:7px 11px;font-size:.72rem;font-weight:800;cursor:pointer}
-.doc-filter:hover{border-color:var(--primary);color:var(--primary);background:var(--blue-pale)}
-.doc-filter.active{border-color:transparent;color:#fff;background:linear-gradient(135deg,var(--accent),var(--primary));box-shadow:0 7px 16px rgba(14,165,233,.18)}
-.doc-more{position:relative}
-.doc-more summary{list-style:none}
-.doc-more summary::-webkit-details-marker{display:none}
-.doc-more[open] summary{border-color:var(--primary);color:var(--primary);background:var(--blue-pale)}
-.doc-more-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:20;min-width:210px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px;display:flex;flex-direction:column;gap:6px}
-.doc-more-menu .btn{width:100%;justify-content:flex-start}
 .progress-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.68rem;font-weight:700;color:var(--ink-muted)}
 .case-info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
 /* QUIZ */
 .progress-bar{height:7px;background:#e8ebf2;border-radius:100px;margin-bottom:2rem;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--primary),var(--primary-strong));border-radius:100px;transition:width .4s}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),#6478cf);border-radius:100px;transition:width .4s}
 .section-tag{display:inline-block;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:.65rem;padding:.28rem .6rem;background:var(--blue-pale);border-radius:100px}
 .step{display:none}.step.active{display:block}
 .step-label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;margin-bottom:.55rem}
@@ -139,13 +124,13 @@ a:hover{text-decoration:none}
 .qbtn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .qbtn{flex:1;min-width:120px;min-height:48px;padding:.75rem 1rem;border-radius:11px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-soft);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
 .qbtn:hover{border-color:var(--primary);background:var(--blue-pale);color:var(--primary)}
-.qbtn.selected{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;box-shadow:0 8px 18px rgba(14,165,233,.24)}
-.btn-next{background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;border:1px solid var(--primary);min-height:46px;padding:.75rem 1.5rem;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:1.15rem;display:inline-flex;align-items:center;transition:all .15s}
-.btn-next:hover{background:linear-gradient(135deg,var(--accent-hover),var(--primary-hover));box-shadow:0 8px 20px rgba(14,165,233,.26);transform:translateY(-1px)}
+.qbtn.selected{border-color:var(--primary);background:var(--primary);color:#fff;box-shadow:0 6px 16px rgba(51,73,160,.2)}
+.btn-next{background:var(--primary);color:#fff;border:1px solid var(--primary);min-height:46px;padding:.75rem 1.5rem;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:1.15rem;display:inline-flex;align-items:center;transition:all .15s}
+.btn-next:hover{background:var(--primary-hover);box-shadow:0 7px 18px rgba(51,73,160,.2);transform:translateY(-1px)}
 .bank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px;margin-bottom:1rem}
 .bank-btn{padding:.65rem .8rem;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-soft);font-size:.73rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:left;display:flex;align-items:center;gap:7px}
 .bank-btn:hover{border-color:var(--primary);background:var(--blue-pale)}
-.bank-btn.selected{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff}
+.bank-btn.selected{border-color:var(--primary);background:var(--primary);color:#fff}
 .bank-btn .ck{font-size:12px;opacity:0}.bank-btn.selected .ck{opacity:1}
 .debt-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:.75rem .9rem;border:1px solid var(--border);border-radius:10px;background:var(--surface-soft)}
 .debt-row label{flex:1;font-size:.81rem;color:var(--ink-soft)}
@@ -156,10 +141,10 @@ a:hover{text-decoration:none}
 .collateral-table td{padding:.5rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}
 .toggle-pair{display:flex;gap:5px}
 .tog{padding:.35rem .7rem;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-muted);font-size:.73rem;font-weight:700;cursor:pointer;transition:all .14s}
-.tog.on{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff}
+.tog.on{border-color:var(--primary);background:var(--primary);color:#fff}
 .spouse-banner{background:var(--blue-pale);border:1px solid #cdddf6;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.4rem;font-size:.81rem;color:var(--blue);line-height:1.6}
 .warn-box{background:#fff8e1;border:1px solid #f9d776;border-radius:9px;padding:1rem 1.3rem;font-size:.84rem;color:#7a5c00;line-height:1.6;margin-bottom:1.1rem}
-.cost-box{background:linear-gradient(135deg,#07111f,#0f766e 48%,#2563eb);border:none;border-radius:14px;padding:1.3rem 1.4rem;margin-bottom:1.35rem;color:#fff}
+.cost-box{background:linear-gradient(135deg,#18233d,#2d3f76);border:none;border-radius:14px;padding:1.3rem 1.4rem;margin-bottom:1.35rem;color:#fff}
 .cost-label{font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:.35rem}
 .cost-amount{font-family:'Noto Serif Armenian',serif;font-size:1.7rem;font-weight:700;color:#fff}
 .cost-details{font-size:.77rem;color:rgba(255,255,255,.7);margin-top:.4rem;line-height:1.55}.cost-details strong{color:#fff}
@@ -194,7 +179,6 @@ a:hover{text-decoration:none}
   .question{font-size:1.08rem}.qbtn{min-width:calc(50% - 6px)}
   .tbl{min-width:650px}.page-head{margin-bottom:18px}
   .search-box{min-width:100%;max-width:none}.doc-row{grid-template-columns:1fr;gap:8px}.doc-actions{justify-content:flex-start}
-  .doc-toolbar{grid-template-columns:1fr 1fr}.doc-more-menu{left:0;right:auto}
 }
 </style>
 </head>
@@ -309,7 +293,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmzHlsDM56RHbqT9bQvUBk_Urv7wecYREg2LcT6eWqDMXQH66CnlmSXEfA7mpCp9f-hw/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnFRkfKGvXn5vnl2ez0kv0lWMcj_X8iWgxeyQ-n3a6Db5-LWfBk8YNv5EYu0CvmZ-zDA/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -356,8 +340,8 @@ const DOC_TYPES = [
   {id:'passport',name:'Անձնագիր կամ նույնականացման քարտ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:true},
   {id:'psn',name:'Հանրային ծառայությունների համարանիշ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
   {id:'marriage',name:'Ամուսնության վկայական',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
-  {id:'notarial_poa',name:'Նոտարական լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
-  {id:'proc_poa',name:'Դատական ներկայացուցչության լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
+  {id:'notarial_poa',name:'Նոտարական լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:true},
+  {id:'proc_poa',name:'Դատական ներկայացուցչության լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:true},
   {id:'cadastre',name:'Կադաստր',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'depository',name:'Կենտրոնական դեպոզիտարիայի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'tax',name:'Պետական եկամուտների կոմիտեի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
@@ -368,6 +352,7 @@ const DOC_TYPES = [
   {id:'mineco',name:'Հայաստանի Հանրապետության էկոնոմիկայի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'mia',name:'Հայաստանի Հանրապետության ներքին գործերի նախարարության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'traffic',name:'Ճանապարհային ոստիկանության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
+  {id:'enforcement_service',name:'Հարկադիր կատարումն ապահովող ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:false},
   {id:'rescue_service',name:'Փրկարար ծառայության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'civil_status',name:'Քաղաքացիական կացության ակտերի գրանցման գործակալության տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'state_reg',name:'Պետական ռեգիստրի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
@@ -378,25 +363,174 @@ const DOC_TYPES = [
   {id:'other_document',name:'Այլ փաստաթուղթ',cat:'Այլ փաստաթղթեր',s90:false,spouse:false},
 ]
 
+const STATE_REQUEST_TEMPLATE_IDS = new Set([
+  'cadastre','depository','tax','tax_personal_account','social','territorial',
+  'minfin','mineco','traffic','enforcement_service','rescue_service','state_reg'
+])
+
+const POA_TEMPLATE_IDS = new Set(['notarial_poa','proc_poa'])
+
+const REPRESENTATIVES = {
+  hovhannes: {
+    label:'Հովհաննես Հարությունյան',
+    fullNameFrom:'Հովհաննես Գրիգորի Հարությունյանից',
+    identityType:'նույնականացման քարտ',
+    identityNumber:'009987561',
+    identityIssueDate:'20.02.2018',
+    identityIssuer:'011',
+    licenseNumber:'2332',
+    notificationAddress:'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
+    phone:'099-648-655',
+    signatureName:'Հովհաննես Հարությունյան'
+  },
+  karine: {
+    label:'Կարինե Ավետիսյան',
+    fullNameFrom:'Կարինե Նաիրիի Ավետիսյանից',
+    identityType:'անձնագիր',
+    identityNumber:'AR0610106',
+    identityIssueDate:'08.01.2018',
+    identityIssuer:'001',
+    licenseNumber:'',
+    notificationAddress:'ք. Երևան, Այգեստան 7-րդ փողոց, 1-ին շենք, բն. 30',
+    phone:'041-648-656',
+    signatureName:'Կարինե Ավետիսյան'
+  }
+}
+
 function newId(){ return crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2,10) }
 function localDate(d=new Date()){
+  if(!d || isNaN(d.getTime())) return ''
   const copy = new Date(d.getTime()-d.getTimezoneOffset()*60000)
   return copy.toISOString().slice(0,10)
 }
-function parseDate(d){ return d ? new Date(d+'T00:00:00') : null }
+function parseDate(d){
+  if(!d) return null
+  const s = String(d).trim()
+  if(!s) return null
+  const dt = new Date(s+'T00:00:00')
+  return isNaN(dt.getTime()) ? null : dt
+}
 function today(){ return localDate() }
-function addDays(d,n){ const dt=parseDate(d);dt.setDate(dt.getDate()+n);return localDate(dt) }
+function addDays(d,n){
+  const dt=parseDate(d)
+  if(!dt) return ''
+  dt.setDate(dt.getDate()+n)
+  return localDate(dt)
+}
 function daysLeft(d){
   const target=parseDate(d)
   const now=parseDate(today())
   return target ? Math.round((target-now)/86400000) : Infinity
 }
 function fmtDate(d){ const dt=parseDate(d);return dt?dt.toLocaleDateString('hy-AM'):'' }
+function safeLocalDate(d) {
+  try {
+    if(!d || isNaN(d.getTime())) return null
+    const copy = new Date(d.getTime() - d.getTimezoneOffset()*60000)
+    return copy.toISOString().slice(0,10)
+  } catch(e) { return null }
+}
+function passportExpiryBadge(issueDateStr) {
+  try {
+    if(!issueDateStr || String(issueDateStr).trim()==='') return ''
+    const issued = parseDate(String(issueDateStr).trim())
+    if(!issued || isNaN(issued.getTime())) return ''
+    const expiry = new Date(issued.getTime())
+    expiry.setFullYear(expiry.getFullYear()+10)
+    if(isNaN(expiry.getTime())) return ''
+    const expiryStr = safeLocalDate(expiry)
+    if(!expiryStr) return ''
+    const dl = daysLeft(expiryStr)
+    if(!isFinite(dl)) return ''
+    if(dl < 0) {
+      return `<span class="badge badge-red" title="Ժամկետը լրացել է ${fmtDate(expiryStr)}">🔴 Ժամկետանց (${Math.abs(dl)} օր)</span>`
+    } else if(dl <= 180) {
+      return `<span class="badge badge-amber" title="Ժամկետը լրանում է ${fmtDate(expiryStr)}">⚠ ${dl} օր (${fmtDate(expiryStr)})</span>`
+    } else if(dl <= 365) {
+      return `<span class="badge" style="background:var(--gold-pale);color:var(--amber)" title="Ժամկետը լրանում է ${fmtDate(expiryStr)}">${dl} օր (${fmtDate(expiryStr)})</span>`
+    } else {
+      return `<span class="badge badge-green" title="Ժամկետը լրանում է ${fmtDate(expiryStr)}">✓ ${dl} օր (${fmtDate(expiryStr)})</span>`
+    }
+  } catch(e) { return '' }
+}
 function esc(value){
   return String(value??'').replace(/[&<>"']/g, ch=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   })[ch])
 }
+function cleanTextCode(value){ return String(value??'').replace(/^'/,'') }
+function normalizeAuthorityCode(value){
+  const raw = cleanTextCode(value).trim()
+  return /^\d{1,2}$/.test(raw) ? raw.padStart(3,'0') : raw
+}
+function identityText(data, prefix='') {
+  const noPassport = String(data[prefix+'noPassport']||'').toUpperCase()==='YES'
+  const noIdCard = String(data[prefix+'noIdCard']||'').toUpperCase()==='YES'
+  const passport = !noPassport && data[prefix+'passport']
+    ? `անձնագիր՝ ${cleanTextCode(data[prefix+'passport'])}, տրված՝ ${data[prefix+'passportDate']||'—'}, մարմին՝ ${cleanTextCode(data[prefix+'passportBy'])||'—'}`
+    : ''
+  const idCard = !noIdCard && data[prefix+'idCard']
+    ? `նույնականացման քարտ՝ ${cleanTextCode(data[prefix+'idCard'])}, տրված՝ ${data[prefix+'idCardDate']||'—'}, մարմին՝ ${cleanTextCode(data[prefix+'idCardBy'])||'—'}`
+    : ''
+  return [passport, idCard].filter(Boolean).join(', ')
+}
+function identityFieldsHtml(prefix, data={}, spouse=false) {
+  const p = prefix
+  const noPassport = String(data.noPassport||'').toUpperCase()==='YES'
+  const noIdCard = String(data.noIdCard||'').toUpperCase()==='YES'
+  return `
+    <div style="margin:14px 0 8px;font-weight:800;color:var(--navy)">Անձնագիր</div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.82rem;color:var(--ink-soft)">
+      <input type="checkbox" id="${p}no-passport" ${noPassport?'checked':''} onchange="togglePassportFields('${p}')"/>
+      Անձնագիր չկա
+    </label>
+    <div id="${p}passport-fields" style="${noPassport?'display:none':''}">
+      <div class="form-row">
+        <div class="field"><label>Անձնագրի համարը</label><input id="${p}pp" value="${esc(cleanTextCode(data.passport))}" placeholder="AN0000000"/></div>
+        <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="${p}pd" value="${esc(data.passportDate||'')}"/></div>
+      </div>
+      <div class="field"><label>Անձնագիրը տված մարմինը</label><input id="${p}pb" value="${esc(cleanTextCode(data.passportBy))}" placeholder="007"/></div>
+    </div>
+    <div style="margin:14px 0 8px;font-weight:800;color:var(--navy)">Նույնականացման քարտ</div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.82rem;color:var(--ink-soft)">
+      <input type="checkbox" id="${p}no-id-card" ${noIdCard?'checked':''} onchange="toggleIdCardFields('${p}')"/>
+      Նույնականացման քարտ չկա
+    </label>
+    <div id="${p}id-card-fields" style="${noIdCard?'display:none':''}">
+      <div class="form-row">
+        <div class="field"><label>Նույնականացման քարտի համարը</label><input id="${p}idc" value="${esc(cleanTextCode(data.idCard))}" placeholder="000000000"/></div>
+        <div class="field"><label>Քարտի տրման ամսաթիվը</label><input type="date" id="${p}idcd" value="${esc(data.idCardDate||'')}"/></div>
+      </div>
+      <div class="field"><label>Քարտը տված մարմինը</label><input id="${p}idcb" value="${esc(cleanTextCode(data.idCardBy))}" placeholder="011"/></div>
+    </div>
+  `
+}
+function togglePassportFields(prefix) {
+  const checked = document.getElementById(prefix+'no-passport')?.checked
+  const box = document.getElementById(prefix+'passport-fields')
+  if(box) box.style.display = checked ? 'none' : 'block'
+}
+function toggleIdCardFields(prefix) {
+  const checked = document.getElementById(prefix+'no-id-card')?.checked
+  const box = document.getElementById(prefix+'id-card-fields')
+  if(box) box.style.display = checked ? 'none' : 'block'
+}
+function readIdentityFields(prefix) {
+  const noPassport = document.getElementById(prefix+'no-passport')?.checked
+  const noIdCard = document.getElementById(prefix+'no-id-card')?.checked
+  return {
+    passport:noPassport?'':cleanTextCode(document.getElementById(prefix+'pp')?.value||'').trim(),
+    passportDate:noPassport?'':(document.getElementById(prefix+'pd')?.value||''),
+    passportBy:noPassport?'':normalizeAuthorityCode(document.getElementById(prefix+'pb')?.value||''),
+    noPassport:noPassport?'YES':'NO',
+    noIdCard:noIdCard?'YES':'NO',
+    idCard:noIdCard?'':cleanTextCode(document.getElementById(prefix+'idc')?.value||'').trim(),
+    idCardDate:noIdCard?'':(document.getElementById(prefix+'idcd')?.value||''),
+    idCardBy:noIdCard?'':normalizeAuthorityCode(document.getElementById(prefix+'idcb')?.value||'')
+  }
+}
+window.togglePassportFields = togglePassportFields
+window.toggleIdCardFields = toggleIdCardFields
 function inlineCall(name,...args){
   return esc(`${name}(${args.map(arg=>JSON.stringify(arg)).join(',')})`)
 }
@@ -445,11 +579,10 @@ let currentDocs = []
 let currentDebts = []
 let currentBankCertificates = []
 let currentFiles = []
-let documentStatusFilter = 'all'
 let currentTab = 'info'
 let dashboardLoadedAt = 0
 let dashboardDataLoaded = false
-const UI_CACHE_MS = 60000
+const UI_CACHE_MS = 180000 // 3 minutes
 const caseBundleCache = new Map()
 
 // ═══════════════════════════════════════════════
@@ -526,6 +659,30 @@ function renderDashboard() {
   const deadlineDocs = [...documentDeadlines,...bankDeadlines]
     .sort((a,b)=>a.days-b.days)
 
+  const passportWarnings = []
+  allCases.forEach(c => {
+    if(c.passportDate && String(c.noPassport||'').toUpperCase()!=='YES') {
+      try {
+        const issued = parseDate(String(c.passportDate).trim())
+        if(issued && !isNaN(issued.getTime())) {
+          const expiry = new Date(issued.getTime()); expiry.setFullYear(expiry.getFullYear()+10)
+          const expiryStr = safeLocalDate(expiry)
+          if(expiryStr) { const dl = daysLeft(expiryStr); if(dl <= 365) passportWarnings.push({caseData:c, subject:c.applicantName, days:dl, expiry:expiryStr}) }
+        }
+      } catch(e) {}
+    }
+    if(c.spousePassportDate && String(c.spouseNoPassport||'').toUpperCase()!=='YES' && c.isMarried==='YES') {
+      try {
+        const issued = parseDate(String(c.spousePassportDate).trim())
+        if(issued && !isNaN(issued.getTime())) {
+          const expiry = new Date(issued.getTime()); expiry.setFullYear(expiry.getFullYear()+10)
+          const expiryStr = safeLocalDate(expiry)
+          if(expiryStr) { const dl = daysLeft(expiryStr); if(dl <= 365) passportWarnings.push({caseData:c, subject:c.spouseName, days:dl, expiry:expiryStr, isSpouse:true}) }
+        }
+      } catch(e) {}
+    }
+  })
+
   const expired = deadlineDocs.filter(d=>d.days<0)
   const expiring = deadlineDocs.filter(d=>d.days>=0&&d.days<=14)
 
@@ -556,6 +713,10 @@ function renderDashboard() {
         ).join('<br>')}${group.items.length>3?`<br>և ևս ${group.items.length-3} փաստաթուղթ կամ տեղեկանք`:''}</span>
       </div>
     `).join(''):'<div class="alert alert-green"><strong>Ամեն ինչ կարգին է։</strong><span>Առաջիկա 14 օրվա ընթացքում ժամկետանց կամ մոտեցող փաստաթուղթ չկա։</span></div>'}
+    ${passportWarnings.length?`<div style="margin-top:14px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin-bottom:8px">🪪 Անձնագրի վավերականության ժամկետ</div>${passportWarnings.sort((a,b)=>a.days-b.days).map(w=>`
+      <div class="alert ${w.days<0?'alert-red':w.days<=180?'alert-amber':'alert-blue'} clickable" onclick="${inlineCall('openCase',w.caseData.id)}" style="cursor:pointer;display:block">
+        🪪 <strong>${esc(w.subject)}</strong> — Անձնագրի ժամկ. ${w.days<0?Math.abs(w.days)+' օր անցած է':w.days+' օր մնում է'} (${esc(w.expiry)})
+      </div>`).join('')}`:''}
   </div>`
   document.getElementById('dash-cases').innerHTML = renderCasesTable(cases)
 }
@@ -583,7 +744,7 @@ function renderCasesTable(cases) {
 function filterCases(query) {
   const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
   const filtered=!value?allCases:allCases.filter(c=>
-    [c.applicantName,c.spouseName,c.passport,c.psn,c.id]
+    [c.applicantName,c.spouseName,c.passport,c.idCard,c.spousePassport,c.spouseIdCard,c.psn,c.id]
       .some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value))
   )
   document.getElementById('cases-list').innerHTML=renderCasesTable(filtered)
@@ -610,40 +771,58 @@ async function loadCases() {
 async function openCase(caseId) {
   currentCase = allCases.find(c=>c.id===caseId) || (await apiGet('getCases')).find(c=>c.id===caseId)
   if(!currentCase) return
+
+  // Show page immediately with cached or skeleton data
+  showPage('case-detail')
+  document.getElementById('detail-title').textContent = currentCase.applicantName
+
   const cached = caseBundleCache.get(caseId)
   if(cached && Date.now()-cached.loadedAt<UI_CACHE_MS) {
     currentDocs = cached.documents
     currentDebts = cached.debts
     currentBankCertificates = cached.bankCertificates
     currentFiles = cached.files
+    renderDetailTabs()
+    renderDetail('info')
   } else {
-    const bundle = await apiGet('getCaseBundle', {caseId})
-    currentDocs = bundle.documents||[]
-    currentDebts = bundle.debts||[]
-    currentBankCertificates = bundle.bankCertificates||[]
-    currentFiles = bundle.files||[]
-    if(bundle.driveFolderId) {
-      currentCase.driveFolderId = bundle.driveFolderId
-      currentCase.driveFolderUrl = bundle.driveFolderUrl
-      const caseIndex = allCases.findIndex(item=>item.id===caseId)
-      if(caseIndex!==-1) allCases[caseIndex] = currentCase
+    // Render info tab immediately from cached case data, fetch bundle in background
+    currentDocs = []; currentDebts = []; currentBankCertificates = []; currentFiles = []
+    renderDetailTabs()
+    renderDetail('info')
+    document.getElementById('detail-content').insertAdjacentHTML('afterbegin',
+      '<div id="bundle-loading" class="alert alert-blue" style="margin-bottom:12px"><span class="spinner"></span> Փաստաթղթերը բեռնվում են...</div>')
+    try {
+      const bundle = await apiGet('getCaseBundle', {caseId})
+      currentDocs = bundle.documents||[]
+      currentDebts = bundle.debts||[]
+      currentBankCertificates = bundle.bankCertificates||[]
+      currentFiles = bundle.files||[]
+      if(bundle.driveFolderId) {
+        currentCase.driveFolderId = bundle.driveFolderId
+        currentCase.driveFolderUrl = bundle.driveFolderUrl
+        const caseIndex = allCases.findIndex(item=>item.id===caseId)
+        if(caseIndex!==-1) allCases[caseIndex] = currentCase
+      }
+      caseBundleCache.set(caseId,{
+        documents:currentDocs,debts:currentDebts,
+        bankCertificates:currentBankCertificates,files:currentFiles,
+        loadedAt:Date.now()
+      })
+      if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
+      caseBundleCache.set(caseId,{
+        documents:currentDocs,debts:currentDebts,
+        bankCertificates:currentBankCertificates,files:currentFiles,
+        loadedAt:Date.now()
+      })
+      document.getElementById('bundle-loading')?.remove()
+      renderDetailTabs()
+      renderDetail(currentTab)
+    } catch(e) {
+      document.getElementById('bundle-loading')?.remove()
+      document.getElementById('detail-content').insertAdjacentHTML('afterbegin',
+        `<div class="alert alert-red">Տվյալները չբեռնվեցին: ${esc(e.message)}</div>`)
     }
-    caseBundleCache.set(caseId,{
-      documents:currentDocs,debts:currentDebts,
-      bankCertificates:currentBankCertificates,files:currentFiles,
-      loadedAt:Date.now()
-    })
   }
-  if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
-  caseBundleCache.set(caseId,{
-    documents:currentDocs,debts:currentDebts,
-    bankCertificates:currentBankCertificates,files:currentFiles,
-    loadedAt:Date.now()
-  })
-  showPage('case-detail')
-  document.getElementById('detail-title').textContent = currentCase.applicantName
-  renderDetailTabs()
-  renderDetail('info')
 }
 
 function renderDetailTabs() {
@@ -673,14 +852,16 @@ function renderDetail(tab) {
         <div class="card-title">👤 Դիմողի տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.applicantName)} ${esc(c.middleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.birthDate||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${esc(c.passport||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(c.passportBy||'')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.noPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.passport)||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(cleanTextCode(c.passportBy))}${c.passportDate&&String(c.noPassport||'').toUpperCase()!=='YES'?` <br><span style="font-size:.71rem">Վավ․ ժամկետ (10 տ.): ${passportExpiryBadge(c.passportDate)}</span>`:''}</span></div>
+        <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.noIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.idCard)||'—')}</span></div>
+        <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.idCardDate||'—')} ${esc(cleanTextCode(c.idCardBy))}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.psn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.regAddr||'—')}</span></div>
         <div class="srow"><span class="sk">Ծանուցման հասցե</span><span class="sv">${esc(c.notifAddr||c.regAddr||'—')}</span></div>
         <div class="srow"><span class="sk">Դիմումը ներկայացնելու ամսաթիվ</span><span class="sv">${esc(c.filingDate||'—')}</span></div>
         <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
-          <button class="btn btn-sm btn-gold" onclick="editCaseModal()">✎ Խմբագրել</button>
+          <button class="btn btn-sm btn-gold" onclick="openEditCaseModal()">✎ Խմբագրել</button>
           ${c.driveFolderUrl?`<a class="btn btn-sm" href="${esc(c.driveFolderUrl)}" target="_blank" rel="noopener">📁 Բացել Drive պանակը</a>`:''}
           ${c.lawyerApproved==='YES'?'<span class="badge badge-green">✓ Հաստատված</span>':'<button class="btn btn-sm btn-green" onclick="approveLawyer()">⚖ Հաստատել</button>'}
           <button class="btn btn-sm btn-red" onclick="openDeleteCaseModal()">Ջնջել գործը</button>
@@ -690,26 +871,29 @@ function renderDetail(tab) {
         <div class="card-title">👫 Ամուսնու կամ կնոջ տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.spouseName||'—')} ${esc(c.spouseMiddleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.spouseBirthDate||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${esc(c.spousePassport||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(c.spousePassportBy||'')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.spouseNoPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.spousePassport)||'—')}</span></div>
+        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(cleanTextCode(c.spousePassportBy)||'—')}${c.spousePassportDate&&String(c.spouseNoPassport||'').toUpperCase()!=='YES'?` <br><span style="font-size:.71rem">Վավ․ ժամկետ (10 տ.): ${passportExpiryBadge(c.spousePassportDate)}</span>`:''}</span></div>
+        <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.spouseNoIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.spouseIdCard)||'—')}</span></div>
+        <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.spouseIdCardDate||'—')} ${esc(cleanTextCode(c.spouseIdCardBy)||'—')}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.spousePsn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.spouseRegAddr||'—')}</span></div>
+        <div class="srow"><span class="sk">Ծանուցման հասցե</span><span class="sv">${esc(c.spouseNotifAddr||c.spouseRegAddr||'—')}</span></div>
+        <div style="margin-top:10px">
+          <button class="btn btn-sm btn-gold" onclick="openEditSpouseModal()">✎ Խմբագրել ամուսնու տվյալները</button>
+        </div>
       </div>`:'<div class="card"><div class="card-title">ℹ Ընտանեկան դրություն</div><div class="srow"><span class="sk">Ամուսնացած է</span><span class="sv">Ոչ</span></div></div>'}
     </div>`
   }
 
-if(tab === 'docs') {
-  const married = currentCase.isMarried === 'YES'
-  const documentSubjects = [{name:currentCase.applicantName,isSpouse:false}]
-  if(married && currentCase.spouseName) documentSubjects.push({name:currentCase.spouseName,isSpouse:true})
-  html = '<div class="card">'
-  html += renderDocumentSummary(documentSubjects)
-  html += renderDocumentFilters()
-  documentSubjects.forEach(item=>{
-    html += renderPersonDocumentSections(item.name,item.isSpouse)
-  })
-  html += '</div>'
-}
+  if(tab === 'docs') {
+    const married = currentCase.isMarried === 'YES'
+    html = '<div class="card">'
+    html += renderPersonDocumentSections(currentCase.applicantName,false)
+    if(married && currentCase.spouseName) {
+      html += renderPersonDocumentSections(currentCase.spouseName,true)
+    }
+    html += '</div>'
+  }
 
   if(tab === 'court') {
     html = renderCourtDocuments()
@@ -722,112 +906,48 @@ if(tab === 'docs') {
   if(tab === 'report') {
     let assessment=null
     try { assessment=JSON.parse(currentCase.assessmentJson||'null') } catch(e){}
-    html = assessment?.applicant
-      ? `<div class="card">
-          <div class="card-title">📄 Նախնական գնահատման ամբողջական հաշվետվություն</div>
-          ${personReport('Դիմողի ամբողջական տվյալները',assessment.applicant,true)}
-          ${assessment.spouse?.name?personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները',assessment.spouse,true,false):''}
-          ${bankCertificatesReport()}
-        </div>`
-      : '<div class="card"><div class="alert alert-amber">Այս գործը ստեղծվել է մինչև ամբողջական հաշվետվության պահպանումը։ Նոր գնահատումների բոլոր պատասխանները կպահպանվեն այստեղ։</div></div>'
+
+    // Build applicant data — from assessmentJson if available, otherwise from case fields directly
+    const c = currentCase
+    const applicantData = assessment?.applicant || {
+      name: c.applicantName,
+      firstName: c.firstName, lastName: c.lastName, middleName: c.middleName,
+      birthDate: c.birthDate,
+      passport: c.passport, passportDate: c.passportDate, passportBy: c.passportBy,
+      noPassport: c.noPassport,
+      idCard: c.idCard, idCardDate: c.idCardDate, idCardBy: c.idCardBy,
+      noIdCard: c.noIdCard,
+      psn: c.psn, regAddr: c.regAddr, notifAddr: c.notifAddr || c.regAddr,
+      // debts from Debts sheet (already loaded)
+      debtDetails: currentDebts.length ? currentDebts : [],
+      banks: (() => { try { return JSON.parse(c.banks||'[]') } catch(e) { return [] } })(),
+      debts: (() => { try { return JSON.parse(c.debts||'{}') } catch(e) { return {} } })(),
+      totalBankDebt: currentDebts.reduce((s,d)=>s+(Number(d.totalAmount)||0),0)
+        || (() => { try { const d=JSON.parse(c.debts||'{}'); return Object.values(d).reduce((s,v)=>s+(Number(v)||0),0) } catch(e){return 0} })(),
+    }
+    const spouseData = assessment?.spouse?.name ? assessment.spouse
+      : (c.isMarried==='YES' && c.spouseName ? {
+          name: c.spouseName,
+          firstName: c.spouseFirstName, lastName: c.spouseLastName, middleName: c.spouseMiddleName,
+          birthDate: c.spouseBirthDate,
+          passport: c.spousePassport, passportDate: c.spousePassportDate, passportBy: c.spousePassportBy,
+          noPassport: c.spouseNoPassport,
+          idCard: c.spouseIdCard, idCardDate: c.spouseIdCardDate, idCardBy: c.spouseIdCardBy,
+          noIdCard: c.spouseNoIdCard,
+          psn: c.spousePsn, regAddr: c.spouseRegAddr, notifAddr: c.spouseNotifAddr || c.spouseRegAddr,
+          banks: (() => { try { return JSON.parse(c.spouseBanks||'[]') } catch(e) { return [] } })(),
+          debts: (() => { try { return JSON.parse(c.spouseDebts||'{}') } catch(e) { return {} } })(),
+        } : null)
+
+    html = `<div class="card">
+        <div class="card-title">📄 Նախնական գնահատման ամբողջական հաշվետվություն</div>
+        ${personReport('Դիմողի ամբողջական տվյալները', applicantData, true)}
+        ${spouseData ? personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները', spouseData, true, false) : ''}
+        ${bankCertificatesReport()}
+      </div>`
   }
 
   document.getElementById('detail-content').innerHTML = html
-}
-
-function documentState(type, doc) {
-  if(!doc || !doc.status || doc.status==='none') return 'missing'
-  if(doc.status==='applied') return 'waiting'
-  if(doc.status==='received') {
-    if(type?.s90 && doc.expiryDate) {
-      const dl = daysLeft(doc.expiryDate)
-      if(dl <= 0) return 'expired'
-      if(dl <= 14) return 'expiring'
-    }
-    return 'received'
-  }
-  return 'missing'
-}
-
-function bankCertificateState(cert) {
-  if(!cert || !cert.status || cert.status==='none') return 'missing'
-  if(cert.status==='applied') return 'waiting'
-  if(cert.status==='received') {
-    if(cert.expiryDate) {
-      const dl = daysLeft(cert.expiryDate)
-      if(dl <= 0) return 'expired'
-      if(dl <= 14) return 'expiring'
-    }
-    return 'received'
-  }
-  return 'missing'
-}
-
-function documentFilterMatches(state) {
-  return documentStatusFilter === 'all' || documentStatusFilter === state
-}
-
-function setDocumentFilter(value) {
-  documentStatusFilter = value
-  renderDetail(currentTab)
-}
-
-function getDocumentItems(subjects) {
-  const items = []
-  subjects.forEach(subjectInfo=>{
-    DOC_TYPES
-      .filter(item=>item.cat!=='Դատական փաստաթղթեր' && (!subjectInfo.isSpouse || item.spouse))
-      .forEach(type=>{
-        if(type.id==='banks_resp') {
-          BANKS.forEach(bank=>{
-            const cert = findBankCertificate(bank,subjectInfo.name)
-            items.push({state:bankCertificateState(cert)})
-          })
-        } else {
-          const doc = currentDocs.find(item=>item.typeId===type.id&&item.subject===subjectInfo.name)
-          items.push({state:documentState(type,doc)})
-        }
-      })
-  })
-  return items
-}
-
-function renderDocumentSummary(subjects) {
-  const items = getDocumentItems(subjects)
-  const count = state => items.filter(item=>item.state===state).length
-  return `<div class="doc-toolbar">
-    <div class="doc-stat"><div class="doc-stat-value">${count('received')}</div><div class="doc-stat-label">Ստացված</div></div>
-    <div class="doc-stat"><div class="doc-stat-value">${count('waiting')}</div><div class="doc-stat-label">Սպասում ենք</div></div>
-    <div class="doc-stat"><div class="doc-stat-value">${count('expiring')}</div><div class="doc-stat-label">Շուտով ժամկետանց</div></div>
-    <div class="doc-stat"><div class="doc-stat-value">${count('missing')+count('expired')}</div><div class="doc-stat-label">Պակաս / ժամկետանց</div></div>
-  </div>`
-}
-
-function renderDocumentFilters() {
-  const filters = [
-    ['all','Բոլորը'],
-    ['missing','Պակաս'],
-    ['waiting','Սպասում ենք'],
-    ['received','Ստացված'],
-    ['expiring','Շուտով ժամկետանց'],
-    ['expired','Ժամկետանց']
-  ]
-  return `<div class="doc-filters">${filters.map(([value,label])=>
-    `<button class="doc-filter${documentStatusFilter===value?' active':''}" onclick="${inlineCall('setDocumentFilter',value)}">${label}</button>`
-  ).join('')}</div>`
-}
-
-function docActionMenu(primary, secondary=[]) {
-  const secondaries = secondary.filter(Boolean)
-  return `<div class="doc-actions">
-    ${primary||''}
-    ${secondaries.length?`<details class="doc-more"><summary class="btn btn-sm">Ավելին</summary><div class="doc-more-menu">${secondaries.join('')}</div></details>`:''}
-  </div>`
-}
-
-function renderFileChips(files) {
-  if(!files.length) return ''
-  return `<div class="doc-files">${files.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(file.fileName)} · Բացել</a>`).join('')}</div>`
 }
 
 function renderPersonDocumentSections(subject,isSpouse) {
@@ -836,7 +956,7 @@ function renderPersonDocumentSections(subject,isSpouse) {
     'Իրավական փաստաթղթեր'
   ]
   const allowedCategories = (isSpouse
-    ? ['Բանկային փաստաթղթեր','Պետական մարմինների տեղեկանքներ']
+    ? ['Իրավական փաստաթղթեր','Բանկային փաստաթղթեր','Պետական մարմինների տեղեկանքներ']
     : [...new Set(DOC_TYPES
         .filter(item=>item.cat!=='Դատական փաստաթղթեր')
         .map(item=>item.cat))])
@@ -849,26 +969,24 @@ function renderPersonDocumentSections(subject,isSpouse) {
       }
       return armenianCompare(a,b)
     })
-  let body = ''
+  let html = `<div class="summary-block-title" style="font-size:.8rem;margin-top:${isSpouse?'22px':'0'}">${isSpouse?'Ամուսնու կամ կնոջ փաստաթղթերը':'Դիմողի փաստաթղթերը'} · ${esc(subject)}</div>`
   allowedCategories.forEach(category=>{
     const types = DOC_TYPES
       .filter(item=>item.cat===category && (!isSpouse||item.spouse))
       .sort((a,b)=>armenianCompare(a.name,b.name))
     if(!types.length) return
-    let rows = ''
+    html += `<div class="doc-group"><div class="summary-block-title">${esc(category)}</div>`
     types.forEach(type=>{
       if(type.id==='banks_resp') {
-        rows += renderBankCertificates(subject)
+        html += renderBankCertificates(subject)
       } else {
         const doc = currentDocs.find(item=>item.typeId===type.id&&item.subject===subject)
-        const state = documentState(type,doc)
-        if(documentFilterMatches(state)) rows += renderDocRow(type,subject,doc)
+        html += renderDocRow(type,subject,doc)
       }
     })
-    if(rows) body += `<div class="doc-group"><div class="summary-block-title">${esc(category)}</div>${rows}</div>`
+    html += '</div>'
   })
-  if(!body) return ''
-  return `<div class="summary-block-title" style="font-size:.8rem;margin-top:${isSpouse?'22px':'0'}">${isSpouse?'Ամուսնու կամ կնոջ փաստաթղթերը':'Դիմողի փաստաթղթերը'} · ${esc(subject)}</div>${body}`
+  return html
 }
 
 function renderCourtDocuments() {
@@ -924,7 +1042,7 @@ function renderDebtsTab() {
         <span>Պարտքերն ըստ բանկերի և վարկատուների</span>
         <button class="btn btn-sm btn-primary" onclick="openDebtModal()">Ավելացնել պարտք</button>
       </div>
-      <div class="alert alert-blue">Այստեղ պահպանված տվյալները փոխանցվում են գործի հաշվետվությանը և սնանկության դիմումի տվյալներին։ Յուրաքանչյուր պարտքի համար կարող եք կցել հաշվի քաղվածքը և վարկային պայմանագիրը։</div>
+      <div class="alert alert-blue">Այստեղ պահպանված տվյալները փոխանցվում են գործի հաշվետվությանը և սնանկության դիմումի տվյալներին։ Յուրաքանչյուր պարտքի համար կարող եք կցել հաշվի քաղվածքը և վարկային պայմանագիրը։ <strong>Նույն բանկի մի քանի վարկ ունե՞ք — սեղմեք «Ավելացնել պարտք» յուրաքանչյուրի համար։</strong></div>
       ${cards||'<p class="hint">Պարտքեր դեռ չեն ավելացվել։</p>'}
       <div class="srow" style="margin-top:12px"><span class="sk"><strong>Ընդհանուր պարտք</strong></span><span class="sv"><strong>${debtMoney(total)}</strong></span></div>
     </div>`
@@ -1150,19 +1268,17 @@ ${new Date().toLocaleDateString('hy-AM')}
 }
 
 function renderBankCertificates(subject=currentCase.applicantName) {
-  const visibleRows = [...BANKS].sort(armenianCompare).map(bank=>{
+  const rows = [...BANKS].sort(armenianCompare).map(bank=>{
     const cert = findBankCertificate(bank,subject)
-    const state = bankCertificateState(cert)
-    return documentFilterMatches(state) ? renderBankCertificateRow(bank,cert,subject,state) : ''
+    return renderBankCertificateRow(bank,cert,subject)
   }).join('')
   const subjectCertificates = currentBankCertificates.filter(item=>item.subject===subject)
   const received = subjectCertificates.filter(item=>item.status==='received').length
   const noAccounts = subjectCertificates.filter(item=>item.result==='no_accounts').length
   const accountsFound = subjectCertificates.filter(item=>item.result==='accounts_found').length
-  if(!visibleRows) return ''
   return `<div class="alert alert-blue" style="margin-bottom:10px">
     Պետք է ստացվի առանձին տեղեկանք բոլոր ${BANKS.length} բանկերից։ Ստացված՝ ${received}, հաշիվներ չկան՝ ${noAccounts}, հաշիվներ կան՝ ${accountsFound}։
-  </div>${visibleRows}`
+  </div>${rows}`
 }
 
 function bankCertificatesReport() {
@@ -1179,47 +1295,46 @@ function bankCertificatesReport() {
   return `<div class="summary-block"><div class="summary-block-title">Բանկերի տեղեկանքների արդյունքները</div>${rows}</div>`
 }
 
-function renderBankCertificateRow(bank,cert,subject,state=bankCertificateState(cert)) {
+function renderBankCertificateRow(bank,cert,subject) {
   const status = cert?.status||'none'
   const files = cert ? currentFiles.filter(file=>file.typeId==='banks_resp'&&file.subject===cert.id) : []
   let expiryEl = ''
-  let statusEl = '<span class="status-pill sp-none">Պակաս</span>'
-  if(status==='applied') statusEl = '<span class="status-pill sp-applied">Սպասում ենք</span>'
+  let statusEl = '<span class="status-pill sp-none">Չի դիմվել</span>'
+  if(status==='applied') statusEl = '<span class="status-pill sp-applied">Սպասում ենք պատասխանին</span>'
   if(status==='received') {
     statusEl = cert.result==='no_accounts'
       ? '<span class="status-pill sp-received">Հաշիվներ չկան</span>'
       : cert.result==='accounts_found'
         ? '<span class="status-pill sp-received">Հաշիվներ կան</span>'
-        : '<span class="status-pill sp-applied">Ստուգել</span>'
+        : '<span class="status-pill sp-applied">Ստացված է, պետք է ստուգել</span>'
     if(cert.expiryDate) {
       const dl = daysLeft(cert.expiryDate)
-      if(dl<=0) expiryEl = `<div style="font-size:.71rem;color:var(--red)">Ժամկետանց · ${esc(cert.expiryDate)} (${Math.abs(dl)} օր անցած)</div>`
-      else if(dl<=14) expiryEl = `<div style="font-size:.71rem;color:var(--amber)">Մնացել է ${dl} օր (${esc(cert.expiryDate)})</div>`
-      else expiryEl = `<div style="font-size:.71rem;color:var(--green)">Վավեր է · ${dl} օր</div>`
+      if(dl<=0) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--red)">❌ Ժամկետանց · ${esc(cert.expiryDate)} (${Math.abs(dl)} օր անցած)</div>`
+      } else if(dl<=14) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--amber)">⚠ ${dl} օր (${esc(cert.expiryDate)})</div>`
+      } else {
+        expiryEl = `<div style="font-size:.71rem;color:var(--green)">✓ ${dl} օր</div>`
+      }
     }
   }
   const result = cert?.result==='accounts_found'
     ? `<div style="font-size:.75rem;color:var(--ink-muted);margin-top:4px">${esc(cert.accountInfo||'Հաշվի տվյալները նշված չեն')} · Մնացորդ՝ ${debtMoney(cert.balance,cert.currency)}</div>`
     : ''
-  const appliedButton = `<button class="btn btn-sm" onclick="${inlineCall('setBankCertificateApplied',bank,subject)}">Դիմել</button>`
-  const receiveButton = `<button class="btn btn-sm btn-green" onclick="${inlineCall('openBankCertificateModal',bank,subject)}">${status==='received'?'Խմբագրել':'Գրանցել'}</button>`
-  const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('openBankCertificateUpload',cert?.id||'',bank,subject)}">Վերբեռնել</button>`
-  const openButton = files[0] ? `<a class="btn btn-sm btn-primary" href="${esc(files[0].fileUrl)}" target="_blank" rel="noopener">Բացել</a>` : ''
-  const primary = status==='none' ? appliedButton : (files.length ? openButton : uploadButton)
-  const secondary = status==='none'
-    ? [uploadButton, receiveButton]
-    : status==='applied'
-      ? [receiveButton]
-      : [uploadButton, receiveButton]
-  return `<div class="doc-row" data-doc-state="${state}">
+  const appliedButton = status==='none'
+    ? `<button class="btn btn-sm" onclick="${inlineCall('setBankCertificateApplied',bank,subject)}">Նշել որպես դիմած</button>`
+    : ''
+  const receiveButton = `<button class="btn btn-sm btn-green" onclick="${inlineCall('openBankCertificateModal',bank,subject)}">${status==='received'?'Խմբագրել պատասխանը':'Գրանցել պատասխանը'}</button>`
+  const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('openBankCertificateUpload',cert?.id||'',bank,subject)}">Վերբեռնել տեղեկանքը</button>`
+  return `<div class="doc-row">
     <div>
       <div class="doc-title">${esc(bank)}</div>
       ${expiryEl}
       ${result}
-      ${renderFileChips(files)}
+      <div class="doc-files">${files.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">${esc(file.fileName)}</a>`).join('')}</div>
     </div>
     ${statusEl}
-    ${docActionMenu(primary, secondary)}
+    <div class="doc-actions">${appliedButton}${receiveButton}${uploadButton}</div>
   </div>`
 }
 
@@ -1362,84 +1477,153 @@ async function submitBankCertificateUpload(certId,bank,subject) {
 
 function renderDocRow(dt, subj, doc) {
   const status = doc?.status || 'none'
-  const state = documentState(dt,doc)
   const isSelf = subj === currentCase.applicantName
   const label = isSelf ? '' : ` <span style="font-size:.71rem;color:var(--ink-muted)">(ամուսնու կամ կնոջ համար)</span>`
 
   let statusEl = ''
+  let actions = ''
   let expiryEl = ''
   const files = currentFiles.filter(file=>file.typeId===dt.id&&file.subject===subj)
-  const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('uploadDocumentModal',dt.id,subj)}">Վերբեռնել</button>`
-  const appliedButton = `<button class="btn btn-sm" onclick="${inlineCall('setStatus',dt.id,subj,'applied')}">Դիմել</button>`
-  const receivedButton = `<button class="btn btn-sm btn-green" onclick="${inlineCall('markReceived',dt.id,subj)}">Ստացված է</button>`
-  const openButton = files[0] ? `<a class="btn btn-sm btn-primary" href="${esc(files[0].fileUrl)}" target="_blank" rel="noopener">Բացել</a>` : ''
-  const generateButton = dt.id==='state_reg'
-    ? `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateRegisterRequestModal',subj)}">Ստեղծել հարցում</button>`
-    : ''
-
-  if(status==='none') {
-    statusEl = '<span class="status-pill sp-none">Պակաս</span>'
-  } else if(status==='applied') {
-    statusEl = '<span class="status-pill sp-applied">Սպասում ենք</span>'
-  } else if(status==='received') {
-    statusEl = '<span class="status-pill sp-received">Ստացված է</span>'
-    if(dt.s90 && doc?.issueDate) {
-      const dl = daysLeft(doc.expiryDate)
-      if(dl<=0) expiryEl = `<div style="font-size:.71rem;color:var(--red)">Ժամկետանց · ${doc.expiryDate}</div>`
-      else if(dl<=14) expiryEl = `<div style="font-size:.71rem;color:var(--amber)">Մնացել է ${dl} օր (${doc.expiryDate})</div>`
-      else expiryEl = `<div style="font-size:.71rem;color:var(--green)">Վավեր է · ${dl} օր</div>`
-    }
+  const uploadButton = `<button class="btn btn-sm btn-gold" onclick="${inlineCall('uploadDocumentModal',dt.id,subj)}">⬆ Վերբեռնել ֆայլ</button>`
+  let generateButton = ''
+  if(STATE_REQUEST_TEMPLATE_IDS.has(dt.id)) {
+    generateButton = `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generateStateRequestModal',dt.id,subj)}">Ստեղծել հարցում</button>`
+  } else if(POA_TEMPLATE_IDS.has(dt.id)) {
+    generateButton = `<button class="btn btn-sm btn-primary" onclick="${inlineCall('generatePoaModal',dt.id,subj)}">Ստեղծել լիազորագիր</button>`
   }
 
-  const motionButton = status==='applied'
-    ? `<button class="btn btn-sm" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber)" onclick="${inlineCall('genMotion',dt.id,subj,'not_received')}">Միջնորդություն</button>`
-    : state==='expired'
-      ? `<button class="btn btn-sm" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber)" onclick="${inlineCall('genMotion',dt.id,subj,'expired')}">Միջնորդություն</button>`
-      : ''
-  const primary = status==='none' ? (generateButton || appliedButton) : (files.length ? openButton : uploadButton)
-  const secondary = status==='none'
-    ? [generateButton && appliedButton, uploadButton]
-    : status==='applied'
-      ? [receivedButton, motionButton]
-      : [uploadButton, motionButton, generateButton]
+  if(status==='none') {
+    statusEl = '<span class="status-pill sp-none">Չի դիմվել</span>'
+    actions = `<button class="btn btn-sm" onclick="${inlineCall('setStatus',dt.id,subj,'applied')}">Նշել որպես դիմած</button>${uploadButton}`
+  } else if(status==='applied') {
+    statusEl = '<span class="status-pill sp-applied">⏳ Սպասում ենք պատասխանին</span>'
+    actions = `<button class="btn btn-sm btn-green" onclick="${inlineCall('markReceived',dt.id,subj)}">✓ Նշել որպես ստացված</button>
+               <button class="btn btn-sm" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber)" onclick="${inlineCall('genMotion',dt.id,subj,'not_received')}">📄 Ստեղծել միջնորդություն</button>${uploadButton}`
+  } else if(status==='received') {
+    statusEl = '<span class="status-pill sp-received">✅ Ստացված է</span>'
+    if(dt.s90 && doc?.issueDate) {
+      const dl = daysLeft(doc.expiryDate)
+      if(dl<=0) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--red)">❌ ${doc.expiryDate}</div>`
+        actions = `<button class="btn btn-sm" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber)" onclick="${inlineCall('genMotion',dt.id,subj,'expired')}">📄 Ստեղծել միջնորդություն</button>${uploadButton}`
+      } else if(dl<=14) {
+        expiryEl = `<div style="font-size:.71rem;color:var(--amber)">⚠ ${dl} օր (${doc.expiryDate})</div>`
+        actions = uploadButton
+      } else {
+        expiryEl = `<div style="font-size:.71rem;color:var(--green)">✓ ${dl} օր</div>`
+        actions = uploadButton
+      }
+    } else {
+      actions = uploadButton
+    }
+  }
+  actions = generateButton + actions
 
-  return `<div class="doc-row" data-doc-state="${state}">
+  return `<div class="doc-row">
     <div>
       <div class="doc-title">${esc(dt.name)}${label}</div>
       ${expiryEl}
-      ${renderFileChips(files)}
+      <div class="doc-files">${files.map(file=>`<a class="doc-file" href="${esc(file.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(file.fileName)}</a>`).join('')}</div>
     </div>
     ${statusEl}
-    ${docActionMenu(primary, secondary)}
+    <div class="doc-actions">${actions}</div>
   </div>`
 }
 
-function generateRegisterRequestModal(subj) {
-  openModal(`
-    <div class="modal-title">Ստեղծել պետական ռեգիստրի հարցում<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
-    <div class="alert alert-blue">
-      Հարցումը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
-      Հարցման ստեղծումը դեռ չի նշանակում, որ այն ուղարկվել է։
+function representativeFormHtml() {
+  return `
+    <div class="field">
+      <label>Ներկայացուցիչ</label>
+      <select id="request-representative" onchange="applyRepresentativePreset()">
+        <option value="hovhannes">Հովհաննես Հարությունյան</option>
+        <option value="karine">Կարինե Ավետիսյան</option>
+        <option value="custom">Այլ ներկայացուցիչ</option>
+      </select>
     </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Չեղարկել</button>
-      <button class="btn btn-primary" id="register-generate-submit" onclick="${inlineCall('submitRegisterRequest',subj)}">Ստեղծել հարցումը</button>
+    <div class="case-info-grid">
+      <div class="field"><label>Ներկայացուցիչ՝ ումից</label><input id="rep-full-name-from" /></div>
+      <div class="field"><label>Ստորագրության անուն</label><input id="rep-signature-name" /></div>
+      <div class="field"><label>Փաստաթղթի տեսակ</label><input id="rep-identity-type" /></div>
+      <div class="field"><label>Փաստաթղթի համար</label><input id="rep-identity-number" /></div>
+      <div class="field"><label>Տրման ամսաթիվ</label><input id="rep-identity-date" placeholder="20.02.2018" /></div>
+      <div class="field"><label>Տրված է ում կողմից</label><input id="rep-identity-issuer" /></div>
+      <div class="field"><label>Արտոնագրի համար</label><input id="rep-license" placeholder="կարող է դատարկ մնալ" /></div>
+      <div class="field"><label>Հեռախոս</label><input id="rep-phone" /></div>
     </div>
-  `)
+    <div class="field"><label>Ծանուցման հասցե</label><input id="rep-address" /></div>
+  `
 }
 
-async function submitRegisterRequest(subj) {
-  const button = document.getElementById('register-generate-submit')
+function applyRepresentativePreset() {
+  const key = document.getElementById('request-representative')?.value || 'hovhannes'
+  const rep = REPRESENTATIVES[key] || {
+    fullNameFrom:'',identityType:'նույնականացման քարտ',identityNumber:'',
+    identityIssueDate:'',identityIssuer:'',licenseNumber:'',
+    notificationAddress:'',phone:'',signatureName:''
+  }
+  const set = (id,value)=>{ const el=document.getElementById(id); if(el) el.value=value||'' }
+  set('rep-full-name-from',rep.fullNameFrom)
+  set('rep-signature-name',rep.signatureName)
+  set('rep-identity-type',rep.identityType)
+  set('rep-identity-number',rep.identityNumber)
+  set('rep-identity-date',rep.identityIssueDate)
+  set('rep-identity-issuer',rep.identityIssuer)
+  set('rep-license',rep.licenseNumber)
+  set('rep-phone',rep.phone)
+  set('rep-address',rep.notificationAddress)
+}
+
+function readRequestRepresentative() {
+  const key = document.getElementById('request-representative')?.value || 'hovhannes'
+  return {
+    key,
+    fullNameFrom:document.getElementById('rep-full-name-from')?.value.trim()||'',
+    signatureName:document.getElementById('rep-signature-name')?.value.trim()||'',
+    identityType:document.getElementById('rep-identity-type')?.value.trim()||'նույնականացման քարտ',
+    identityNumber:document.getElementById('rep-identity-number')?.value.trim()||'',
+    identityIssueDate:document.getElementById('rep-identity-date')?.value.trim()||'',
+    identityIssuer:document.getElementById('rep-identity-issuer')?.value.trim()||'',
+    licenseNumber:document.getElementById('rep-license')?.value.trim()||'',
+    notificationAddress:document.getElementById('rep-address')?.value.trim()||'',
+    phone:document.getElementById('rep-phone')?.value.trim()||''
+  }
+}
+
+function generateStateRequestModal(typeId, subj) {
+  const dt = DOC_TYPES.find(item=>item.id===typeId)
+  openModal(`
+    <div class="modal-title">Ստեղծել հարցում<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">
+      ${esc(dt?.name||'Հարցում')} փաստաթուղթը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
+      Հարցման ստեղծումը դեռ չի նշանակում, որ այն ուղարկվել է։
+    </div>
+    ${representativeFormHtml()}
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="state-request-generate-submit" onclick="${inlineCall('submitStateRequest',typeId,subj)}">Ստեղծել հարցումը</button>
+    </div>
+  `)
+  applyRepresentativePreset()
+}
+
+function generateRegisterRequestModal(subj) {
+  generateStateRequestModal('state_reg',subj)
+}
+
+async function submitStateRequest(typeId, subj) {
+  const button = document.getElementById('state-request-generate-submit')
   button.disabled = true
   button.innerHTML = '<span class="spinner"></span> Ստեղծվում է...'
   try {
     const generated = await apiPost({
-      action:'generateRegisterRequest',
+      action:'generateStateRequest',
       caseId:currentCase.id,
-      subject:subj
+      typeId,
+      subject:subj,
+      representative:readRequestRepresentative()
     })
     currentFiles.push({
-      id:newId(),caseId:currentCase.id,documentId:'',typeId:'state_reg',subject:subj,
+      id:newId(),caseId:currentCase.id,documentId:'',typeId,subject:subj,
       fileName:generated.fileName,fileUrl:generated.fileUrl,fileId:generated.fileId,
       folderId:generated.folderId,uploadedAt:new Date().toISOString()
     })
@@ -1455,6 +1639,56 @@ async function submitRegisterRequest(subj) {
     button.disabled = false
     button.textContent = 'Ստեղծել հարցումը'
     alert('Հարցումը չստեղծվեց՝ '+e.message)
+  }
+}
+
+async function submitRegisterRequest(subj) {
+  return submitStateRequest('state_reg',subj)
+}
+
+function generatePoaModal(typeId, subj) {
+  const dt = DOC_TYPES.find(item=>item.id===typeId)
+  openModal(`
+    <div class="modal-title">Ստեղծել լիազորագիր<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+    <div class="alert alert-blue">
+      ${esc(dt?.name||'Լիազորագիր')} փաստաթուղթը կլրացվի ${esc(subj)}-ի գործի տվյալներով և կպահպանվի գործի Google Drive պանակում։
+      Եթե անձը ունի և՛ անձնագիր, և՛ նույնականացման քարտ, լրացրեք լրացուցիչ փաստաթուղթը գործի անձնական տվյալներում։
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" id="poa-generate-submit" onclick="${inlineCall('submitPoa',typeId,subj)}">Ստեղծել լիազորագիրը</button>
+    </div>
+  `)
+}
+
+async function submitPoa(typeId, subj) {
+  const button = document.getElementById('poa-generate-submit')
+  button.disabled = true
+  button.innerHTML = '<span class="spinner"></span> Ստեղծվում է...'
+  try {
+    const generated = await apiPost({
+      action:'generatePoa',
+      caseId:currentCase.id,
+      typeId,
+      subject:subj
+    })
+    currentFiles.push({
+      id:newId(),caseId:currentCase.id,documentId:'',typeId,subject:subj,
+      fileName:generated.fileName,fileUrl:generated.fileUrl,fileId:generated.fileId,
+      folderId:generated.folderId,uploadedAt:new Date().toISOString()
+    })
+    openModal(`
+      <div class="modal-title">Լիազորագիրը ստեղծված է<button class="btn btn-sm" onclick="closeModal()">Փակել</button></div>
+      <div class="alert alert-green">Փաստաթուղթը լրացվել և պահպանվել է գործի Google Drive պանակում։</div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal();renderDetail('docs')">Վերադառնալ փաստաթղթերին</button>
+        <a class="btn btn-primary" href="${esc(generated.fileUrl)}" target="_blank" rel="noopener">Բացել լիազորագիրը</a>
+      </div>
+    `)
+  } catch(e) {
+    button.disabled = false
+    button.textContent = 'Ստեղծել լիազորագիրը'
+    alert('Լիազորագիրը չստեղծվեց՝ '+e.message)
   }
 }
 
@@ -1590,7 +1824,7 @@ function genMotion(typeId, subj, reason) {
 Երևան, Օտյան փողոց 53/2
 
 Դիմող՝ ${c.applicantName}
-${c.passport?'Անձնագիր՝ '+c.passport+', տրված՝ '+(c.passportDate||'—')+', մարմին՝ '+(c.passportBy||'—'):''}
+${identityText(c)}
 ${c.regAddr?'Հաշվառման հասցե՝ '+c.regAddr:''}
 
 ՄԻՋՆՈՐԴՈՒԹՅՈՒՆ
@@ -1624,6 +1858,10 @@ function dlMotion(name) {
   a.download = 'Midnord_'+name+'_'+today()+'.txt'; a.click()
 }
 
+function openEditCaseModal() {
+  return editCaseModal()
+}
+
 function editCaseModal() {
   const c = currentCase
   openModal(`
@@ -1636,14 +1874,12 @@ function editCaseModal() {
       <div class="field"><label>Հայրանուն</label><input id="e-mn" value="${esc(c.middleName||'')}"/></div>
       <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="e-bd" value="${esc(c.birthDate||'')}"/></div>
     </div>
-    <div class="form-row">
-      <div class="field"><label>Անձնագրի համարը</label><input id="e-pp" value="${esc(c.passport||'')}"/></div>
-      <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="e-psn" value="${esc(c.psn||'')}"/></div>
-    </div>
-    <div class="form-row">
-      <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="e-pd" value="${esc(c.passportDate||'')}"/></div>
-      <div class="field"><label>Անձնագիրը տված մարմինը</label><input id="e-pb" value="${esc(c.passportBy||'')}"/></div>
-    </div>
+    ${identityFieldsHtml('e-', {
+      passport:c.passport, passportDate:c.passportDate, passportBy:c.passportBy,
+      noPassport:c.noPassport, idCard:c.idCard, idCardDate:c.idCardDate, idCardBy:c.idCardBy,
+      noIdCard:c.noIdCard
+    })}
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="e-psn" value="${esc(c.psn||'')}"/></div>
     <div class="field"><label>Հաշվառման հասցե</label><input id="e-ra" value="${esc(c.regAddr||'')}"/></div>
     <div class="field"><label>Ծանուցման հասցե</label><input id="e-na" value="${esc(c.notifAddr||'')}"/></div>
     <div class="form-row">
@@ -1657,6 +1893,63 @@ function editCaseModal() {
   `)
 }
 
+function openEditSpouseModal() {
+  const c = currentCase
+  if(!c) return
+  openModal(`
+    <div class="modal-title">✎ Խմբագրել ամուսնու տվյալները<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-row">
+      <div class="field"><label>Անուն *</label><input id="es-fn" value="${esc(c.spouseFirstName||'')}"/></div>
+      <div class="field"><label>Ազգանուն *</label><input id="es-ln" value="${esc(c.spouseLastName||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Հայրանուն</label><input id="es-mn" value="${esc(c.spouseMiddleName||'')}"/></div>
+      <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="es-bd" value="${esc(c.spouseBirthDate||'')}"/></div>
+    </div>
+    ${identityFieldsHtml('es-', {
+      passport:c.spousePassport, passportDate:c.spousePassportDate, passportBy:c.spousePassportBy,
+      noPassport:c.spouseNoPassport, idCard:c.spouseIdCard, idCardDate:c.spouseIdCardDate, idCardBy:c.spouseIdCardBy,
+      noIdCard:c.spouseNoIdCard
+    })}
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="es-psn" value="${esc(c.spousePsn||'')}"/></div>
+    <div class="field"><label>Հաշվառման հասցե</label><input id="es-ra" value="${esc(c.spouseRegAddr||'')}"/></div>
+    <div class="field"><label>Ծանուցման հասցե</label><input id="es-na" value="${esc(c.spouseNotifAddr||'')}"/></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" onclick="saveSpouseEdit()">Պահպանել</button>
+    </div>
+  `)
+}
+
+async function saveSpouseEdit() {
+  const c = currentCase
+  const fn = document.getElementById('es-fn').value.trim()
+  const ln = document.getElementById('es-ln').value.trim()
+  if(!fn||!ln){alert('Ամուսնու անունը և ազգանունը պարտադիր են։');return}
+  const id = readIdentityFields('es-')
+  const updated = {...c,
+    spouseFirstName:fn, spouseLastName:ln, spouseMiddleName:document.getElementById('es-mn').value.trim(),
+    spouseName:fn+' '+ln,
+    spouseBirthDate:document.getElementById('es-bd').value,
+    spousePassport:id.passport, spousePassportDate:id.passportDate, spousePassportBy:id.passportBy,
+    spouseNoPassport:id.noPassport, spouseNoIdCard:id.noIdCard,
+    spouseIdCard:id.idCard, spouseIdCardDate:id.idCardDate, spouseIdCardBy:id.idCardBy,
+    spousePsn:document.getElementById('es-psn').value.trim(),
+    spouseRegAddr:document.getElementById('es-ra').value.trim(),
+    spouseNotifAddr:document.getElementById('es-na').value.trim(),
+  }
+  const row = buildCaseRow(updated)
+  await apiPost({action:'saveCase', row})
+  currentCase = updated
+  const idx = allCases.findIndex(c2=>c2.id===c.id)
+  if(idx!==-1) allCases[idx] = updated
+  closeModal()
+  renderDetail('info')
+}
+
+window.openEditSpouseModal = openEditSpouseModal
+window.saveSpouseEdit = saveSpouseEdit
+
 async function saveEdit() {
   const c = currentCase
   const fn = document.getElementById('e-fn').value.trim()
@@ -1666,10 +1959,9 @@ async function saveEdit() {
     firstName:fn, lastName:ln, middleName:document.getElementById('e-mn').value.trim(),
     applicantName:fn+' '+ln,
     birthDate:document.getElementById('e-bd').value,
-    passport:document.getElementById('e-pp').value.trim(),
+    ...readIdentityFields('e-'),
     psn:document.getElementById('e-psn').value.trim(),
-    passportDate:document.getElementById('e-pd').value,
-    passportBy:document.getElementById('e-pb').value.trim(),
+    additionalIdentity:'',
     regAddr:document.getElementById('e-ra').value.trim(),
     notifAddr:document.getElementById('e-na').value.trim(),
     spouseName:document.getElementById('e-sp').value.trim(),
@@ -1684,6 +1976,10 @@ async function saveEdit() {
   document.getElementById('detail-title').textContent = updated.applicantName
   renderDetail('info')
 }
+
+window.openEditCaseModal = openEditCaseModal
+window.editCaseModal = editCaseModal
+window.saveEdit = saveEdit
 
 async function approveLawyer() {
   const updated = {...currentCase, lawyerApproved:'YES', lawyerApprovedAt:today()}
@@ -1816,7 +2112,7 @@ function closeModal() {
 // ═══════════════════════════════════════════════
 let A={}, S={}, qMode='applicant', qFlow=[], qIdx=0, qLocChoice={}
 
-const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl']
+const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard']
 
 function buildCaseRow(c) {
   return QUIZ_COLS.map(col => {
@@ -1861,10 +2157,8 @@ function buildSteps(pfx, isSp) {
     <div class="field"><label>Ազգանուն *</label><input id="${pfx}ln" placeholder="Ազգանուն"/></div></div>
     <div class="form-row"><div class="field"><label>Հայրանուն</label><input id="${pfx}mn" placeholder="Հայրանուն"/></div>
     <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="${pfx}bd"/></div></div>
-    <div class="form-row"><div class="field"><label>Անձնագրի համարը</label><input id="${pfx}pp" placeholder="AN0000000"/></div>
-    <div class="field"><label>Անձնագրի տրման ամսաթիվը</label><input type="date" id="${pfx}pd"/></div></div>
-    <div class="form-row"><div class="field"><label>Անձնագիրը տված մարմինը</label><input id="${pfx}pb" placeholder="007"/></div>
-    <div class="field"><label>Հանրային ծառայությունների համարանիշ *</label><input id="${pfx}psn" placeholder="000000000"/></div></div>
+    ${identityFieldsHtml(pfx)}
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ *</label><input id="${pfx}psn" placeholder="000000000"/></div>
     <div class="field"><label>Հաշվառման հասցե</label><input id="${pfx}ra" placeholder="Երևան..."/></div>
     <div class="field"><label>Ծանուցման հասցե (եթե տարբեր է)</label><input id="${pfx}na" placeholder="Երևան..."/></div>
     <div class="field"><label>Ներկայումս գտնվո՞ւմ եք Հայաստանի Հանրապետությունում</label>
@@ -1889,14 +2183,8 @@ function buildSteps(pfx, isSp) {
         <div class="field"><label>Հայրանուն</label><input id="${pfx}sp-mn" placeholder="Հայրանուն"/></div>
         <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="${pfx}sp-bd"/></div>
       </div>
-      <div class="form-row">
-        <div class="field"><label>Անձնագրի համարը</label><input id="${pfx}sp-pp" placeholder="AN0000000"/></div>
-        <div class="field"><label>Անձնագիրը տրված է ամսաթիվ</label><input type="date" id="${pfx}sp-pd"/></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Անձնագիրը տված մարմին</label><input id="${pfx}sp-pb" placeholder="007"/></div>
-        <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="${pfx}sp-psn" placeholder="000000000"/></div>
-      </div>
+      ${identityFieldsHtml(pfx+'sp-')}
+      <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="${pfx}sp-psn" placeholder="000000000"/></div>
       <div class="field"><label>Հաշվառման հասցե</label><input id="${pfx}sp-ra" placeholder="Երևան..."/></div>
     </div>
     <button class="btn-next" onclick="nextIntro('${pfx}')">Շարունակել →</button>`)
@@ -2001,9 +2289,8 @@ function nextIntro(p){
   A.firstName=fn; A.lastName=ln; A.name=fn+' '+ln
   A.middleName=document.getElementById(p+'mn')?.value.trim()||''
   A.birthDate=document.getElementById(p+'bd')?.value||''
-  A.passport=document.getElementById(p+'pp')?.value.trim()||''
-  A.passportDate=document.getElementById(p+'pd')?.value||''
-  A.passportBy=document.getElementById(p+'pb')?.value.trim()||''
+  Object.assign(A, readIdentityFields(p))
+  if(!A.passport && !A.idCard){alert('Լրացրեք անձնագիրը կամ նույնականացման քարտը։');return}
   A.psn=document.getElementById(p+'psn')?.value.trim()||''
   A.regAddr=document.getElementById(p+'ra')?.value.trim()||''
   A.notifAddr=document.getElementById(p+'na')?.value.trim()||''
@@ -2019,9 +2306,7 @@ function nextIntro(p){
     S.firstName=spFn; S.lastName=spLn; S.name=spFn+' '+spLn
     S.middleName=document.getElementById(p+'sp-mn')?.value.trim()||''
     S.birthDate=document.getElementById(p+'sp-bd')?.value||''
-    S.passport=document.getElementById(p+'sp-pp')?.value.trim()||''
-    S.passportDate=document.getElementById(p+'sp-pd')?.value||''
-    S.passportBy=document.getElementById(p+'sp-pb')?.value.trim()||''
+    Object.assign(S, readIdentityFields(p+'sp-'))
     S.psn=document.getElementById(p+'sp-psn')?.value.trim()||''
     S.regAddr=document.getElementById(p+'sp-ra')?.value.trim()||''
   }
@@ -2108,10 +2393,8 @@ function spouseModal(){
     <div class="field"><label>Ազգանուն *</label><input id="sp-ln" placeholder="Ազգանուն"/></div></div>
     <div class="form-row"><div class="field"><label>Հայրանուն</label><input id="sp-mn" placeholder="Հայրանուն"/></div>
     <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="sp-bd"/></div></div>
-    <div class="form-row"><div class="field"><label>Անձնագրի համարը</label><input id="sp-pp" placeholder="AN0000000"/></div>
-    <div class="field"><label>Անձնագիրը տրված ամսաթիվ</label><input type="date" id="sp-pd"/></div></div>
-    <div class="form-row"><div class="field"><label>Անձնագիրը տված մարմին</label><input id="sp-pb" placeholder="007"/></div>
-    <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="sp-psn" placeholder="000000000"/></div></div>
+    ${identityFieldsHtml('sp-')}
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="sp-psn" placeholder="000000000"/></div>
     <div class="field"><label>Հաշվառման հասցե</label><input id="sp-ra" placeholder="Երևան..."/></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal();showQuizResult()">Բաց թողնել</button>
@@ -2127,9 +2410,7 @@ function confirmSpouse(){
   S.firstName=fn; S.lastName=ln; S.name=fn+' '+ln
   S.middleName=document.getElementById('sp-mn')?.value.trim()||''
   S.birthDate=document.getElementById('sp-bd')?.value||''
-  S.passport=document.getElementById('sp-pp')?.value.trim()||''
-  S.passportDate=document.getElementById('sp-pd')?.value||''
-  S.passportBy=document.getElementById('sp-pb')?.value.trim()||''
+  Object.assign(S, readIdentityFields('sp-'))
   S.psn=document.getElementById('sp-psn')?.value.trim()||''
   S.regAddr=document.getElementById('sp-ra')?.value.trim()||''
   closeModal()
@@ -2180,9 +2461,12 @@ function personReport(title,data,includeIdentity,includeDebts=true){
       reportRow('Անուն, ազգանուն',data.name),
       reportRow('Հայրանուն',data.middleName),
       reportRow('Ծննդյան ամսաթիվ',data.birthDate),
-      reportRow('Անձնագիր',data.passport),
+      reportRow('Անձնագիր',String(data.noPassport||'').toUpperCase()==='YES'?'Չկա':cleanTextCode(data.passport)),
       reportRow('Անձնագրի տրման ամսաթիվ',data.passportDate),
-      reportRow('Անձնագիրը տված մարմին',data.passportBy),
+      reportRow('Անձնագիրը տված մարմին',cleanTextCode(data.passportBy)),
+      reportRow('Նույնականացման քարտ',cleanTextCode(data.idCard)),
+      reportRow('Քարտի տրման ամսաթիվ',data.idCardDate),
+      reportRow('Քարտը տված մարմին',cleanTextCode(data.idCardBy)),
       reportRow('Հանրային ծառայությունների համարանիշ',data.psn),
       reportRow('Հաշվառման հասցե',data.regAddr),
       reportRow('Ծանուցման հասցե',data.notifAddr)
@@ -2259,6 +2543,9 @@ async function saveAndGenerate(){
       id:caseId, applicantName:A.name, firstName:A.firstName, lastName:A.lastName,
       middleName:A.middleName||'', birthDate:A.birthDate||'', passport:A.passport||'',
       passportDate:A.passportDate||'', passportBy:A.passportBy||'',
+      additionalIdentity:'', noPassport:A.noPassport||'NO',
+      idCard:A.idCard||'', idCardDate:A.idCardDate||'', idCardBy:A.idCardBy||'',
+      noIdCard:A.noIdCard||'NO',
       regAddr:A.regAddr||'', notifAddr:A.notifAddr||'', psn:A.psn||'',
       isMarried:A.married?'YES':'NO', spouseName:S.name||'', filingDate:'',
       employed:A.employed?'YES':'NO', salaryAbove:A.salaryAbove?'YES':'NO',
@@ -2270,6 +2557,9 @@ async function saveAndGenerate(){
       spouseMiddleName:S.middleName||'', spouseBirthDate:S.birthDate||'',
       spousePassport:S.passport||'', spousePassportDate:S.passportDate||'',
       spousePassportBy:S.passportBy||'', spousePsn:S.psn||'',
+      spouseAdditionalIdentity:'', spouseNoPassport:S.noPassport||'NO',
+      spouseIdCard:S.idCard||'', spouseIdCardDate:S.idCardDate||'', spouseIdCardBy:S.idCardBy||'',
+      spouseNoIdCard:S.noIdCard||'NO',
       spouseRegAddr:S.regAddr||'', spouseNotifAddr:S.notifAddr||'',
       assessmentJson:JSON.stringify({applicant:A,spouse:S}),
       driveFolderId:'',driveFolderUrl:''
@@ -2316,7 +2606,7 @@ function genContract(c){
 ${COMPANY.name} (հարկ վճարողի հաշվառման համար՝ ${COMPANY.hvhh}), ի դեմս տնօրեն ${COMPANY.director}-ի, այսուհետ՝ «Կատարող», մի կողմից,
 
 ${c.applicantName} ${c.middleName||''}
-${c.passport?'անձնական փաստաթուղթ՝ '+c.passport+', տրված՝ '+(c.passportDate||'—')+', մարմին՝ '+(c.passportBy||'—'):''}
+${identityText(c)}
 ${c.psn?'հանրային ծառայությունների համարանիշ՝ '+c.psn:''}
 հաշվառման հասցե՝ ${c.regAddr||'—'},
 այսուհետ՝ «Պատվիրատու», մյուս կողմից, կնքեցին սույն պայմանագիրը հետևյալի մասին։
@@ -2364,9 +2654,12 @@ function textPersonReport(title,data,includeDebts=true){
   return `${title}
 Անուն, ազգանուն, հայրանուն՝ ${data.name||'—'} ${data.middleName||''}
 Ծննդյան ամսաթիվ՝ ${data.birthDate||'—'}
-Անձնագիր կամ նույնականացման քարտ՝ ${data.passport||'—'}
-Փաստաթղթի տրման ամսաթիվ՝ ${data.passportDate||'—'}
-Փաստաթուղթը տված մարմին՝ ${data.passportBy||'—'}
+Անձնագիր՝ ${String(data.noPassport||'').toUpperCase()==='YES'?'Չկա':(cleanTextCode(data.passport)||'—')}
+Անձնագրի տրման ամսաթիվ՝ ${data.passportDate||'—'}
+Անձնագիրը տված մարմին՝ ${cleanTextCode(data.passportBy)||'—'}
+Նույնականացման քարտ՝ ${cleanTextCode(data.idCard)||'—'}
+Քարտի տրման ամսաթիվ՝ ${data.idCardDate||'—'}
+Քարտը տված մարմին՝ ${cleanTextCode(data.idCardBy)||'—'}
 Հանրային ծառայությունների համարանիշ՝ ${data.psn||'—'}
 Հաշվառման հասցե՝ ${data.regAddr||'—'}
 Ծանուցման հասցե՝ ${data.notifAddr||data.regAddr||'—'}
