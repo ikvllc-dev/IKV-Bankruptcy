@@ -906,14 +906,45 @@ function renderDetail(tab) {
   if(tab === 'report') {
     let assessment=null
     try { assessment=JSON.parse(currentCase.assessmentJson||'null') } catch(e){}
-    html = assessment?.applicant
-      ? `<div class="card">
-          <div class="card-title">📄 Նախնական գնահատման ամբողջական հաշվետվություն</div>
-          ${personReport('Դիմողի ամբողջական տվյալները',assessment.applicant,true)}
-          ${assessment.spouse?.name?personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները',assessment.spouse,true,false):''}
-          ${bankCertificatesReport()}
-        </div>`
-      : '<div class="card"><div class="alert alert-amber">Այս գործը ստեղծվել է մինչև ամբողջական հաշվետվության պահպանումը։ Նոր գնահատումների բոլոր պատասխանները կպահպանվեն այստեղ։</div></div>'
+
+    // Build applicant data — from assessmentJson if available, otherwise from case fields directly
+    const c = currentCase
+    const applicantData = assessment?.applicant || {
+      name: c.applicantName,
+      firstName: c.firstName, lastName: c.lastName, middleName: c.middleName,
+      birthDate: c.birthDate,
+      passport: c.passport, passportDate: c.passportDate, passportBy: c.passportBy,
+      noPassport: c.noPassport,
+      idCard: c.idCard, idCardDate: c.idCardDate, idCardBy: c.idCardBy,
+      noIdCard: c.noIdCard,
+      psn: c.psn, regAddr: c.regAddr, notifAddr: c.notifAddr || c.regAddr,
+      // debts from Debts sheet (already loaded)
+      debtDetails: currentDebts.length ? currentDebts : [],
+      banks: (() => { try { return JSON.parse(c.banks||'[]') } catch(e) { return [] } })(),
+      debts: (() => { try { return JSON.parse(c.debts||'{}') } catch(e) { return {} } })(),
+      totalBankDebt: currentDebts.reduce((s,d)=>s+(Number(d.totalAmount)||0),0)
+        || (() => { try { const d=JSON.parse(c.debts||'{}'); return Object.values(d).reduce((s,v)=>s+(Number(v)||0),0) } catch(e){return 0} })(),
+    }
+    const spouseData = assessment?.spouse?.name ? assessment.spouse
+      : (c.isMarried==='YES' && c.spouseName ? {
+          name: c.spouseName,
+          firstName: c.spouseFirstName, lastName: c.spouseLastName, middleName: c.spouseMiddleName,
+          birthDate: c.spouseBirthDate,
+          passport: c.spousePassport, passportDate: c.spousePassportDate, passportBy: c.spousePassportBy,
+          noPassport: c.spouseNoPassport,
+          idCard: c.spouseIdCard, idCardDate: c.spouseIdCardDate, idCardBy: c.spouseIdCardBy,
+          noIdCard: c.spouseNoIdCard,
+          psn: c.spousePsn, regAddr: c.spouseRegAddr, notifAddr: c.spouseNotifAddr || c.spouseRegAddr,
+          banks: (() => { try { return JSON.parse(c.spouseBanks||'[]') } catch(e) { return [] } })(),
+          debts: (() => { try { return JSON.parse(c.spouseDebts||'{}') } catch(e) { return {} } })(),
+        } : null)
+
+    html = `<div class="card">
+        <div class="card-title">📄 Նախնական գնահատման ամբողջական հաշվետվություն</div>
+        ${personReport('Դիմողի ամբողջական տվյալները', applicantData, true)}
+        ${spouseData ? personReport('Ամուսնու կամ կնոջ ամբողջական տվյալները', spouseData, true, false) : ''}
+        ${bankCertificatesReport()}
+      </div>`
   }
 
   document.getElementById('detail-content').innerHTML = html
