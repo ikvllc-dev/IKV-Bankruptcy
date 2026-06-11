@@ -340,8 +340,8 @@ const DOC_TYPES = [
   {id:'passport',name:'Անձնագիր կամ նույնականացման քարտ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:true},
   {id:'psn',name:'Հանրային ծառայությունների համարանիշ',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
   {id:'marriage',name:'Ամուսնության վկայական',cat:'Անձնական փաստաթղթեր',s90:false,spouse:false},
-  {id:'notarial_poa',name:'Նոտարական լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
-  {id:'proc_poa',name:'Դատական ներկայացուցչության լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:false},
+  {id:'notarial_poa',name:'Նոտարական լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:true},
+  {id:'proc_poa',name:'Դատական ներկայացուցչության լիազորագիր',cat:'Իրավական փաստաթղթեր',s90:false,spouse:true},
   {id:'cadastre',name:'Կադաստր',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'depository',name:'Կենտրոնական դեպոզիտարիայի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
   {id:'tax',name:'Պետական եկամուտների կոմիտեի տեղեկանք',cat:'Պետական մարմինների տեղեկանքներ',s90:true,spouse:true},
@@ -411,6 +411,24 @@ function daysLeft(d){
   return target ? Math.round((target-now)/86400000) : Infinity
 }
 function fmtDate(d){ const dt=parseDate(d);return dt?dt.toLocaleDateString('hy-AM'):'' }
+function passportExpiryBadge(issueDateStr) {
+  if(!issueDateStr) return ''
+  const issued = parseDate(issueDateStr)
+  if(!issued) return ''
+  const expiry = new Date(issued)
+  expiry.setFullYear(expiry.getFullYear()+10)
+  const expiryStr = localDate(expiry)
+  const dl = daysLeft(expiryStr)
+  if(dl < 0) {
+    return `<span class="badge badge-red" title="Ժամկետը լրացել է ${fmtDate(expiryStr)}">🔴 Ժամկետանց (${Math.abs(dl)} օր)</span>`
+  } else if(dl <= 180) {
+    return `<span class="badge badge-amber" title="Ժամկետը լրանում է ${fmtDate(expiryStr)}">⚠ ${dl} օր (${fmtDate(expiryStr)})</span>`
+  } else if(dl <= 365) {
+    return `<span class="badge" style="background:var(--gold-pale);color:var(--amber)" title="Ժամկետը լրանում է ${fmtDate(expiryStr)}">${dl} օր (${fmtDate(expiryStr)})</span>`
+  } else {
+    return `<span class="badge badge-green" title="Ժամկետը լրանում է ${fmtDate(expiryStr)}">✓ ${dl} օր (${fmtDate(expiryStr)})</span>`
+  }
+}
 function esc(value){
   return String(value??'').replace(/[&<>"']/g, ch=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -540,7 +558,7 @@ let currentFiles = []
 let currentTab = 'info'
 let dashboardLoadedAt = 0
 let dashboardDataLoaded = false
-const UI_CACHE_MS = 60000
+const UI_CACHE_MS = 180000 // 3 minutes
 const caseBundleCache = new Map()
 
 // ═══════════════════════════════════════════════
@@ -617,6 +635,26 @@ function renderDashboard() {
   const deadlineDocs = [...documentDeadlines,...bankDeadlines]
     .sort((a,b)=>a.days-b.days)
 
+  const passportWarnings = []
+  allCases.forEach(c => {
+    if(c.passportDate && String(c.noPassport||'').toUpperCase()!=='YES') {
+      const issued = parseDate(c.passportDate)
+      if(issued) {
+        const expiry = new Date(issued); expiry.setFullYear(expiry.getFullYear()+10)
+        const dl = daysLeft(localDate(expiry))
+        if(dl <= 365) passportWarnings.push({caseData:c, subject:c.applicantName, days:dl, expiry:localDate(expiry)})
+      }
+    }
+    if(c.spousePassportDate && String(c.spouseNoPassport||'').toUpperCase()!=='YES' && c.isMarried==='YES') {
+      const issued = parseDate(c.spousePassportDate)
+      if(issued) {
+        const expiry = new Date(issued); expiry.setFullYear(expiry.getFullYear()+10)
+        const dl = daysLeft(localDate(expiry))
+        if(dl <= 365) passportWarnings.push({caseData:c, subject:c.spouseName, days:dl, expiry:localDate(expiry), isSpouse:true})
+      }
+    }
+  })
+
   const expired = deadlineDocs.filter(d=>d.days<0)
   const expiring = deadlineDocs.filter(d=>d.days>=0&&d.days<=14)
 
@@ -647,6 +685,10 @@ function renderDashboard() {
         ).join('<br>')}${group.items.length>3?`<br>և ևս ${group.items.length-3} փաստաթուղթ կամ տեղեկանք`:''}</span>
       </div>
     `).join(''):'<div class="alert alert-green"><strong>Ամեն ինչ կարգին է։</strong><span>Առաջիկա 14 օրվա ընթացքում ժամկետանց կամ մոտեցող փաստաթուղթ չկա։</span></div>'}
+    ${passportWarnings.length?`<div style="margin-top:14px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin-bottom:8px">🪪 Անձնագրի վավերականության ժամկետ</div>${passportWarnings.sort((a,b)=>a.days-b.days).map(w=>`
+      <div class="alert ${w.days<0?'alert-red':w.days<=180?'alert-amber':'alert-blue'} clickable" onclick="${inlineCall('openCase',w.caseData.id)}" style="cursor:pointer;display:block">
+        🪪 <strong>${esc(w.subject)}</strong> — Անձնագրի ժամկ. ${w.days<0?Math.abs(w.days)+' օր անցած է':w.days+' օր մնում է'} (${esc(w.expiry)})
+      </div>`).join('')}`:''}
   </div>`
   document.getElementById('dash-cases').innerHTML = renderCasesTable(cases)
 }
@@ -701,40 +743,58 @@ async function loadCases() {
 async function openCase(caseId) {
   currentCase = allCases.find(c=>c.id===caseId) || (await apiGet('getCases')).find(c=>c.id===caseId)
   if(!currentCase) return
+
+  // Show page immediately with cached or skeleton data
+  showPage('case-detail')
+  document.getElementById('detail-title').textContent = currentCase.applicantName
+
   const cached = caseBundleCache.get(caseId)
   if(cached && Date.now()-cached.loadedAt<UI_CACHE_MS) {
     currentDocs = cached.documents
     currentDebts = cached.debts
     currentBankCertificates = cached.bankCertificates
     currentFiles = cached.files
+    renderDetailTabs()
+    renderDetail('info')
   } else {
-    const bundle = await apiGet('getCaseBundle', {caseId})
-    currentDocs = bundle.documents||[]
-    currentDebts = bundle.debts||[]
-    currentBankCertificates = bundle.bankCertificates||[]
-    currentFiles = bundle.files||[]
-    if(bundle.driveFolderId) {
-      currentCase.driveFolderId = bundle.driveFolderId
-      currentCase.driveFolderUrl = bundle.driveFolderUrl
-      const caseIndex = allCases.findIndex(item=>item.id===caseId)
-      if(caseIndex!==-1) allCases[caseIndex] = currentCase
+    // Render info tab immediately from cached case data, fetch bundle in background
+    currentDocs = []; currentDebts = []; currentBankCertificates = []; currentFiles = []
+    renderDetailTabs()
+    renderDetail('info')
+    document.getElementById('detail-content').insertAdjacentHTML('afterbegin',
+      '<div id="bundle-loading" class="alert alert-blue" style="margin-bottom:12px"><span class="spinner"></span> Փաստաթղթերը բեռնվում են...</div>')
+    try {
+      const bundle = await apiGet('getCaseBundle', {caseId})
+      currentDocs = bundle.documents||[]
+      currentDebts = bundle.debts||[]
+      currentBankCertificates = bundle.bankCertificates||[]
+      currentFiles = bundle.files||[]
+      if(bundle.driveFolderId) {
+        currentCase.driveFolderId = bundle.driveFolderId
+        currentCase.driveFolderUrl = bundle.driveFolderUrl
+        const caseIndex = allCases.findIndex(item=>item.id===caseId)
+        if(caseIndex!==-1) allCases[caseIndex] = currentCase
+      }
+      caseBundleCache.set(caseId,{
+        documents:currentDocs,debts:currentDebts,
+        bankCertificates:currentBankCertificates,files:currentFiles,
+        loadedAt:Date.now()
+      })
+      if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
+      caseBundleCache.set(caseId,{
+        documents:currentDocs,debts:currentDebts,
+        bankCertificates:currentBankCertificates,files:currentFiles,
+        loadedAt:Date.now()
+      })
+      document.getElementById('bundle-loading')?.remove()
+      renderDetailTabs()
+      renderDetail(currentTab)
+    } catch(e) {
+      document.getElementById('bundle-loading')?.remove()
+      document.getElementById('detail-content').insertAdjacentHTML('afterbegin',
+        `<div class="alert alert-red">Տվյալները չբեռնվեցին: ${esc(e.message)}</div>`)
     }
-    caseBundleCache.set(caseId,{
-      documents:currentDocs,debts:currentDebts,
-      bankCertificates:currentBankCertificates,files:currentFiles,
-      loadedAt:Date.now()
-    })
   }
-  if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
-  caseBundleCache.set(caseId,{
-    documents:currentDocs,debts:currentDebts,
-    bankCertificates:currentBankCertificates,files:currentFiles,
-    loadedAt:Date.now()
-  })
-  showPage('case-detail')
-  document.getElementById('detail-title').textContent = currentCase.applicantName
-  renderDetailTabs()
-  renderDetail('info')
 }
 
 function renderDetailTabs() {
@@ -765,7 +825,7 @@ function renderDetail(tab) {
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.applicantName)} ${esc(c.middleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.birthDate||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.noPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.passport)||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(cleanTextCode(c.passportBy))}</span></div>
+        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(cleanTextCode(c.passportBy))}${c.passportDate&&String(c.noPassport||'').toUpperCase()!=='YES'?` <br><span style="font-size:.71rem">Վավ․ ժամկետ (10 տ.): ${passportExpiryBadge(c.passportDate)}</span>`:''}</span></div>
         <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.noIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.idCard)||'—')}</span></div>
         <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.idCardDate||'—')} ${esc(cleanTextCode(c.idCardBy))}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.psn||'—')}</span></div>
@@ -784,11 +844,15 @@ function renderDetail(tab) {
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.spouseName||'—')} ${esc(c.spouseMiddleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.spouseBirthDate||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.spouseNoPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.spousePassport)||'—')}</span></div>
-        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(cleanTextCode(c.spousePassportBy))}</span></div>
+        <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.spousePassportDate||'—')} ${esc(cleanTextCode(c.spousePassportBy)||'—')}${c.spousePassportDate&&String(c.spouseNoPassport||'').toUpperCase()!=='YES'?` <br><span style="font-size:.71rem">Վավ․ ժամկետ (10 տ.): ${passportExpiryBadge(c.spousePassportDate)}</span>`:''}</span></div>
         <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.spouseNoIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.spouseIdCard)||'—')}</span></div>
-        <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.spouseIdCardDate||'—')} ${esc(cleanTextCode(c.spouseIdCardBy))}</span></div>
+        <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.spouseIdCardDate||'—')} ${esc(cleanTextCode(c.spouseIdCardBy)||'—')}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.spousePsn||'—')}</span></div>
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.spouseRegAddr||'—')}</span></div>
+        <div class="srow"><span class="sk">Ծանուցման հասցե</span><span class="sv">${esc(c.spouseNotifAddr||c.spouseRegAddr||'—')}</span></div>
+        <div style="margin-top:10px">
+          <button class="btn btn-sm btn-gold" onclick="openEditSpouseModal()">✎ Խմբագրել ամուսնու տվյալները</button>
+        </div>
       </div>`:'<div class="card"><div class="card-title">ℹ Ընտանեկան դրություն</div><div class="srow"><span class="sk">Ամուսնացած է</span><span class="sv">Ոչ</span></div></div>'}
     </div>`
   }
@@ -833,7 +897,7 @@ function renderPersonDocumentSections(subject,isSpouse) {
     'Իրավական փաստաթղթեր'
   ]
   const allowedCategories = (isSpouse
-    ? ['Բանկային փաստաթղթեր','Պետական մարմինների տեղեկանքներ']
+    ? ['Իրավական փաստաթղթեր','Բանկային փաստաթղթեր','Պետական մարմինների տեղեկանքներ']
     : [...new Set(DOC_TYPES
         .filter(item=>item.cat!=='Դատական փաստաթղթեր')
         .map(item=>item.cat))])
@@ -919,7 +983,7 @@ function renderDebtsTab() {
         <span>Պարտքերն ըստ բանկերի և վարկատուների</span>
         <button class="btn btn-sm btn-primary" onclick="openDebtModal()">Ավելացնել պարտք</button>
       </div>
-      <div class="alert alert-blue">Այստեղ պահպանված տվյալները փոխանցվում են գործի հաշվետվությանը և սնանկության դիմումի տվյալներին։ Յուրաքանչյուր պարտքի համար կարող եք կցել հաշվի քաղվածքը և վարկային պայմանագիրը։</div>
+      <div class="alert alert-blue">Այստեղ պահպանված տվյալները փոխանցվում են գործի հաշվետվությանը և սնանկության դիմումի տվյալներին։ Յուրաքանչյուր պարտքի համար կարող եք կցել հաշվի քաղվածքը և վարկային պայմանագիրը։ <strong>Նույն բանկի մի քանի վարկ ունե՞ք — սեղմեք «Ավելացնել պարտք» յուրաքանչյուրի համար։</strong></div>
       ${cards||'<p class="hint">Պարտքեր դեռ չեն ավելացվել։</p>'}
       <div class="srow" style="margin-top:12px"><span class="sk"><strong>Ընդհանուր պարտք</strong></span><span class="sv"><strong>${debtMoney(total)}</strong></span></div>
     </div>`
@@ -1769,6 +1833,63 @@ function editCaseModal() {
     </div>
   `)
 }
+
+function openEditSpouseModal() {
+  const c = currentCase
+  if(!c) return
+  openModal(`
+    <div class="modal-title">✎ Խմբագրել ամուսնու տվյալները<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-row">
+      <div class="field"><label>Անուն *</label><input id="es-fn" value="${esc(c.spouseFirstName||'')}"/></div>
+      <div class="field"><label>Ազգանուն *</label><input id="es-ln" value="${esc(c.spouseLastName||'')}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Հայրանուն</label><input id="es-mn" value="${esc(c.spouseMiddleName||'')}"/></div>
+      <div class="field"><label>Ծննդյան ամսաթիվ</label><input type="date" id="es-bd" value="${esc(c.spouseBirthDate||'')}"/></div>
+    </div>
+    ${identityFieldsHtml('es-', {
+      passport:c.spousePassport, passportDate:c.spousePassportDate, passportBy:c.spousePassportBy,
+      noPassport:c.spouseNoPassport, idCard:c.spouseIdCard, idCardDate:c.spouseIdCardDate, idCardBy:c.spouseIdCardBy,
+      noIdCard:c.spouseNoIdCard
+    })}
+    <div class="field"><label>Հանրային ծառայությունների համարանիշ</label><input id="es-psn" value="${esc(c.spousePsn||'')}"/></div>
+    <div class="field"><label>Հաշվառման հասցե</label><input id="es-ra" value="${esc(c.spouseRegAddr||'')}"/></div>
+    <div class="field"><label>Ծանուցման հասցե</label><input id="es-na" value="${esc(c.spouseNotifAddr||'')}"/></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" onclick="saveSpouseEdit()">Պահպանել</button>
+    </div>
+  `)
+}
+
+async function saveSpouseEdit() {
+  const c = currentCase
+  const fn = document.getElementById('es-fn').value.trim()
+  const ln = document.getElementById('es-ln').value.trim()
+  if(!fn||!ln){alert('Ամուսնու անունը և ազգանունը պարտադիր են։');return}
+  const id = readIdentityFields('es-')
+  const updated = {...c,
+    spouseFirstName:fn, spouseLastName:ln, spouseMiddleName:document.getElementById('es-mn').value.trim(),
+    spouseName:fn+' '+ln,
+    spouseBirthDate:document.getElementById('es-bd').value,
+    spousePassport:id.passport, spousePassportDate:id.passportDate, spousePassportBy:id.passportBy,
+    spouseNoPassport:id.noPassport, spouseNoIdCard:id.noIdCard,
+    spouseIdCard:id.idCard, spouseIdCardDate:id.idCardDate, spouseIdCardBy:id.idCardBy,
+    spousePsn:document.getElementById('es-psn').value.trim(),
+    spouseRegAddr:document.getElementById('es-ra').value.trim(),
+    spouseNotifAddr:document.getElementById('es-na').value.trim(),
+  }
+  const row = buildCaseRow(updated)
+  await apiPost({action:'saveCase', row})
+  currentCase = updated
+  const idx = allCases.findIndex(c2=>c2.id===c.id)
+  if(idx!==-1) allCases[idx] = updated
+  closeModal()
+  renderDetail('info')
+}
+
+window.openEditSpouseModal = openEditSpouseModal
+window.saveSpouseEdit = saveSpouseEdit
 
 async function saveEdit() {
   const c = currentCase
