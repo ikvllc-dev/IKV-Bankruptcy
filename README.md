@@ -15,11 +15,8 @@ Armenian-first legal case management for preparation, court process, and physica
 ## Production Deployment
 
 1. Create an Apps Script project and replace its backend with `Code.gs`.
-2. In **Project Settings > Script Properties**, set:
-   - `IKV_ALLOWED_DOMAIN` to the firm Workspace domain, or
-   - `IKV_ALLOWED_EMAILS` to a comma-separated allowlist.
-3. Do not set `IKV_ALLOW_UNAUTHENTICATED=true` in production.
-4. Deploy as a Web App, execute as the owner, and restrict access to the firm/domain.
+2. Deploy as a Web App, execute as the owner, and set access to **Anyone**.
+3. `PUBLIC_ACCESS_ENABLED` is currently set to `true` in `Code.gs`.
 5. Put the deployment URL in `SCRIPT_URL` inside `ikv_bankruptcy.html`.
 6. Open **Կարգավորումներ** in the app:
    - save the shared Calendar ID;

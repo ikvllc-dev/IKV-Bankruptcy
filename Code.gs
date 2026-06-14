@@ -11,6 +11,7 @@ const SPREADSHEET_ID = '1EdjhuXFFzNjxtWVPrcxueKJ5frS4qkxZnb7QqttQBxs'
 const ROOT_FOLDER_NAME = 'IKV Bankruptcy Cases'
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 const REGISTER_TEMPLATE_DOC_ID = '1CfXZsHPy25vPk5i-KcxFvoggtefjYexQhrvhtptUtVE'
+const PUBLIC_ACCESS_ENABLED = true
 const DEFAULT_REMINDER_DAYS = 3
 const DEFAULT_CASE_TYPES = [
   ['bankruptcy', 'Սնանկություն', 'YES', '10'],
@@ -483,6 +484,7 @@ function jsonResponse(data) {
 }
 
 function assertAuthorizedUser() {
+  if (PUBLIC_ACCESS_ENABLED) return currentUserEmail()
   const props = PropertiesService.getScriptProperties()
   const email = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase()
   if (props.getProperty('IKV_ALLOW_UNAUTHENTICATED') === 'true') {
