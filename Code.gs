@@ -75,6 +75,7 @@ const HEADERS = {
   IncomingMail: ['id','dateReceived','sender','caseId','internalNumber','loggedBy','note'],
   Hearings: ['id','caseId','dateTime','note','reminderDaysBefore','calendarEventId','responsibleEmails','updatedAt','reminderSentAt'],
   Deadlines: ['id','caseId','dueDate','description','reminderDaysBefore','done','calendarEventId','responsibleEmails','updatedAt','reminderSentAt'],
+  ArchiveVolumes: ['id','caseId','volumeNumber','volumeLabel','storageNumber','storageRoom','storageShelf','storageBox','locationHints','createdAt','updatedAt'],
   CaseTypes: ['key','label','enabled','sortOrder','updatedAt'],
   Settings: ['key','value','description','updatedAt']
 }
@@ -421,6 +422,7 @@ function doGet(e) {
     else if (action === 'getFiles') result = e.parameter.caseId ? getRows('CaseFiles', 'caseId', e.parameter.caseId) : getRows('CaseFiles')
     else if (action === 'getHearings') result = e.parameter.caseId ? getRows('Hearings', 'caseId', e.parameter.caseId) : getRows('Hearings')
     else if (action === 'getDeadlines') result = e.parameter.caseId ? getRows('Deadlines', 'caseId', e.parameter.caseId) : getRows('Deadlines')
+    else if (action === 'getArchiveVolumes') result = e.parameter.caseId ? getRows('ArchiveVolumes', 'caseId', e.parameter.caseId) : getRows('ArchiveVolumes')
     else if (action === 'getIncomingMail') result = e.parameter.caseId ? getRows('IncomingMail', 'caseId', e.parameter.caseId) : getRows('IncomingMail')
     else if (action === 'getCaseTypes') result = getCaseTypes(e.parameter.includeDisabled === 'true')
     else if (action === 'getSettings') result = getSettings()
@@ -453,6 +455,8 @@ function doPost(e) {
     else if (action === 'deleteHearing') result = deleteScheduledItem('Hearings', data.id)
     else if (action === 'saveDeadline') result = saveScheduledItem('Deadlines', data.row)
     else if (action === 'deleteDeadline') result = deleteScheduledItem('Deadlines', data.id)
+    else if (action === 'saveArchiveVolume') result = saveArchiveVolume(data.row)
+    else if (action === 'deleteArchiveVolume') result = deleteArchiveVolume(data.id)
     else if (action === 'logIncomingMail') result = logIncomingMail(data)
     else if (action === 'saveCaseType') result = saveCaseType(data)
     else if (action === 'saveSetting') result = saveSetting(data)
@@ -625,6 +629,7 @@ function getDashboardData() {
     bankCertificates: getRows('BankCertificates'),
     hearings: getRows('Hearings'),
     deadlines: getRows('Deadlines'),
+    archiveVolumes: getRows('ArchiveVolumes'),
     caseTypes: getCaseTypes(false)
   }
 }
@@ -644,6 +649,7 @@ function getCaseBundle(caseId) {
     files: getRows('CaseFiles', 'caseId', caseId),
     hearings: getRows('Hearings', 'caseId', caseId),
     deadlines: getRows('Deadlines', 'caseId', caseId),
+    archiveVolumes: getRows('ArchiveVolumes', 'caseId', caseId),
     incomingMail: getRows('IncomingMail', 'caseId', caseId)
   }
 }
@@ -810,9 +816,9 @@ function validateCaseLifecycle(row) {
     required('judge', 'Judge is required')
   }
   if (stage === 'archive') {
-    required('storageRoom', 'Archive room is required')
-    required('storageShelf', 'Archive shelf is required')
-    required('storageBox', 'Archive box is required')
+    const hasLocation = ['storageNumber','storageRoom','storageShelf','storageBox','locationHints']
+      .some(function(header) { return Boolean(row[HEADERS.Cases.indexOf(header)]) })
+    if (!hasLocation) throw new Error('Archive location is required')
     setCaseDefault(row, 'archivedAt', new Date().toISOString())
   }
 }
@@ -933,10 +939,9 @@ function migrateCaseStage(data) {
       if (!String(data.judge || item.judge || '').trim()) throw new Error('Judge is required')
     }
     if (targetStage === 'archive') {
-      if (!String(data.storageRoom || '').trim() ||
-          !String(data.storageShelf || '').trim() ||
-          !String(data.storageBox || '').trim()) {
-        throw new Error('Archive room, shelf and box are required')
+      if (![data.storageNumber, data.storageRoom, data.storageShelf, data.storageBox, data.locationHints]
+        .some(function(value) { return Boolean(String(value || '').trim()) })) {
+        throw new Error('Archive location is required')
       }
     }
 
@@ -997,6 +1002,47 @@ function logIncomingMail(data) {
     mailId: item.id, sender: item.sender, dateReceived: item.dateReceived
   })
   return item
+}
+
+function saveArchiveVolume(row) {
+  const item = rowToObject('ArchiveVolumes', validateRow('ArchiveVolumes', row))
+  const caseRow = getRows('Cases').find(function(value) { return value.id === item.caseId })
+  if (!caseRow) throw new Error('Case not found')
+  if (!item.volumeNumber) throw new Error('Volume number is required')
+  const hasLocation = [
+    item.storageNumber, item.storageRoom, item.storageShelf,
+    item.storageBox, item.locationHints
+  ].some(function(value) { return Boolean(String(value || '').trim()) })
+  if (!hasLocation) throw new Error('Volume location is required')
+  const existing = getRows('ArchiveVolumes').find(function(value) {
+    return value.id === item.id
+  })
+  const duplicate = getRows('ArchiveVolumes', 'caseId', item.caseId).find(function(value) {
+    return value.id !== item.id && String(value.volumeNumber) === String(item.volumeNumber)
+  })
+  if (duplicate) throw new Error('This volume number already exists for the case')
+  const now = new Date().toISOString()
+  item.createdAt = existing ? existing.createdAt : (item.createdAt || now)
+  item.updatedAt = now
+  const result = upsertRow('ArchiveVolumes', validateRow('ArchiveVolumes', objectToRow('ArchiveVolumes', item)))
+  auditAction(existing ? 'UPDATE' : 'CREATE', 'ArchiveVolume', item.id, {
+    caseId: item.caseId,
+    volumeNumber: item.volumeNumber,
+    location: archiveLocation(item)
+  })
+  result.item = item
+  return result
+}
+
+function deleteArchiveVolume(id) {
+  const item = getRows('ArchiveVolumes').find(function(value) { return value.id === id })
+  if (!item) throw new Error('Archive volume not found')
+  const deleted = deleteRowsByValue('ArchiveVolumes', 'id', id)
+  auditAction('DELETE', 'ArchiveVolume', id, {
+    caseId: item.caseId,
+    volumeNumber: item.volumeNumber
+  })
+  return { status: 'deleted', id: id, deletedRows: deleted }
 }
 
 function saveScheduledItem(sheetName, row) {
@@ -1245,6 +1291,7 @@ function deleteCase(data) {
       IncomingMail: deleteRowsByValue('IncomingMail', 'caseId', caseId),
       Hearings: deleteRowsByValue('Hearings', 'caseId', caseId),
       Deadlines: deleteRowsByValue('Deadlines', 'caseId', caseId),
+      ArchiveVolumes: deleteRowsByValue('ArchiveVolumes', 'caseId', caseId),
       Cases: deleteRowsByValue('Cases', 'id', caseId)
     }
     const user = Session.getActiveUser().getEmail() || 'web-app-user'

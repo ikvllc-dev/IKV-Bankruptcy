@@ -359,7 +359,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDgMh1tamB5b_3HbWycUTAViNMR0irLLwm0JJ3Vkj0ZzYL0699dGioRqatEtb9UJOCpA/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwT6caHnHJ-SuZMhp2FJDw7p_YAxBRMl8g3CrhfPUN9A6mLvoYKSuL_g9oCfDta_weY3w/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -642,6 +642,7 @@ let allDocuments = []
 let allBankCertificates = []
 let allHearings = []
 let allDeadlines = []
+let allArchiveVolumes = []
 let caseTypes = []
 let currentCase = null
 let currentDocs = []
@@ -651,6 +652,7 @@ let currentFiles = []
 let currentHearings = []
 let currentDeadlines = []
 let currentIncomingMail = []
+let currentArchiveVolumes = []
 let currentTab = 'info'
 let activeStageFilter = 'preparation'
 let mailVisibleCases = []
@@ -694,6 +696,7 @@ async function loadDashboard() {
       allBankCertificates = data.bankCertificates||[]
       allHearings = data.hearings||[]
       allDeadlines = data.deadlines||[]
+      allArchiveVolumes = data.archiveVolumes||[]
       caseTypes = data.caseTypes||[]
     } catch(error) {
       if(!String(error.message||'').includes('Unknown action')) throw error
@@ -913,12 +916,14 @@ async function openCase(caseId) {
     currentHearings = cached.hearings||[]
     currentDeadlines = cached.deadlines||[]
     currentIncomingMail = cached.incomingMail||[]
+    currentArchiveVolumes = cached.archiveVolumes||[]
     renderDetailTabs()
     renderDetail('info')
   } else {
     // Render info tab immediately from cached case data, fetch bundle in background
     currentDocs = []; currentDebts = []; currentBankCertificates = []; currentFiles = []
     currentHearings = []; currentDeadlines = []; currentIncomingMail = []
+    currentArchiveVolumes = []
     renderDetailTabs()
     renderDetail('info')
     document.getElementById('detail-content').insertAdjacentHTML('afterbegin',
@@ -932,6 +937,7 @@ async function openCase(caseId) {
       currentHearings = bundle.hearings||[]
       currentDeadlines = bundle.deadlines||[]
       currentIncomingMail = bundle.incomingMail||[]
+      currentArchiveVolumes = bundle.archiveVolumes||[]
       if(bundle.driveFolderId) {
         currentCase.driveFolderId = bundle.driveFolderId
         currentCase.driveFolderUrl = bundle.driveFolderUrl
@@ -942,6 +948,7 @@ async function openCase(caseId) {
         documents:currentDocs,debts:currentDebts,
         bankCertificates:currentBankCertificates,files:currentFiles,
         hearings:currentHearings,deadlines:currentDeadlines,incomingMail:currentIncomingMail,
+        archiveVolumes:currentArchiveVolumes,
         loadedAt:Date.now()
       })
       if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
@@ -949,6 +956,7 @@ async function openCase(caseId) {
         documents:currentDocs,debts:currentDebts,
         bankCertificates:currentBankCertificates,files:currentFiles,
         hearings:currentHearings,deadlines:currentDeadlines,incomingMail:currentIncomingMail,
+        archiveVolumes:currentArchiveVolumes,
         loadedAt:Date.now()
       })
       document.getElementById('bundle-loading')?.remove()
@@ -2226,6 +2234,7 @@ async function confirmDeleteCase() {
     currentHearings = []
     currentDeadlines = []
     currentIncomingMail = []
+    currentArchiveVolumes = []
     dashboardLoadedAt = Date.now()
     closeModal()
     showPage('cases')
@@ -2335,8 +2344,10 @@ function processFieldsHtml(prefix) {
 }
 
 function archiveFieldsHtml(prefix) {
-  return `<div class="form-row-3"><div class="field"><label>Սենյակ / տարածք *</label><input id="${prefix}room"/></div><div class="field"><label>Դարակ *</label><input id="${prefix}shelf"/></div><div class="field"><label>Արկղ *</label><input id="${prefix}box"/></div></div>
-  <div class="form-row"><div class="field"><label>Պահեստային համար</label><input id="${prefix}storage"/></div><div class="field"><label>Տեղի հուշումներ</label><input id="${prefix}hints"/></div></div>`
+  return `<div class="alert alert-blue">Լրացրեք պահպանման տեղը ձեզ հարմար ձևով։ Գոնե մեկ դաշտ պետք է լրացված լինի։</div>
+  <div class="field"><label>Պահպանման տեղի ազատ նկարագրություն</label><input id="${prefix}hints" placeholder="օր.՝ գլխավոր գրասենյակ, մոխրագույն պահարան, վերևի դարակ"/></div>
+  <div class="form-row-3"><div class="field"><label>Սենյակ / տարածք</label><input id="${prefix}room"/></div><div class="field"><label>Դարակ</label><input id="${prefix}shelf"/></div><div class="field"><label>Արկղ</label><input id="${prefix}box"/></div></div>
+  <div class="field"><label>Պահեստային համար</label><input id="${prefix}storage"/></div>`
 }
 
 function readProcessFields(prefix) {
@@ -2363,6 +2374,7 @@ function renderLifecycleTab() {
   const c=currentCase
   const stages=['preparation','process','archive']
   const index=stages.indexOf(c.stage||'preparation')
+  const volumes=[...currentArchiveVolumes].sort((a,b)=>Number(a.volumeNumber||0)-Number(b.volumeNumber||0))
   return `<div class="case-info-grid">
     <div class="card">
       <div class="card-title">Գործի նույնականացում</div>
@@ -2385,7 +2397,70 @@ function renderLifecycleTab() {
       <div class="srow"><span class="sk">Արխիվի տեղ</span><span class="sv">${esc(archiveLocationText(c))}</span></div>
       <div class="srow"><span class="sk">Արխիվացվել է</span><span class="sv">${esc(c.archivedAt||'—')}</span></div>
     </div>
-  </div>`
+  </div>
+  ${c.stage==='archive'?`<div class="card">
+    <div class="card-title" style="justify-content:space-between"><span>Արխիվային հատորներ</span><button class="btn btn-sm btn-primary" onclick="openArchiveVolumeModal()">+ Ավելացնել հատոր</button></div>
+    <div class="alert alert-blue">Յուրաքանչյուր հատորի համար կարող եք նշել առանձին դարակ, արկղ կամ ազատ տեղորոշման նկարագրություն։</div>
+    ${volumes.length?`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Հատոր</th><th>Անվանում</th><th>Պահպանման տեղ</th><th></th></tr></thead><tbody>
+      ${volumes.map(volume=>`<tr>
+        <td><strong>Հատոր ${esc(volume.volumeNumber)}</strong></td>
+        <td>${esc(volume.volumeLabel||'—')}</td>
+        <td>${esc(volumeLocationText(volume))}</td>
+        <td><button class="btn btn-sm" onclick="${inlineCall('openArchiveVolumeModal',volume.id)}">Խմբագրել</button></td>
+      </tr>`).join('')}
+    </tbody></table></div>`:'<p class="hint">Հատորներ դեռ չեն ավելացվել։ Եթե գործն ունի մեկ թղթապանակ, կարող եք այն գրանցել որպես «Հատոր 1»։</p>'}
+  </div>`:''}`
+}
+
+const ARCHIVE_VOLUME_COLS=['id','caseId','volumeNumber','volumeLabel','storageNumber','storageRoom','storageShelf','storageBox','locationHints','createdAt','updatedAt']
+
+function volumeLocationText(volume) {
+  const structured=[volume.storageRoom,volume.storageShelf,volume.storageBox].filter(Boolean).join(' / ')
+  return [structured,volume.storageNumber,volume.locationHints].filter(Boolean).join(' · ')||'Տեղը նշված չէ'
+}
+
+function openArchiveVolumeModal(id='') {
+  const item=currentArchiveVolumes.find(value=>value.id===id)||{}
+  const suggested=currentArchiveVolumes.reduce((max,value)=>Math.max(max,Number(value.volumeNumber)||0),0)+1
+  openModal(`<div class="modal-title">Արխիվային հատոր<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-row"><div class="field"><label>Հատորի համար *</label><input type="number" min="1" id="volume-number" value="${esc(item.volumeNumber||suggested)}"/></div><div class="field"><label>Հատորի անվանում</label><input id="volume-label" value="${esc(item.volumeLabel||'')}" placeholder="օր.՝ պայմանագրեր, դատական նյութեր"/></div></div>
+    <div class="field"><label>Պահպանման տեղի ազատ նկարագրություն</label><input id="volume-hints" value="${esc(item.locationHints||'')}" placeholder="օր.՝ մոխրագույն պահարան, վերևի դարակ"/></div>
+    <div class="form-row-3"><div class="field"><label>Սենյակ</label><input id="volume-room" value="${esc(item.storageRoom||'')}"/></div><div class="field"><label>Դարակ</label><input id="volume-shelf" value="${esc(item.storageShelf||'')}"/></div><div class="field"><label>Արկղ</label><input id="volume-box" value="${esc(item.storageBox||'')}"/></div></div>
+    <div class="field"><label>Պահեստային համար</label><input id="volume-storage" value="${esc(item.storageNumber||'')}"/></div>
+    <div class="modal-actions">${id?`<button class="btn btn-red" onclick="${inlineCall('deleteArchiveVolume',id)}">Ջնջել</button>`:''}<button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" id="volume-save" onclick="${inlineCall('saveArchiveVolume',id)}">Պահպանել</button></div>`)
+}
+
+async function saveArchiveVolume(id='') {
+  const existing=currentArchiveVolumes.find(value=>value.id===id)||{}
+  const item={...existing,
+    id:id||newId(),caseId:currentCase.id,
+    volumeNumber:document.getElementById('volume-number').value,
+    volumeLabel:document.getElementById('volume-label').value.trim(),
+    storageNumber:document.getElementById('volume-storage').value.trim(),
+    storageRoom:document.getElementById('volume-room').value.trim(),
+    storageShelf:document.getElementById('volume-shelf').value.trim(),
+    storageBox:document.getElementById('volume-box').value.trim(),
+    locationHints:document.getElementById('volume-hints').value.trim()
+  }
+  if(!item.volumeNumber){alert('Հատորի համարը պարտադիր է։');return}
+  if(![item.storageNumber,item.storageRoom,item.storageShelf,item.storageBox,item.locationHints].some(Boolean)){alert('Նշեք հատորի պահպանման տեղը։');return}
+  const button=document.getElementById('volume-save');button.disabled=true;button.textContent='Պահպանվում է...'
+  try {
+    const result=await apiPost({action:'saveArchiveVolume',row:itemRow(ARCHIVE_VOLUME_COLS,item)})
+    const index=currentArchiveVolumes.findIndex(value=>value.id===item.id)
+    if(index===-1) currentArchiveVolumes.push(result.item);else currentArchiveVolumes[index]=result.item
+    const globalIndex=allArchiveVolumes.findIndex(value=>value.id===item.id)
+    if(globalIndex===-1) allArchiveVolumes.push(result.item);else allArchiveVolumes[globalIndex]=result.item
+    closeModal();renderDetail('lifecycle')
+  } catch(e){button.disabled=false;button.textContent='Պահպանել';alert('Հատորը չպահպանվեց՝ '+e.message)}
+}
+
+async function deleteArchiveVolume(id) {
+  if(!confirm('Ջնջե՞լ այս հատորի գրառումը։')) return
+  await apiPost({action:'deleteArchiveVolume',id})
+  currentArchiveVolumes=currentArchiveVolumes.filter(item=>item.id!==id)
+  allArchiveVolumes=allArchiveVolumes.filter(item=>item.id!==id)
+  closeModal();renderDetail('lifecycle')
 }
 
 function openStageMigration(targetStage) {
@@ -2490,8 +2565,11 @@ async function loadMailPage() {
   const root=document.getElementById('mail-results')
   if(root) root.innerHTML='<span class="spinner"></span>'
   try {
-    if(!allCases.length) allCases=await apiGet('getCases')
-    if(!caseTypes.length) caseTypes=await apiGet('getCaseTypes')
+    const requests=[]
+    if(!allCases.length) requests.push(apiGet('getCases').then(value=>{allCases=value}))
+    if(!caseTypes.length) requests.push(apiGet('getCaseTypes').then(value=>{caseTypes=value}))
+    if(!allArchiveVolumes.length) requests.push(apiGet('getArchiveVolumes').then(value=>{allArchiveVolumes=value}))
+    if(requests.length) await Promise.all(requests)
     mailVisibleCases=[...allCases]
     renderMailCaseList()
     document.getElementById('mail-search')?.focus()
@@ -2517,7 +2595,11 @@ function searchIncomingMail(query) {
     try {
       const rows=await apiGet('searchCases',{q})
       rows.forEach(row=>{const index=allCases.findIndex(item=>item.id===row.id);if(index===-1)allCases.push(row);else allCases[index]=row})
-      mailVisibleCases=rows
+      const volumeCaseIds=new Set(filterArchiveVolumes(q).map(item=>item.caseId))
+      mailVisibleCases=[...new Map([
+        ...rows.map(item=>[item.id,item]),
+        ...allCases.filter(item=>volumeCaseIds.has(item.id)).map(item=>[item.id,item])
+      ]).values()]
       renderMailCaseList()
     } catch(e) {
       mailVisibleCases=filterMailCasesLocally(allCases,q)
@@ -2529,10 +2611,20 @@ function searchIncomingMail(query) {
 function filterMailCasesLocally(cases,query) {
   const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
   if(!value) return [...cases]
-  return cases.filter(c=>[
+  const volumeCaseIds=new Set(filterArchiveVolumes(value).map(item=>item.caseId))
+  return cases.filter(c=>volumeCaseIds.has(c.id)||[
     c.applicantName,c.internalNumber,c.officialCaseNumber,c.caseType,c.stage,
     c.storageNumber,c.storageRoom,c.storageShelf,c.storageBox,c.locationHints,
     c.companyRegistrationNumber,c.companyTaxId
+  ].some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value)))
+}
+
+function filterArchiveVolumes(query) {
+  const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
+  if(!value) return []
+  return allArchiveVolumes.filter(item=>[
+    item.volumeNumber,item.volumeLabel,item.storageNumber,item.storageRoom,
+    item.storageShelf,item.storageBox,item.locationHints
   ].some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value)))
 }
 
@@ -2565,6 +2657,9 @@ function stageSortValue(stage) {
 
 function renderMailCaseCard(c) {
   const archived=(c.stage||'preparation')==='archive'
+  const volumes=allArchiveVolumes
+    .filter(item=>item.caseId===c.id)
+    .sort((a,b)=>Number(a.volumeNumber||0)-Number(b.volumeNumber||0))
   return `<article class="mail-case-card">
     <div class="mail-card-top">
       <div class="mail-card-number">${esc(displayCaseNumber(c))}</div>
@@ -2572,7 +2667,9 @@ function renderMailCaseCard(c) {
     </div>
     <div class="mail-card-name">${esc(c.applicantName||'Անվանում չկա')}</div>
     <div class="mail-card-meta">${esc(caseTypeLabel(c.caseType))}${c.officialCaseNumber?`<br>Դատական՝ ${esc(c.officialCaseNumber)}`:''}</div>
-    ${archived?`<div class="mail-card-location">Տեղ՝ ${esc(archiveLocationText(c))}${c.locationHints?`<br>${esc(c.locationHints)}`:''}</div>`:''}
+    ${archived?`<div class="mail-card-location">${volumes.length
+      ? `<strong>${volumes.length} հատոր</strong><br>${volumes.slice(0,3).map(item=>`Հ.${esc(item.volumeNumber)}՝ ${esc(volumeLocationText(item))}`).join('<br>')}${volumes.length>3?`<br>և ևս ${volumes.length-3} հատոր`:''}`
+      : `Տեղ՝ ${esc(archiveLocationText(c))}${c.locationHints?`<br>${esc(c.locationHints)}`:''}`}</div>`:''}
     <div class="mail-card-actions">
       <button class="btn btn-primary" onclick="${inlineCall('openMailLogModal',c.id)}">Ստացվել է</button>
       <button class="btn" onclick="${inlineCall('printMailLabel',c.id)}">Պիտակ</button>
