@@ -466,6 +466,7 @@ function doPost(e) {
     else if (action === 'repairBankCertificateExpiryDates') result = repairBankCertificateExpiryDates()
     else if (action === 'repairIdentityTextCodes') result = repairIdentityTextCodes()
     else if (action === 'migrateExistingCases') result = migrateExistingCases()
+    else if (action === 'renumberCasesSequentially') result = renumberCasesSequentially()
     else if (action === 'runReminders') result = sendUpcomingReminders()
     else if (action === 'runBackup') result = backupSpreadsheet()
     else if (action === 'installMaintenanceTriggers') result = installMaintenanceTriggers()
@@ -822,14 +823,11 @@ function nextInternalNumber() {
   const lock = LockService.getScriptLock()
   lock.waitLock(30000)
   try {
-    const props = PropertiesService.getScriptProperties()
-    const stored = Number(props.getProperty('IKV_CASE_SEQUENCE') || 0)
     const existingMax = getRows('Cases').reduce(function(max, item) {
       const match = String(item.internalNumber || '').match(/(\d+)$/)
       return Math.max(max, match ? Number(match[1]) : 0)
     }, 0)
-    const next = Math.max(stored, existingMax) + 1
-    props.setProperty('IKV_CASE_SEQUENCE', String(next))
+    const next = existingMax + 1
     return String(next)
   } finally {
     lock.releaseLock()
@@ -1153,6 +1151,58 @@ function migrateExistingCases() {
   const count = values.filter(function(row, index) { return index > 0 && row[0] }).length
   auditAction('MIGRATION', 'Cases', 'all', { before: count, after: count, updatedCells: updated })
   return { status: 'ok', before: count, after: count, updated: updated }
+}
+
+function renumberCasesSequentially() {
+  const lock = LockService.getScriptLock()
+  lock.waitLock(30000)
+  try {
+    const sheet = getOrCreateSheet('Cases')
+    const values = sheet.getDataRange().getDisplayValues()
+    if (values.length < 2) return { status: 'ok', renumbered: 0 }
+    backupSheetBeforeMigration(sheet, 'Cases_before_renumber')
+
+    const headers = values[0]
+    const numberIndex = headers.indexOf('internalNumber')
+    const createdAtIndex = headers.indexOf('createdAt')
+    const updatedAtIndex = headers.indexOf('updatedAt')
+    const updatedByIndex = headers.indexOf('updatedBy')
+    const dataRows = values.slice(1).filter(function(row) { return row[0] })
+    dataRows.sort(function(a, b) {
+      const aDate = Date.parse(a[createdAtIndex] || '') || 0
+      const bDate = Date.parse(b[createdAtIndex] || '') || 0
+      return aDate - bDate || String(a[0]).localeCompare(String(b[0]))
+    })
+
+    const now = new Date().toISOString()
+    const user = currentUserEmail()
+    dataRows.forEach(function(row, index) {
+      row[numberIndex] = String(index + 1)
+      if (updatedAtIndex !== -1) row[updatedAtIndex] = now
+      if (updatedByIndex !== -1) row[updatedByIndex] = user
+    })
+    sheet.getRange(2, 1, dataRows.length, headers.length).setValues(dataRows)
+    if (sheet.getLastRow() > dataRows.length + 1) {
+      sheet.getRange(dataRows.length + 2, 1, sheet.getLastRow() - dataRows.length - 1, headers.length).clearContent()
+    }
+    const incomingMailSheet = getOrCreateSheet('IncomingMail')
+    incomingMailSheet.getDataRange().getDisplayValues().slice(1).forEach(function(row, index) {
+      if (!row[0]) return
+      const caseId = row[HEADERS.IncomingMail.indexOf('caseId')]
+      const caseRow = dataRows.find(function(item) { return item[0] === caseId })
+      if (caseRow) {
+        incomingMailSheet.getRange(index + 2, HEADERS.IncomingMail.indexOf('internalNumber') + 1)
+          .setValue(caseRow[numberIndex])
+      }
+    })
+    getOrCreateSheet('AuditLog').appendRow(validateRow('AuditLog', [
+      Utilities.getUuid(), now, user, 'RENUMBER', 'Cases', 'all',
+      JSON.stringify({ count: dataRows.length, first: '1', last: String(dataRows.length) })
+    ]))
+    return { status: 'ok', renumbered: dataRows.length, first: '1', last: String(dataRows.length) }
+  } finally {
+    lock.releaseLock()
+  }
 }
 
 function deleteCase(data) {
