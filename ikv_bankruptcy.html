@@ -113,6 +113,22 @@ a:hover{text-decoration:none}
 .doc-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
 .progress-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.68rem;font-weight:700;color:var(--ink-muted)}
 .case-info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
+.mail-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 220px auto;gap:12px;align-items:end}
+.mail-toolbar .search-box{max-width:none}
+.mail-toggle{min-height:42px;display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid var(--border-strong);border-radius:11px;background:#fff;font-size:.75rem;font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.mail-toggle input{width:18px;height:18px;accent-color:var(--primary)}
+.mail-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 10px;font-size:.74rem;color:var(--ink-muted)}
+.mail-scroll{max-height:620px;overflow-y:auto;padding:4px 6px 10px 2px;scrollbar-gutter:stable}
+.mail-card-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.mail-case-card{min-width:0;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:0 4px 14px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px;transition:border-color .15s,box-shadow .15s,transform .15s}
+.mail-case-card:hover{border-color:#aeb7c8;box-shadow:0 8px 20px rgba(15,23,42,.09);transform:translateY(-1px)}
+.mail-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.mail-card-number{font-family:'Noto Serif Armenian',serif;font-size:1.35rem;line-height:1;font-weight:800;color:var(--primary)}
+.mail-card-name{font-size:.76rem;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
+.mail-card-meta{font-size:.65rem;color:var(--ink-muted);line-height:1.45}
+.mail-card-location{padding:7px 8px;border-radius:8px;background:var(--amber-pale);color:var(--amber);font-size:.65rem;font-weight:700;overflow-wrap:anywhere}
+.mail-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:auto}
+.mail-card-actions .btn{min-height:30px;padding:4px 6px;font-size:.62rem}
 /* QUIZ */
 .progress-bar{height:7px;background:#e8ebf2;border-radius:100px;margin-bottom:2rem;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),#6478cf);border-radius:100px;transition:width .4s}
@@ -160,6 +176,7 @@ a:hover{text-decoration:none}
 .ineligible-box{background:var(--red-pale);border:1px solid #f0bcb6;border-radius:9px;padding:1rem 1.3rem;font-size:.84rem;color:var(--red);line-height:1.5}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:1150px){.mail-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:1050px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.page{padding:30px 26px 50px}}
 @media(max-width:820px){
   body{padding-bottom:68px}
@@ -170,6 +187,8 @@ a:hover{text-decoration:none}
   .page{margin:0;padding:24px 18px 42px;max-width:none}
   .page-title{font-size:1.35rem}
   .case-info-grid{grid-template-columns:1fr}
+  .mail-toolbar{grid-template-columns:1fr 1fr}.mail-toolbar .search-box{grid-column:1/-1}
+  .mail-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:600px){
   .form-row,.form-row-3{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:14px}.metric-val{font-size:1.65rem}
@@ -179,6 +198,7 @@ a:hover{text-decoration:none}
   .question{font-size:1.08rem}.qbtn{min-width:calc(50% - 6px)}
   .tbl{min-width:650px}.page-head{margin-bottom:18px}
   .search-box{min-width:100%;max-width:none}.doc-row{grid-template-columns:1fr;gap:8px}.doc-actions{justify-content:flex-start}
+  .mail-toolbar{grid-template-columns:1fr}.mail-toolbar .search-box{grid-column:auto}.mail-card-grid{grid-template-columns:1fr}.mail-scroll{max-height:68vh}
 }
 </style>
 </head>
@@ -246,8 +266,19 @@ a:hover{text-decoration:none}
     </div>
   </div>
   <div class="card">
-    <div class="search-box" style="max-width:none"><input id="mail-search" type="search" placeholder="Սկսեք գրել..." oninput="searchIncomingMail(this.value)"/></div>
-    <div id="mail-results" style="margin-top:14px"><p class="hint">Մուտքագրեք առնվազն 2 նիշ։</p></div>
+    <div class="mail-toolbar">
+      <div class="search-box"><input id="mail-search" type="search" placeholder="Անուն, համար, ուղարկող կամ տեղ..." oninput="searchIncomingMail(this.value)"/></div>
+      <div class="field" style="margin:0"><label>Դասավորել</label><select id="mail-sort" onchange="renderMailCaseList()">
+        <option value="number-asc">Ներքին համար՝ աճող</option>
+        <option value="number-desc">Ներքին համար՝ նվազող</option>
+        <option value="name-asc">Անվանում՝ Ա-Ֆ</option>
+        <option value="stage">Ըստ փուլի</option>
+        <option value="location">Ըստ արխիվային տեղի</option>
+      </select></div>
+      <label class="mail-toggle"><input type="checkbox" id="mail-show-archive" checked onchange="renderMailCaseList()"/> Ցույց տալ արխիվը</label>
+    </div>
+    <div class="mail-list-head"><strong>Գործերի արագ ցանկ</strong><span id="mail-result-count"></span></div>
+    <div class="mail-scroll"><div id="mail-results" class="mail-card-grid"><span class="spinner"></span></div></div>
   </div>
 </div>
 
@@ -622,6 +653,7 @@ let currentDeadlines = []
 let currentIncomingMail = []
 let currentTab = 'info'
 let activeStageFilter = 'preparation'
+let mailVisibleCases = []
 let dashboardLoadedAt = 0
 let dashboardDataLoaded = false
 const UI_CACHE_MS = 180000 // 3 minutes
@@ -640,7 +672,7 @@ function showPage(id) {
   if(id==='dashboard') loadDashboard()
   if(id==='cases') loadCases()
   if(id==='quiz') initQuiz()
-  if(id==='mail') document.getElementById('mail-search')?.focus()
+  if(id==='mail') loadMailPage()
   if(id==='calendar') loadCalendar()
   if(id==='settings') loadSettings()
 }
@@ -2447,23 +2479,100 @@ async function deleteScheduleItem(kind,id) {
 // INCOMING MAIL
 // ═══════════════════════════════════════════════
 let mailSearchTimer=null
+
+async function loadMailPage() {
+  const root=document.getElementById('mail-results')
+  if(root) root.innerHTML='<span class="spinner"></span>'
+  try {
+    if(!allCases.length) allCases=await apiGet('getCases')
+    if(!caseTypes.length) caseTypes=await apiGet('getCaseTypes')
+    mailVisibleCases=[...allCases]
+    renderMailCaseList()
+    document.getElementById('mail-search')?.focus()
+  } catch(e) {
+    if(root) root.innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`
+  }
+}
+
 function searchIncomingMail(query) {
   clearTimeout(mailSearchTimer)
   const q=String(query||'').trim()
-  if(q.length<2){document.getElementById('mail-results').innerHTML='<p class="hint">Մուտքագրեք առնվազն 2 նիշ։</p>';return}
+  if(!q) {
+    mailVisibleCases=[...allCases]
+    renderMailCaseList()
+    return
+  }
+  if(q.length<2) {
+    mailVisibleCases=filterMailCasesLocally(allCases,q)
+    renderMailCaseList()
+    return
+  }
   mailSearchTimer=setTimeout(async()=>{
-    document.getElementById('mail-results').innerHTML='<span class="spinner"></span>'
     try {
       const rows=await apiGet('searchCases',{q})
       rows.forEach(row=>{const index=allCases.findIndex(item=>item.id===row.id);if(index===-1)allCases.push(row);else allCases[index]=row})
-      document.getElementById('mail-results').innerHTML=rows.length?rows.map(c=>`<div class="card" style="margin-top:10px;padding:14px">
-        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><strong>${esc(c.applicantName)}</strong><br><span class="hint">${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</span></div><div style="font-size:1.15rem;font-weight:900;color:var(--navy)">${esc(displayInternalNumber(c.internalNumber))}</div></div>
-        ${c.officialCaseNumber?`<div class="srow"><span class="sk">Դատական համար</span><span class="sv">${esc(c.officialCaseNumber)}</span></div>`:''}
-        ${c.stage==='archive'?`<div class="alert alert-amber"><strong>Ֆիզիկական տեղ՝ ${esc(archiveLocationText(c))}</strong><span>${esc(c.locationHints||'')}</span></div>`:''}
-        <div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="${inlineCall('openMailLogModal',c.id)}">Նամակն ստացված է</button><button class="btn btn-sm" onclick="${inlineCall('printMailLabel',c.id)}">Տպել պիտակ</button></div>
-      </div>`).join(''):'<div class="alert alert-amber">Համապատասխան գործ չի գտնվել։</div>'
-    } catch(e){document.getElementById('mail-results').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`}
+      mailVisibleCases=rows
+      renderMailCaseList()
+    } catch(e) {
+      mailVisibleCases=filterMailCasesLocally(allCases,q)
+      renderMailCaseList()
+    }
   },250)
+}
+
+function filterMailCasesLocally(cases,query) {
+  const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
+  if(!value) return [...cases]
+  return cases.filter(c=>[
+    c.applicantName,c.internalNumber,c.officialCaseNumber,c.caseType,c.stage,
+    c.storageNumber,c.storageRoom,c.storageShelf,c.storageBox,c.locationHints,
+    c.companyRegistrationNumber,c.companyTaxId
+  ].some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value)))
+}
+
+function renderMailCaseList() {
+  const root=document.getElementById('mail-results')
+  if(!root) return
+  const showArchive=document.getElementById('mail-show-archive')?.checked!==false
+  const sort=document.getElementById('mail-sort')?.value||'number-asc'
+  let rows=mailVisibleCases.filter(c=>showArchive||(c.stage||'preparation')!=='archive')
+  rows=[...rows].sort((a,b)=>{
+    if(sort==='number-desc') return internalNumberValue(b)-internalNumberValue(a)
+    if(sort==='name-asc') return armenianCompare(a.applicantName,b.applicantName)
+    if(sort==='stage') return stageSortValue(a.stage)-stageSortValue(b.stage)||internalNumberValue(a)-internalNumberValue(b)
+    if(sort==='location') return archiveLocationText(a).localeCompare(archiveLocationText(b),'hy')||internalNumberValue(a)-internalNumberValue(b)
+    return internalNumberValue(a)-internalNumberValue(b)
+  })
+  const count=document.getElementById('mail-result-count')
+  if(count) count.textContent=`${rows.length} գործ`
+  root.innerHTML=rows.length?rows.map(renderMailCaseCard).join(''):'<div class="alert alert-amber" style="grid-column:1/-1">Համապատասխան գործ չի գտնվել։</div>'
+}
+
+function internalNumberValue(c) {
+  const value=Number(shortInternalNumber(c?.internalNumber))
+  return Number.isFinite(value)?value:Number.MAX_SAFE_INTEGER
+}
+
+function stageSortValue(stage) {
+  return ({preparation:1,process:2,archive:3})[stage||'preparation']||9
+}
+
+function renderMailCaseCard(c) {
+  const archived=(c.stage||'preparation')==='archive'
+  return `<article class="mail-case-card">
+    <div class="mail-card-top">
+      <div class="mail-card-number">${esc(displayInternalNumber(c.internalNumber))}</div>
+      ${stageBadge(c.stage)}
+    </div>
+    <div class="mail-card-name">${esc(c.applicantName||'Անվանում չկա')}</div>
+    <div class="mail-card-meta">${esc(caseTypeLabel(c.caseType))}${c.officialCaseNumber?`<br>Դատական՝ ${esc(c.officialCaseNumber)}`:''}</div>
+    ${archived?`<div class="mail-card-location">Տեղ՝ ${esc(archiveLocationText(c))}${c.locationHints?`<br>${esc(c.locationHints)}`:''}</div>`:''}
+    <div class="mail-card-actions">
+      <button class="btn btn-primary" onclick="${inlineCall('openMailLogModal',c.id)}">Ստացվել է</button>
+      <button class="btn" onclick="${inlineCall('printMailLabel',c.id)}">Պիտակ</button>
+      <button class="btn" style="grid-column:1/-1" onclick="${inlineCall('openCase',c.id)}">Բացել գործը</button>
+    </div>
+  </article>`
 }
 
 function openMailLogModal(caseId) {
