@@ -189,7 +189,9 @@ a:hover{text-decoration:none}
   <div class="nav-tab active" onclick="showPage('dashboard')">▦ &nbsp;Վահանակ</div>
   <div class="nav-tab" onclick="showPage('cases')">▤ &nbsp;Գործեր</div>
   <div class="nav-tab" onclick="showPage('quiz')">＋ &nbsp;Նոր հաճախորդ</div>
+  <div class="nav-tab" onclick="showPage('mail')">✉ &nbsp;Մուտքային փոստ</div>
   <div class="nav-tab" onclick="showPage('calendar')">◷ &nbsp;Օրացույց</div>
+  <div class="nav-tab" onclick="showPage('settings')">⚙ &nbsp;Կարգավորումներ</div>
 </nav>
 
 <!-- DASHBOARD -->
@@ -200,7 +202,7 @@ a:hover{text-decoration:none}
       <h1 class="page-title">Վահանակ</h1>
       <p class="page-subtitle">Հետևեք ակտիվ գործերին, փաստաթղթերի ժամկետներին և հաստատումներին։</p>
     </div>
-    <button class="btn btn-gold" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
+    <button class="btn btn-gold" onclick="openCreateCaseModal('preparation')">+ Ավելացնել գործ</button>
   </div>
   <div class="metrics" id="dash-metrics">
     <div class="metric"><div class="metric-val">—</div><div class="metric-lbl">Գործ</div></div>
@@ -220,12 +222,33 @@ a:hover{text-decoration:none}
       <h1 class="page-title">Բոլոր գործերը</h1>
       <p class="page-subtitle">Գտեք հաճախորդին և շարունակեք աշխատանքը վերջին պահված վիճակից։</p>
     </div>
-    <button class="btn btn-gold" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
+    <button class="btn btn-gold" id="stage-add-button" onclick="openCreateCaseModal(activeStageFilter)">+ Ավելացնել գործ</button>
   </div>
   <div class="toolbar" style="margin-bottom:14px">
-    <div class="search-box"><input id="case-search" type="search" placeholder="Փնտրել անունով, անձնագրով կամ համարանիշով" oninput="filterCases(this.value)"/></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="btn btn-sm stage-filter" data-stage="preparation" onclick="setStageFilter('preparation')">Նախապատրաստում</button>
+      <button class="btn btn-sm stage-filter" data-stage="process" onclick="setStageFilter('process')">Ընթացիկ / Դատական</button>
+      <button class="btn btn-sm stage-filter" data-stage="archive" onclick="setStageFilter('archive')">Արխիվ</button>
+      <button class="btn btn-sm stage-filter" data-stage="all" onclick="setStageFilter('all')">Բոլորը</button>
+    </div>
+    <div class="search-box"><input id="case-search" type="search" placeholder="Անուն, ներքին կամ դատական համար, տեսակ, տեղ" oninput="filterCases(this.value)"/></div>
   </div>
   <div class="card"><div id="cases-list"></div></div>
+</div>
+
+<!-- INCOMING MAIL -->
+<div class="page" id="page-mail">
+  <div class="page-head">
+    <div>
+      <div class="page-eyebrow">Թղթային նամակների արագ դասակարգում</div>
+      <h1 class="page-title">Մուտքային փոստ</h1>
+      <p class="page-subtitle">Փնտրեք անունով, ներքին կամ դատական համարով, ուղարկողով կամ արխիվային տեղով։</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="search-box" style="max-width:none"><input id="mail-search" type="search" placeholder="Սկսեք գրել..." oninput="searchIncomingMail(this.value)"/></div>
+    <div id="mail-results" style="margin-top:14px"><p class="hint">Մուտքագրեք առնվազն 2 նիշ։</p></div>
+  </div>
 </div>
 
 <!-- CASE DETAIL -->
@@ -282,6 +305,18 @@ a:hover{text-decoration:none}
   <div class="card"><div id="cal-content"><p class="hint">Բեռնվում է...</p></div></div>
 </div>
 
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="page-head">
+    <div>
+      <div class="page-eyebrow">Կառավարվող ցանկեր և ինտեգրումներ</div>
+      <h1 class="page-title">Կարգավորումներ</h1>
+      <p class="page-subtitle">Փոփոխությունները պահվում են Sheets-ում և չեն պահանջում կոդի փոփոխություն։</p>
+    </div>
+  </div>
+  <div id="settings-content"><span class="spinner"></span></div>
+</div>
+
 <!-- MODAL -->
 <div id="modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-box">
@@ -293,7 +328,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnFRkfKGvXn5vnl2ez0kv0lWMcj_X8iWgxeyQ-n3a6Db5-LWfBk8YNv5EYu0CvmZ-zDA/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylNfrr54YaGhYTiL9UqauS_5GopAATWvVO5kGYgELW4OnoQBLeL0Io84pEpHm3nHx_eg/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -574,12 +609,19 @@ async function apiPost(data) {
 let allCases = []
 let allDocuments = []
 let allBankCertificates = []
+let allHearings = []
+let allDeadlines = []
+let caseTypes = []
 let currentCase = null
 let currentDocs = []
 let currentDebts = []
 let currentBankCertificates = []
 let currentFiles = []
+let currentHearings = []
+let currentDeadlines = []
+let currentIncomingMail = []
 let currentTab = 'info'
+let activeStageFilter = 'preparation'
 let dashboardLoadedAt = 0
 let dashboardDataLoaded = false
 const UI_CACHE_MS = 180000 // 3 minutes
@@ -592,13 +634,15 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'))
   document.getElementById('page-'+id)?.classList.add('active')
-  const tabs = {dashboard:0,cases:1,'case-detail':1,quiz:2,calendar:3}
+  const tabs = {dashboard:0,cases:1,'case-detail':1,quiz:2,mail:3,calendar:4,settings:5}
   const navTabs = document.querySelectorAll('.nav-tab')
   if(tabs[id]!==undefined) navTabs[tabs[id]]?.classList.add('active')
   if(id==='dashboard') loadDashboard()
   if(id==='cases') loadCases()
   if(id==='quiz') initQuiz()
+  if(id==='mail') document.getElementById('mail-search')?.focus()
   if(id==='calendar') loadCalendar()
+  if(id==='settings') loadSettings()
 }
 
 // ═══════════════════════════════════════════════
@@ -616,6 +660,9 @@ async function loadDashboard() {
       allCases = data.cases||[]
       allDocuments = data.documents||[]
       allBankCertificates = data.bankCertificates||[]
+      allHearings = data.hearings||[]
+      allDeadlines = data.deadlines||[]
+      caseTypes = data.caseTypes||[]
     } catch(error) {
       if(!String(error.message||'').includes('Unknown action')) throw error
       ;[allCases, allDocuments, allBankCertificates] = await Promise.all([
@@ -683,11 +730,15 @@ function renderDashboard() {
     }
   })
 
-  const expired = deadlineDocs.filter(d=>d.days<0)
-  const expiring = deadlineDocs.filter(d=>d.days>=0&&d.days<=14)
+  const proceduralItems = [
+    ...allHearings.map(item=>({...item,days:daysLeft(String(item.dateTime||'').slice(0,10)),title:'Դատական նիստ',caseData:cases.find(c=>c.id===item.caseId)})),
+    ...allDeadlines.filter(item=>item.done!=='YES').map(item=>({...item,days:daysLeft(item.dueDate),title:item.description||'Դատավարական ժամկետ',caseData:cases.find(c=>c.id===item.caseId)}))
+  ].filter(item=>item.caseData&&isFinite(item.days)).sort((a,b)=>a.days-b.days)
+  const expired = [...deadlineDocs.filter(d=>d.days<0),...proceduralItems.filter(d=>d.days<0)]
+  const expiring = [...deadlineDocs.filter(d=>d.days>=0&&d.days<=14),...proceduralItems.filter(d=>d.days>=0&&d.days<=14)]
 
   document.getElementById('dash-metrics').innerHTML = `
-    <div class="metric"><div class="metric-val">${cases.length}</div><div class="metric-lbl">Ակտիվ գործեր</div></div>
+    <div class="metric"><div class="metric-val">${cases.filter(c=>(c.stage||'preparation')!=='archive').length}</div><div class="metric-lbl">Ակտիվ գործեր</div></div>
     <div class="metric"><div class="metric-val" style="color:var(--red)">${expired.length}</div><div class="metric-lbl">Ժամկետանց փաստաթղթեր և բանկային տեղեկանքներ</div></div>
     <div class="metric"><div class="metric-val" style="color:var(--amber)">${expiring.length}</div><div class="metric-lbl">Մինչև 14 օր</div></div>
     <div class="metric"><div class="metric-val" style="color:var(--green)">${cases.filter(c=>c.lawyerApproved==='YES').length}</div><div class="metric-lbl">Փաստաբանի կողմից հաստատված</div></div>
@@ -709,7 +760,7 @@ function renderDashboard() {
       <div class="alert ${group.overdue?'alert-red':'alert-amber'} clickable" onclick="${inlineCall('openCase',group.caseData.id)}" style="cursor:pointer;display:block">
         <strong>${esc(group.caseData.applicantName)} — ${group.overdue?group.overdue+' ժամկետանց':''}${group.overdue&&group.expiring?', ':''}${group.expiring?group.expiring+' մոտ ժամկետ':''}</strong>
         <span style="display:block;margin-top:5px">${group.items.slice(0,3).map(item=>
-          `${esc(item.title)} · ${esc(item.subject||group.caseData.applicantName)} · ${esc(item.expiryDate)} (${item.days<0?Math.abs(item.days)+' օր անցած':item.days+' օր մնացած'})`
+          `${esc(item.title)} · ${esc(item.subject||group.caseData.applicantName)} · ${esc(item.expiryDate||item.dateTime||item.dueDate||'')} (${item.days<0?Math.abs(item.days)+' օր անցած':item.days+' օր մնացած'})`
         ).join('<br>')}${group.items.length>3?`<br>և ևս ${group.items.length-3} փաստաթուղթ կամ տեղեկանք`:''}</span>
       </div>
     `).join(''):'<div class="alert alert-green"><strong>Ամեն ինչ կարգին է։</strong><span>Առաջիկա 14 օրվա ընթացքում ժամկետանց կամ մոտեցող փաստաթուղթ չկա։</span></div>'}
@@ -718,7 +769,7 @@ function renderDashboard() {
         🪪 <strong>${esc(w.subject)}</strong> — Անձնագրի ժամկ. ${w.days<0?Math.abs(w.days)+' օր անցած է':w.days+' օր մնում է'} (${esc(w.expiry)})
       </div>`).join('')}`:''}
   </div>`
-  document.getElementById('dash-cases').innerHTML = renderCasesTable(cases)
+  document.getElementById('dash-cases').innerHTML = renderCasesTable(cases.filter(c=>(c.stage||'preparation')!=='archive').slice(0,20))
 }
 
 function renderCasesTable(cases) {
@@ -729,13 +780,14 @@ function renderCasesTable(cases) {
     <button class="btn btn-gold btn-sm" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
   </div>`
   return `<div style="overflow-x:auto"><table class="tbl"><thead><tr>
-    <th>Հաճախորդ</th><th>Ամուսին կամ կին</th><th>Ներկայացման ամսաթիվ</th><th>Կարգավիճակ</th><th></th>
+    <th>Ներքին համար</th><th>Հաճախորդ</th><th>Տեսակ</th><th>Փուլ</th><th>Դատական համար / տեղ</th><th></th>
   </tr></thead><tbody>
     ${cases.map(c=>`<tr class="clickable" onclick="${inlineCall('openCase',c.id)}">
+      <td><strong>${esc(c.internalNumber||c.id)}</strong></td>
       <td><strong>${esc(c.applicantName)}</strong>${c.isMarried==='YES'?'<br><span style="font-size:.72rem;color:var(--ink-muted)">Ամուսնացած է</span>':''}</td>
-      <td style="font-size:.8rem">${esc(c.spouseName||'—')}</td>
-      <td style="font-size:.8rem">${esc(c.filingDate||'—')}</td>
-      <td>${c.lawyerApproved==='YES'?'<span class="badge badge-green">✓ Հաստատված</span>':'<span class="badge badge-blue">Ընթացքի մեջ</span>'}</td>
+      <td style="font-size:.8rem">${esc(caseTypeLabel(c.caseType))}</td>
+      <td>${stageBadge(c.stage)}</td>
+      <td style="font-size:.8rem">${esc(c.stage==='archive'?archiveLocationText(c):(c.officialCaseNumber||'—'))}</td>
       <td><button class="btn btn-sm" onclick="event.stopPropagation();${inlineCall('openCase',c.id)}">→</button></td>
     </tr>`).join('')}
   </tbody></table></div>`
@@ -743,8 +795,10 @@ function renderCasesTable(cases) {
 
 function filterCases(query) {
   const value=String(query||'').trim().toLocaleLowerCase('hy-AM')
-  const filtered=!value?allCases:allCases.filter(c=>
-    [c.applicantName,c.spouseName,c.passport,c.idCard,c.spousePassport,c.spouseIdCard,c.psn,c.id]
+  const staged=activeStageFilter==='all'?allCases:allCases.filter(c=>(c.stage||'preparation')===activeStageFilter)
+  const filtered=!value?staged:staged.filter(c=>
+    [c.applicantName,c.spouseName,c.passport,c.idCard,c.spousePassport,c.spouseIdCard,c.psn,c.id,
+      c.internalNumber,c.officialCaseNumber,c.caseType,c.stage,c.storageNumber,c.storageRoom,c.storageShelf,c.storageBox,c.locationHints]
       .some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value))
   )
   document.getElementById('cases-list').innerHTML=renderCasesTable(filtered)
@@ -752,17 +806,44 @@ function filterCases(query) {
 
 async function loadCases() {
   if(allCases.length && dashboardLoadedAt && Date.now()-dashboardLoadedAt<UI_CACHE_MS) {
-    document.getElementById('cases-list').innerHTML = renderCasesTable(allCases)
+    setStageFilter(activeStageFilter)
     return
   }
   document.getElementById('cases-list').innerHTML = '<span class="spinner"></span>'
   try {
     allCases = await apiGet('getCases')
     dashboardLoadedAt = Date.now()
-    document.getElementById('cases-list').innerHTML = renderCasesTable(allCases)
+    if(!caseTypes.length) caseTypes=await apiGet('getCaseTypes')
+    setStageFilter(activeStageFilter)
   } catch(e) {
     document.getElementById('cases-list').innerHTML = `<div class="alert alert-red">${e.message}</div>`
   }
+}
+
+function caseTypeLabel(key) {
+  return caseTypes.find(item=>item.key===(key||'bankruptcy'))?.label || key || 'Սնանկություն'
+}
+
+function stageLabel(stage) {
+  return ({preparation:'Նախապատրաստում',process:'Ընթացիկ / Դատական',archive:'Արխիվ'})[stage||'preparation']||stage
+}
+
+function stageBadge(stage) {
+  const cls=stage==='archive'?'badge-green':stage==='process'?'badge-amber':'badge-blue'
+  return `<span class="badge ${cls}">${esc(stageLabel(stage))}</span>`
+}
+
+function archiveLocationText(c) {
+  return [c.storageRoom,c.storageShelf,c.storageBox].filter(Boolean).join(' / ') || c.storageNumber || 'Տեղը նշված չէ'
+}
+
+function setStageFilter(stage) {
+  activeStageFilter=stage
+  document.querySelectorAll('.stage-filter').forEach(button=>button.classList.toggle('btn-primary',button.dataset.stage===stage))
+  const query=document.getElementById('case-search')?.value||''
+  filterCases(query)
+  const add=document.getElementById('stage-add-button')
+  if(add) add.textContent=`+ Ավելացնել գործ · ${stage==='all'?'Նախապատրաստում':stageLabel(stage)}`
 }
 
 // ═══════════════════════════════════════════════
@@ -782,11 +863,15 @@ async function openCase(caseId) {
     currentDebts = cached.debts
     currentBankCertificates = cached.bankCertificates
     currentFiles = cached.files
+    currentHearings = cached.hearings||[]
+    currentDeadlines = cached.deadlines||[]
+    currentIncomingMail = cached.incomingMail||[]
     renderDetailTabs()
     renderDetail('info')
   } else {
     // Render info tab immediately from cached case data, fetch bundle in background
     currentDocs = []; currentDebts = []; currentBankCertificates = []; currentFiles = []
+    currentHearings = []; currentDeadlines = []; currentIncomingMail = []
     renderDetailTabs()
     renderDetail('info')
     document.getElementById('detail-content').insertAdjacentHTML('afterbegin',
@@ -797,6 +882,9 @@ async function openCase(caseId) {
       currentDebts = bundle.debts||[]
       currentBankCertificates = bundle.bankCertificates||[]
       currentFiles = bundle.files||[]
+      currentHearings = bundle.hearings||[]
+      currentDeadlines = bundle.deadlines||[]
+      currentIncomingMail = bundle.incomingMail||[]
       if(bundle.driveFolderId) {
         currentCase.driveFolderId = bundle.driveFolderId
         currentCase.driveFolderUrl = bundle.driveFolderUrl
@@ -806,12 +894,14 @@ async function openCase(caseId) {
       caseBundleCache.set(caseId,{
         documents:currentDocs,debts:currentDebts,
         bankCertificates:currentBankCertificates,files:currentFiles,
+        hearings:currentHearings,deadlines:currentDeadlines,incomingMail:currentIncomingMail,
         loadedAt:Date.now()
       })
       if(!currentDebts.length) currentDebts = legacyDebtsForCase(currentCase)
       caseBundleCache.set(caseId,{
         documents:currentDocs,debts:currentDebts,
         bankCertificates:currentBankCertificates,files:currentFiles,
+        hearings:currentHearings,deadlines:currentDeadlines,incomingMail:currentIncomingMail,
         loadedAt:Date.now()
       })
       document.getElementById('bundle-loading')?.remove()
@@ -826,13 +916,19 @@ async function openCase(caseId) {
 }
 
 function renderDetailTabs() {
-  const tabs = [
+  const common = [
     {id:'info',label:'👤 Տեղեկություններ'},
+    {id:'lifecycle',label:'↔ Փուլ և արխիվ'},
+    {id:'schedule',label:'◷ Նիստեր և ժամկետներ'},
+  ]
+  const bankruptcy = [
     {id:'docs',label:'📋 Փաստաթղթեր'},
     {id:'court',label:'⚖ Դատական փաստաթղթեր'},
     {id:'credits',label:'💰 Պարտքեր'},
     {id:'report',label:'📄 Ամբողջական հաշվետվություն'},
   ]
+  const general = [{id:'court',label:'⚖ Գործի փաստաթղթեր'}]
+  const tabs = [...common,...((currentCase?.caseType||'bankruptcy')==='bankruptcy'?bankruptcy:general)]
   document.getElementById('detail-tabs').innerHTML = tabs.map(t=>
     `<div class="nav-tab${currentTab===t.id?' active':''}" onclick="renderDetail('${t.id}')" style="padding:9px 14px;font-size:.82rem">${t.label}</div>`
   ).join('')
@@ -884,6 +980,9 @@ function renderDetail(tab) {
       </div>`:'<div class="card"><div class="card-title">ℹ Ընտանեկան դրություն</div><div class="srow"><span class="sk">Ամուսնացած է</span><span class="sv">Ոչ</span></div></div>'}
     </div>`
   }
+
+  if(tab === 'lifecycle') html = renderLifecycleTab()
+  if(tab === 'schedule') html = renderScheduleTab()
 
   if(tab === 'docs') {
     const married = currentCase.isMarried === 'YES'
@@ -990,9 +1089,10 @@ function renderPersonDocumentSections(subject,isSpouse) {
 }
 
 function renderCourtDocuments() {
-  const category = 'Դատական փաստաթղթեր'
+  const isBankruptcy=(currentCase.caseType||'bankruptcy')==='bankruptcy'
+  const category = isBankruptcy?'Դատական փաստաթղթեր':'Գործի փաստաթղթեր'
   const types = DOC_TYPES
-    .filter(item=>item.cat===category)
+    .filter(item=>isBankruptcy?item.cat==='Դատական փաստաթղթեր':['court_docs','other_document'].includes(item.id))
     .sort((a,b)=>armenianCompare(a.name,b.name))
   const rows = types.map(type=>{
     const doc = currentDocs.find(item=>
@@ -1002,12 +1102,13 @@ function renderCourtDocuments() {
   }).join('')
   return `<div class="card">
     <div class="summary-block-title">${category}</div>
-    <div class="alert alert-blue">Դատարան ներկայացվող և դատական վարույթին վերաբերող փաստաթղթերը պահվում են այս առանձին բաժնում։</div>
+    <div class="alert alert-blue">${isBankruptcy?'Դատարան ներկայացվող և դատական վարույթին վերաբերող փաստաթղթերը պահվում են այս առանձին բաժնում։':'Կցեք գործին վերաբերող դատական և այլ հիմնական փաստաթղթերը։'}</div>
     ${rows}
   </div>`
 }
 
 function documentTabForType(typeId) {
+  if((currentCase?.caseType||'bankruptcy')!=='bankruptcy') return 'court'
   return DOC_TYPES.find(item=>item.id===typeId)?.cat==='Դատական փաստաթղթեր'
     ? 'court'
     : 'docs'
@@ -2029,6 +2130,9 @@ async function confirmDeleteCase() {
     currentDebts = []
     currentBankCertificates = []
     currentFiles = []
+    currentHearings = []
+    currentDeadlines = []
+    currentIncomingMail = []
     dashboardLoadedAt = Date.now()
     closeModal()
     showPage('cases')
@@ -2041,15 +2145,324 @@ async function confirmDeleteCase() {
 }
 
 // ═══════════════════════════════════════════════
+// CASE LIFECYCLE + GENERAL CASES
+// ═══════════════════════════════════════════════
+async function openCreateCaseModal(stage='preparation') {
+  if(!caseTypes.length) caseTypes=await apiGet('getCaseTypes')
+  const target=stage==='all'?'preparation':stage
+  openModal(`
+    <div class="modal-title">Ավելացնել գործ · ${esc(stageLabel(target))}<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Գործի տեսակ *</label><select id="new-case-type" onchange="toggleGeneralCaseFields()">
+      ${caseTypes.map(item=>`<option value="${esc(item.key)}">${esc(item.label)}</option>`).join('')}
+    </select></div>
+    <div id="general-case-fields">
+      <div class="form-row"><div class="field"><label>Անուն *</label><input id="new-case-first"/></div><div class="field"><label>Ազգանուն *</label><input id="new-case-last"/></div></div>
+      <div class="field"><label>Հայրանուն / կազմակերպություն</label><input id="new-case-middle"/></div>
+      <div class="field"><label>Պատասխանատու իրավաբանների էլ. հասցեներ</label><input id="new-case-emails" placeholder="lawyer@company.am, ..."/></div>
+      ${target==='process'?processFieldsHtml('new-'):''}
+      ${target==='archive'?archiveFieldsHtml('new-'):''}
+    </div>
+    <div id="bankruptcy-quiz-note" class="alert alert-blue">Սնանկության նոր գործի համար կարող եք անցնել ամբողջական հարցաթերթը։</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Չեղարկել</button>
+      <button class="btn btn-primary" onclick="${inlineCall('continueCreateCase',target)}">Շարունակել</button>
+    </div>`)
+  toggleGeneralCaseFields()
+}
+
+function toggleGeneralCaseFields() {
+  const bankruptcy=document.getElementById('new-case-type')?.value==='bankruptcy'
+  const note=document.getElementById('bankruptcy-quiz-note')
+  if(note) note.style.display=bankruptcy?'block':'none'
+}
+
+async function continueCreateCase(stage) {
+  const type=document.getElementById('new-case-type').value
+  if(type==='bankruptcy'&&stage==='preparation') {
+    closeModal(); showPage('quiz'); return
+  }
+  const first=document.getElementById('new-case-first').value.trim()
+  const last=document.getElementById('new-case-last').value.trim()
+  if(!first||!last){alert('Անունը և ազգանունը պարտադիր են։');return}
+  const data={
+    id:newId(),applicantName:`${first} ${last}`,firstName:first,lastName:last,
+    middleName:document.getElementById('new-case-middle').value.trim(),
+    caseType:type,stage,responsibleEmails:document.getElementById('new-case-emails').value.trim(),
+    createdAt:new Date().toISOString()
+  }
+  if(stage==='process') Object.assign(data,readProcessFields('new-'))
+  if(stage==='archive') {
+    Object.assign(data,readArchiveFields('new-'))
+    data.archivedAt=new Date().toISOString()
+  }
+  const result=await apiPost({action:'saveCase',row:buildCaseRow(data)})
+  Object.assign(data,result)
+  allCases.push(data)
+  dashboardLoadedAt=0
+  closeModal()
+  setStageFilter(stage)
+}
+
+function processFieldsHtml(prefix) {
+  return `<div class="form-row"><div class="field"><label>Պաշտոնական դատական համար *</label><input id="${prefix}official"/></div><div class="field"><label>Ատյան *</label><select id="${prefix}instance"><option value="first">Առաջին ատյան</option><option value="appeal">Վերաքննիչ</option><option value="cassation">Վճռաբեկ</option></select></div></div>
+  <div class="form-row"><div class="field"><label>Դատարան *</label><input id="${prefix}court"/></div><div class="field"><label>Դատավոր *</label><input id="${prefix}judge"/></div></div>
+  <div class="field"><label>Դատավարական կարգավիճակ</label><input id="${prefix}status"/></div>`
+}
+
+function archiveFieldsHtml(prefix) {
+  return `<div class="form-row-3"><div class="field"><label>Սենյակ / տարածք *</label><input id="${prefix}room"/></div><div class="field"><label>Դարակ *</label><input id="${prefix}shelf"/></div><div class="field"><label>Արկղ *</label><input id="${prefix}box"/></div></div>
+  <div class="form-row"><div class="field"><label>Պահեստային համար</label><input id="${prefix}storage"/></div><div class="field"><label>Տեղի հուշումներ</label><input id="${prefix}hints"/></div></div>`
+}
+
+function readProcessFields(prefix) {
+  return {
+    officialCaseNumber:document.getElementById(prefix+'official')?.value.trim()||'',
+    court:document.getElementById(prefix+'court')?.value.trim()||'',
+    courtInstance:document.getElementById(prefix+'instance')?.value||'',
+    judge:document.getElementById(prefix+'judge')?.value.trim()||'',
+    caseStatus:document.getElementById(prefix+'status')?.value.trim()||''
+  }
+}
+
+function readArchiveFields(prefix) {
+  return {
+    storageRoom:document.getElementById(prefix+'room')?.value.trim()||'',
+    storageShelf:document.getElementById(prefix+'shelf')?.value.trim()||'',
+    storageBox:document.getElementById(prefix+'box')?.value.trim()||'',
+    storageNumber:document.getElementById(prefix+'storage')?.value.trim()||'',
+    locationHints:document.getElementById(prefix+'hints')?.value.trim()||''
+  }
+}
+
+function renderLifecycleTab() {
+  const c=currentCase
+  const stages=['preparation','process','archive']
+  const index=stages.indexOf(c.stage||'preparation')
+  return `<div class="case-info-grid">
+    <div class="card">
+      <div class="card-title">Գործի նույնականացում</div>
+      <div class="srow"><span class="sk">Ներքին համար</span><span class="sv"><strong>${esc(c.internalNumber||c.id)}</strong></span></div>
+      <div class="srow"><span class="sk">Տեսակ</span><span class="sv">${esc(caseTypeLabel(c.caseType))}</span></div>
+      <div class="srow"><span class="sk">Ընթացիկ փուլ</span><span class="sv">${stageBadge(c.stage)}</span></div>
+      <div class="srow"><span class="sk">Փուլը փոխվել է</span><span class="sv">${esc(c.stageChangedAt||'—')}<br>${esc(c.stageChangedBy||'')}</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        ${index>0?`<button class="btn btn-sm" onclick="${inlineCall('openStageMigration',stages[index-1])}">← ${esc(stageLabel(stages[index-1]))}</button>`:''}
+        ${index<2?`<button class="btn btn-sm btn-primary" onclick="${inlineCall('openStageMigration',stages[index+1])}">${esc(stageLabel(stages[index+1]))} →</button>`:''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Դատարան և արխիվ</div>
+      <div class="srow"><span class="sk">Պաշտոնական համար</span><span class="sv">${esc(c.officialCaseNumber||'—')}</span></div>
+      <div class="srow"><span class="sk">Դատարան / ատյան</span><span class="sv">${esc(c.court||'—')} · ${esc(c.courtInstance||'—')}</span></div>
+      <div class="srow"><span class="sk">Դատավոր</span><span class="sv">${esc(c.judge||'—')}</span></div>
+      <div class="srow"><span class="sk">Կարգավիճակ / արդյունք</span><span class="sv">${esc(c.caseStatus||c.finalOutcome||'—')}</span></div>
+      <div class="srow"><span class="sk">Արխիվի տեղ</span><span class="sv">${esc(archiveLocationText(c))}</span></div>
+      <div class="srow"><span class="sk">Արխիվացվել է</span><span class="sv">${esc(c.archivedAt||'—')}</span></div>
+    </div>
+  </div>`
+}
+
+function openStageMigration(targetStage) {
+  const forward=['preparation','process','archive'].indexOf(targetStage)>['preparation','process','archive'].indexOf(currentCase.stage||'preparation')
+  openModal(`<div class="modal-title">${forward?'Տեղափոխել':'Վերաբացել'} · ${esc(stageLabel(targetStage))}<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    ${targetStage==='process'?processFieldsHtml('move-'):''}
+    ${targetStage==='archive'?archiveFieldsHtml('move-'):''}
+    ${targetStage==='preparation'?'<div class="alert alert-amber">Գործը կվերադարձվի նախապատրաստման փուլ։ Գործողությունը կգրանցվի աուդիտի մատյանում։</div>':''}
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" onclick="${inlineCall('submitStageMigration',targetStage)}">Հաստատել</button></div>`)
+  if(targetStage==='process') {
+    document.getElementById('move-official').value=currentCase.officialCaseNumber||''
+    document.getElementById('move-court').value=currentCase.court||''
+    document.getElementById('move-instance').value=currentCase.courtInstance||'first'
+    document.getElementById('move-judge').value=currentCase.judge||''
+    document.getElementById('move-status').value=currentCase.caseStatus||''
+  }
+}
+
+async function submitStageMigration(targetStage) {
+  const payload={action:'migrateCaseStage',caseId:currentCase.id,targetStage}
+  if(targetStage==='process') Object.assign(payload,readProcessFields('move-'))
+  if(targetStage==='archive') Object.assign(payload,readArchiveFields('move-'))
+  try {
+    const updated=await apiPost(payload)
+    currentCase=updated
+    const index=allCases.findIndex(item=>item.id===updated.id)
+    if(index!==-1) allCases[index]=updated
+    closeModal(); renderDetail('lifecycle'); dashboardLoadedAt=0
+  } catch(e){alert('Տեղափոխումը չկատարվեց՝ '+e.message)}
+}
+
+// ═══════════════════════════════════════════════
+// HEARINGS + DEADLINES
+// ═══════════════════════════════════════════════
+const HEARING_COLS=['id','caseId','dateTime','note','reminderDaysBefore','calendarEventId','responsibleEmails','updatedAt','reminderSentAt']
+const DEADLINE_COLS=['id','caseId','dueDate','description','reminderDaysBefore','done','calendarEventId','responsibleEmails','updatedAt','reminderSentAt']
+function itemRow(columns,item){return columns.map(key=>item[key]??'')}
+
+function renderScheduleTab() {
+  const hearings=[...currentHearings].sort((a,b)=>String(a.dateTime).localeCompare(String(b.dateTime)))
+  const deadlines=[...currentDeadlines].sort((a,b)=>String(a.dueDate).localeCompare(String(b.dueDate)))
+  return `<div class="case-info-grid">
+    <div class="card"><div class="card-title">Դատական նիստեր <button class="btn btn-sm btn-primary" onclick="openHearingModal()">+ Ավելացնել</button></div>
+      ${hearings.map(item=>`<div class="alert alert-blue"><strong>${esc(item.dateTime)}</strong><span>${esc(item.note||'Նշում չկա')}</span><button class="btn btn-sm" onclick="${inlineCall('openHearingModal',item.id)}">Խմբագրել</button></div>`).join('')||'<p class="hint">Նիստ դեռ չկա։</p>'}
+    </div>
+    <div class="card"><div class="card-title">Դատավարական ժամկետներ <button class="btn btn-sm btn-primary" onclick="openDeadlineModal()">+ Ավելացնել</button></div>
+      ${deadlines.map(item=>`<div class="alert ${item.done==='YES'?'alert-green':daysLeft(item.dueDate)<0?'alert-red':'alert-amber'}"><strong>${esc(item.dueDate)} · ${esc(item.description)}</strong><span>${item.done==='YES'?'Կատարված':'Հիշեցում՝ '+esc(item.reminderDaysBefore||'3')+' օր առաջ'}</span><button class="btn btn-sm" onclick="${inlineCall('openDeadlineModal',item.id)}">Խմբագրել</button></div>`).join('')||'<p class="hint">Ժամկետ դեռ չկա։</p>'}
+    </div></div>`
+}
+
+function openHearingModal(id='') {
+  const item=currentHearings.find(value=>value.id===id)||{}
+  openModal(`<div class="modal-title">Դատական նիստ<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Ամսաթիվ և ժամ *</label><input type="datetime-local" id="hearing-date" value="${esc(String(item.dateTime||'').slice(0,16))}"/></div>
+    <div class="field"><label>Նշում</label><textarea id="hearing-note">${esc(item.note||'')}</textarea></div>
+    <div class="form-row"><div class="field"><label>Հիշեցնել օր առաջ</label><input type="number" min="0" id="hearing-reminder" value="${esc(item.reminderDaysBefore||'3')}"/></div><div class="field"><label>Ստացողներ</label><input id="hearing-emails" value="${esc(item.responsibleEmails||currentCase.responsibleEmails||'')}"/></div></div>
+    <div class="modal-actions">${id?`<button class="btn btn-red" onclick="${inlineCall('deleteScheduleItem','Hearing',id)}">Ջնջել</button>`:''}<button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" onclick="${inlineCall('saveHearing',id)}">Պահպանել</button></div>`)
+}
+
+async function saveHearing(id='') {
+  const existing=currentHearings.find(value=>value.id===id)||{}
+  const item={...existing,id:id||newId(),caseId:currentCase.id,dateTime:document.getElementById('hearing-date').value,note:document.getElementById('hearing-note').value.trim(),reminderDaysBefore:document.getElementById('hearing-reminder').value,responsibleEmails:document.getElementById('hearing-emails').value.trim(),reminderSentAt:''}
+  const result=await apiPost({action:'saveHearing',row:itemRow(HEARING_COLS,item)})
+  const index=currentHearings.findIndex(value=>value.id===item.id)
+  if(index===-1) currentHearings.push(result.item); else currentHearings[index]=result.item
+  closeModal();renderDetail('schedule');dashboardLoadedAt=0
+}
+
+function openDeadlineModal(id='') {
+  const item=currentDeadlines.find(value=>value.id===id)||{}
+  openModal(`<div class="modal-title">Դատավարական ժամկետ<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Վերջնաժամկետ *</label><input type="date" id="deadline-date" value="${esc(item.dueDate||'')}"/></div>
+    <div class="field"><label>Նկարագրություն *</label><textarea id="deadline-description">${esc(item.description||'')}</textarea></div>
+    <div class="form-row"><div class="field"><label>Հիշեցնել օր առաջ</label><input type="number" min="0" id="deadline-reminder" value="${esc(item.reminderDaysBefore||'3')}"/></div><div class="field"><label>Ստացողներ</label><input id="deadline-emails" value="${esc(item.responsibleEmails||currentCase.responsibleEmails||'')}"/></div></div>
+    <label><input type="checkbox" id="deadline-done" ${item.done==='YES'?'checked':''}/> Կատարված է</label>
+    <div class="modal-actions">${id?`<button class="btn btn-red" onclick="${inlineCall('deleteScheduleItem','Deadline',id)}">Ջնջել</button>`:''}<button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" onclick="${inlineCall('saveDeadline',id)}">Պահպանել</button></div>`)
+}
+
+async function saveDeadline(id='') {
+  const existing=currentDeadlines.find(value=>value.id===id)||{}
+  const item={...existing,id:id||newId(),caseId:currentCase.id,dueDate:document.getElementById('deadline-date').value,description:document.getElementById('deadline-description').value.trim(),reminderDaysBefore:document.getElementById('deadline-reminder').value,responsibleEmails:document.getElementById('deadline-emails').value.trim(),done:document.getElementById('deadline-done').checked?'YES':'NO',reminderSentAt:''}
+  const result=await apiPost({action:'saveDeadline',row:itemRow(DEADLINE_COLS,item)})
+  const index=currentDeadlines.findIndex(value=>value.id===item.id)
+  if(index===-1) currentDeadlines.push(result.item); else currentDeadlines[index]=result.item
+  closeModal();renderDetail('schedule');dashboardLoadedAt=0
+}
+
+async function deleteScheduleItem(kind,id) {
+  if(!confirm('Ջնջե՞լ գրառումը։')) return
+  await apiPost({action:'delete'+kind,id})
+  if(kind==='Hearing') currentHearings=currentHearings.filter(item=>item.id!==id)
+  else currentDeadlines=currentDeadlines.filter(item=>item.id!==id)
+  closeModal();renderDetail('schedule');dashboardLoadedAt=0
+}
+
+// ═══════════════════════════════════════════════
+// INCOMING MAIL
+// ═══════════════════════════════════════════════
+let mailSearchTimer=null
+function searchIncomingMail(query) {
+  clearTimeout(mailSearchTimer)
+  const q=String(query||'').trim()
+  if(q.length<2){document.getElementById('mail-results').innerHTML='<p class="hint">Մուտքագրեք առնվազն 2 նիշ։</p>';return}
+  mailSearchTimer=setTimeout(async()=>{
+    document.getElementById('mail-results').innerHTML='<span class="spinner"></span>'
+    try {
+      const rows=await apiGet('searchCases',{q})
+      rows.forEach(row=>{const index=allCases.findIndex(item=>item.id===row.id);if(index===-1)allCases.push(row);else allCases[index]=row})
+      document.getElementById('mail-results').innerHTML=rows.length?rows.map(c=>`<div class="card" style="margin-top:10px;padding:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><strong>${esc(c.applicantName)}</strong><br><span class="hint">${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</span></div><div style="font-size:1.15rem;font-weight:900;color:var(--navy)">${esc(c.internalNumber||c.id)}</div></div>
+        ${c.officialCaseNumber?`<div class="srow"><span class="sk">Դատական համար</span><span class="sv">${esc(c.officialCaseNumber)}</span></div>`:''}
+        ${c.stage==='archive'?`<div class="alert alert-amber"><strong>Ֆիզիկական տեղ՝ ${esc(archiveLocationText(c))}</strong><span>${esc(c.locationHints||'')}</span></div>`:''}
+        <div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="${inlineCall('openMailLogModal',c.id)}">Նամակն ստացված է</button><button class="btn btn-sm" onclick="${inlineCall('printMailLabel',c.id)}">Տպել պիտակ</button></div>
+      </div>`).join(''):'<div class="alert alert-amber">Համապատասխան գործ չի գտնվել։</div>'
+    } catch(e){document.getElementById('mail-results').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`}
+  },250)
+}
+
+function openMailLogModal(caseId) {
+  const c=allCases.find(item=>item.id===caseId)
+  openModal(`<div class="modal-title">Նամակն ստացված է<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="alert alert-blue"><strong>${esc(c?.applicantName||'')}</strong><span>${esc(c?.internalNumber||caseId)}</span></div>
+    <div class="field"><label>Ուղարկող</label><input id="mail-sender"/></div><div class="field"><label>Նշում</label><textarea id="mail-note"></textarea></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Բաց թողնել</button><button class="btn btn-primary" onclick="${inlineCall('submitMailLog',caseId)}">Գրանցել</button></div>`)
+}
+
+async function submitMailLog(caseId) {
+  await apiPost({action:'logIncomingMail',caseId,sender:document.getElementById('mail-sender').value.trim(),note:document.getElementById('mail-note').value.trim(),dateReceived:new Date().toISOString()})
+  closeModal();alert('Նամակը գրանցված է։')
+}
+
+function printMailLabel(caseId) {
+  const c=allCases.find(item=>item.id===caseId)
+  if(!c)return
+  const w=window.open('','_blank','width=500,height=350')
+  w.document.write(`<html><head><title>${esc(c.internalNumber)}</title><style>body{font-family:Arial;padding:28px}.label{border:3px solid #111;padding:22px}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(c.internalNumber||c.id)}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
+  w.document.close()
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+async function loadSettings() {
+  const root=document.getElementById('settings-content')
+  root.innerHTML='<span class="spinner"></span>'
+  try {
+    const [types,settings]=await Promise.all([apiGet('getCaseTypes',{includeDisabled:'true'}),apiGet('getSettings')])
+    caseTypes=types
+    root.innerHTML=`<div class="case-info-grid"><div class="card"><div class="card-title">Գործերի տեսակներ <button class="btn btn-sm btn-primary" onclick="openCaseTypeModal()">+ Ավելացնել</button></div>
+      ${types.map(item=>`<div class="srow"><span class="sk">${esc(item.key)}</span><span class="sv">${esc(item.label)} · ${item.enabled==='NO'?'Անջատված':'Ակտիվ'} <button class="btn btn-sm" onclick="${inlineCall('openCaseTypeModal',item.key)}">Խմբագրել</button></span></div>`).join('')}
+    </div><div class="card"><div class="card-title">Հիշեցումներ և ինտեգրումներ</div>
+      <div class="field"><label>Լռելյայն հիշեցման օրեր</label><input id="setting-reminder" type="number" min="0" value="${esc(settings.REMINDER_DAYS||'3')}"/></div>
+      <div class="field"><label>Ընդհանուր Google Calendar ID</label><input id="setting-calendar" value="${esc(settings.SHARED_CALENDAR_ID||'')}"/></div>
+      <div class="field"><label>Backup Drive պանակի ID</label><input id="setting-backup" value="${esc(settings.BACKUP_FOLDER_ID||'')}"/></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveSystemSettings()">Պահպանել</button><button class="btn" onclick="runMaintenance('installMaintenanceTriggers')">Տեղադրել ավտոմատ գործարկումները</button><button class="btn" onclick="runMaintenance('runBackup')">Ստեղծել backup հիմա</button><button class="btn" onclick="runMaintenance('migrateExistingCases')">Միգրացնել առկա գործերը</button></div>
+    </div></div>`
+  } catch(e){root.innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`}
+}
+
+function openCaseTypeModal(key='') {
+  const item=caseTypes.find(value=>value.key===key)||{}
+  openModal(`<div class="modal-title">Գործի տեսակ<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Տեխնիկական բանալի *</label><input id="type-key" value="${esc(item.key||'')}" ${key?'disabled':''}/></div>
+    <div class="field"><label>Հայերեն անվանում *</label><input id="type-label" value="${esc(item.label||'')}"/></div>
+    <div class="field"><label>Դասավորման հերթ</label><input id="type-order" type="number" value="${esc(item.sortOrder||'999')}"/></div>
+    <label><input id="type-enabled" type="checkbox" ${item.enabled==='NO'?'':'checked'}/> Ակտիվ է</label>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" onclick="saveCaseType()">Պահպանել</button></div>`)
+}
+
+async function saveCaseType() {
+  await apiPost({action:'saveCaseType',key:document.getElementById('type-key').value,label:document.getElementById('type-label').value,sortOrder:document.getElementById('type-order').value,enabled:document.getElementById('type-enabled').checked})
+  closeModal();loadSettings()
+}
+
+async function saveSystemSettings() {
+  await Promise.all([
+    apiPost({action:'saveSetting',key:'REMINDER_DAYS',value:document.getElementById('setting-reminder').value}),
+    apiPost({action:'saveSetting',key:'SHARED_CALENDAR_ID',value:document.getElementById('setting-calendar').value}),
+    apiPost({action:'saveSetting',key:'BACKUP_FOLDER_ID',value:document.getElementById('setting-backup').value})
+  ])
+  alert('Կարգավորումները պահպանված են։')
+}
+
+async function runMaintenance(action) {
+  try {
+    const result=await apiPost({action})
+    alert(typeof result==='string'?result:JSON.stringify(result,null,2))
+    dashboardLoadedAt=0
+  } catch(e){alert('Գործողությունը չկատարվեց՝ '+e.message)}
+}
+
+// ═══════════════════════════════════════════════
 // CALENDAR
 // ═══════════════════════════════════════════════
 async function loadCalendar() {
   document.getElementById('cal-content').innerHTML = '<span class="spinner"></span>'
   try {
     if(!allCases.length) allCases = await apiGet('getCases')
-    const [allDocs,bankCertificates] = await Promise.all([
+    const [allDocs,bankCertificates,hearings,deadlines] = await Promise.all([
       apiGet('getDocs'),
-      apiGet('getBankCertificates')
+      apiGet('getBankCertificates'),
+      apiGet('getHearings'),
+      apiGet('getDeadlines')
     ])
     const events = []
 
@@ -2080,14 +2493,23 @@ async function loadCalendar() {
       }
     })
 
+    hearings.forEach(item=>{
+      const c=allCases.find(value=>value.id===item.caseId)
+      if(c) events.push({date:item.dateTime,label:`Դատական նիստ — ${c.applicantName}${item.note?' — '+item.note:''}`,type:'hearing',caseId:item.caseId})
+    })
+    deadlines.filter(item=>item.done!=='YES').forEach(item=>{
+      const c=allCases.find(value=>value.id===item.caseId)
+      if(c) events.push({date:item.dueDate,label:`${item.description} — ${c.applicantName}`,type:daysLeft(item.dueDate)<0?'expired':'deadline',caseId:item.caseId})
+    })
+
     events.sort((a,b)=>a.date.localeCompare(b.date))
 
     document.getElementById('cal-content').innerHTML = events.length
       ? `<table class="tbl"><thead><tr><th>Ամսաթիվ</th><th>Նշանակություն</th><th>Կարգավիճակ</th></tr></thead><tbody>
           ${events.map(e=>`<tr class="clickable" onclick="${inlineCall('openCase',e.caseId)}">
             <td>${esc(e.date)}</td>
-            <td>${e.type==='filing'?'📁 Դիմումի ներկայացում':e.deadlineKind==='bank'?'🏦 Բանկային տեղեկանքի ժամկետ':'⏰ Փաստաթղթի ժամկետ'}: ${esc(e.label)}</td>
-            <td>${e.type==='expired'?'<span class="badge badge-red">Ժամկետանց</span>':e.type==='expiring'?'<span class="badge badge-amber">Ժամկետը մոտենում է</span>':'<span class="badge badge-blue">Ներկայացման ամսաթիվ</span>'}</td>
+            <td>${e.type==='filing'?'📁 Դիմումի ներկայացում':e.type==='hearing'?'⚖ Դատական նիստ':e.type==='deadline'?'⏰ Դատավարական ժամկետ':e.deadlineKind==='bank'?'🏦 Բանկային տեղեկանքի ժամկետ':'⏰ Փաստաթղթի ժամկետ'}: ${esc(e.label)}</td>
+            <td>${e.type==='expired'?'<span class="badge badge-red">Ժամկետանց</span>':e.type==='expiring'||e.type==='deadline'?'<span class="badge badge-amber">Ժամկետը մոտենում է</span>':e.type==='hearing'?'<span class="badge badge-blue">Նիստ</span>':'<span class="badge badge-blue">Ներկայացման ամսաթիվ</span>'}</td>
           </tr>`).join('')}
         </tbody></table>`
       : '<p class="hint" style="text-align:center;padding:20px">Նշանակված իրադարձություններ չկան</p>'
@@ -2112,7 +2534,7 @@ function closeModal() {
 // ═══════════════════════════════════════════════
 let A={}, S={}, qMode='applicant', qFlow=[], qIdx=0, qLocChoice={}
 
-const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard']
+const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy']
 
 function buildCaseRow(c) {
   return QUIZ_COLS.map(col => {
@@ -2562,11 +2984,11 @@ async function saveAndGenerate(){
       spouseNoIdCard:S.noIdCard||'NO',
       spouseRegAddr:S.regAddr||'', spouseNotifAddr:S.notifAddr||'',
       assessmentJson:JSON.stringify({applicant:A,spouse:S}),
-      driveFolderId:'',driveFolderUrl:''
+      driveFolderId:'',driveFolderUrl:'',
+      caseType:'bankruptcy',stage:'preparation',responsibleEmails:''
     }
     const savedCase = await apiPost({action:'saveCase', row:buildCaseRow(caseData)})
-    caseData.driveFolderId = savedCase.driveFolderId||''
-    caseData.driveFolderUrl = savedCase.driveFolderUrl||''
+    Object.assign(caseData,savedCase)
     allCases.push(caseData)
     dlText(genContract(caseData), 'Paymanagir_'+A.name+'_'+today()+'.txt')
     await new Promise(r=>setTimeout(r,400))

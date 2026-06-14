@@ -3,7 +3,7 @@
 // ================================================================
 // SETUP:
 // 1. Go to script.google.com → New project → paste this code
-// 2. Deploy as Web App (Execute as: Me, Who has access: Anyone)
+// 2. Deploy as Web App (Execute as: Me, access restricted to the firm)
 // 3. Copy the Web App URL into ikv_bankruptcy.html CONFIG.SCRIPT_URL
 // ================================================================
 
@@ -11,6 +11,15 @@ const SPREADSHEET_ID = '1EdjhuXFFzNjxtWVPrcxueKJ5frS4qkxZnb7QqttQBxs'
 const ROOT_FOLDER_NAME = 'IKV Bankruptcy Cases'
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 const REGISTER_TEMPLATE_DOC_ID = '1CfXZsHPy25vPk5i-KcxFvoggtefjYexQhrvhtptUtVE'
+const DEFAULT_REMINDER_DAYS = 3
+const DEFAULT_CASE_TYPES = [
+  ['bankruptcy', 'Սնանկություն', 'YES', '10'],
+  ['civil', 'Քաղաքացիական դատավարություն', 'YES', '20'],
+  ['criminal', 'Քրեական պաշտպանություն', 'YES', '30'],
+  ['administrative', 'Վարչական', 'YES', '40'],
+  ['advisory', 'Խորհրդատվություն / Պայմանագրեր', 'YES', '50'],
+  ['other', 'Այլ', 'YES', '60']
+]
 
 const REPRESENTATIVES = {
   hovhannes: {
@@ -56,12 +65,17 @@ function authorizeDocumentGeneration() {
 }
 
 const HEADERS = {
-  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard'],
+  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy'],
   Documents: ['id','caseId','typeId','subject','status','issueDate','expiryDate','appliedAt','updatedAt'],
   Debts: ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'],
   BankCertificates: ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt'],
   CaseFiles: ['id','caseId','documentId','typeId','subject','fileName','mimeType','fileId','fileUrl','folderId','uploadedAt'],
-  AuditLog: ['id','timestamp','user','action','entity','entityId','detail']
+  AuditLog: ['id','timestamp','user','action','entity','entityId','detail'],
+  IncomingMail: ['id','dateReceived','sender','caseId','internalNumber','loggedBy','note'],
+  Hearings: ['id','caseId','dateTime','note','reminderDaysBefore','calendarEventId','responsibleEmails','updatedAt','reminderSentAt'],
+  Deadlines: ['id','caseId','dueDate','description','reminderDaysBefore','done','calendarEventId','responsibleEmails','updatedAt','reminderSentAt'],
+  CaseTypes: ['key','label','enabled','sortOrder','updatedAt'],
+  Settings: ['key','value','description','updatedAt']
 }
 
 const DOCUMENT_FOLDERS = {
@@ -280,7 +294,26 @@ function getOrCreateSheet(name) {
   } else {
     migrateSheetSchema(sheet, name)
   }
+  if (name === 'CaseTypes') ensureDefaultCaseTypes(sheet)
+  if (name === 'Settings') ensureDefaultSettings(sheet)
   return sheet
+}
+
+function ensureDefaultCaseTypes(sheet) {
+  if (sheet.getLastRow() > 1) return
+  const now = new Date().toISOString()
+  sheet.getRange(2, 1, DEFAULT_CASE_TYPES.length, HEADERS.CaseTypes.length)
+    .setValues(DEFAULT_CASE_TYPES.map(function(row) { return row.concat(now) }))
+}
+
+function ensureDefaultSettings(sheet) {
+  if (sheet.getLastRow() > 1) return
+  const now = new Date().toISOString()
+  sheet.getRange(2, 1, 3, HEADERS.Settings.length).setValues([
+    ['REMINDER_DAYS', String(DEFAULT_REMINDER_DAYS), 'Default email reminder lead time', now],
+    ['SHARED_CALENDAR_ID', '', 'Shared Google Calendar ID', now],
+    ['BACKUP_FOLDER_ID', '', 'Drive folder ID for scheduled spreadsheet backups', now]
+  ])
 }
 
 function migrateSheetSchema(sheet, sheetName) {
@@ -370,23 +403,30 @@ function applySheetTextFormats(sheet) {
 
 function repairAllSheetSchemas() {
   Object.keys(HEADERS).forEach(name => getOrCreateSheet(name))
-  return 'All sheet schemas are ready'
+  return migrateExistingCases()
 }
 
 function doGet(e) {
   const action = e && e.parameter ? e.parameter.action : ''
   try {
+    const user = assertAuthorizedUser()
     let result
     if (action === 'getCases') result = getRows('Cases')
     else if (action === 'getDashboardData') result = getDashboardData()
     else if (action === 'getCaseBundle') result = getCaseBundle(e.parameter.caseId)
-    else if (action === 'getDocs') result = getRows('Documents', 'caseId', e.parameter.caseId)
-    else if (action === 'getDebts') result = getRows('Debts', 'caseId', e.parameter.caseId)
-    else if (action === 'getBankCertificates') result = getRows('BankCertificates', 'caseId', e.parameter.caseId)
-    else if (action === 'getFiles') result = getRows('CaseFiles', 'caseId', e.parameter.caseId)
+    else if (action === 'getDocs') result = e.parameter.caseId ? getRows('Documents', 'caseId', e.parameter.caseId) : getRows('Documents')
+    else if (action === 'getDebts') result = e.parameter.caseId ? getRows('Debts', 'caseId', e.parameter.caseId) : getRows('Debts')
+    else if (action === 'getBankCertificates') result = e.parameter.caseId ? getRows('BankCertificates', 'caseId', e.parameter.caseId) : getRows('BankCertificates')
+    else if (action === 'getFiles') result = e.parameter.caseId ? getRows('CaseFiles', 'caseId', e.parameter.caseId) : getRows('CaseFiles')
+    else if (action === 'getHearings') result = e.parameter.caseId ? getRows('Hearings', 'caseId', e.parameter.caseId) : getRows('Hearings')
+    else if (action === 'getDeadlines') result = e.parameter.caseId ? getRows('Deadlines', 'caseId', e.parameter.caseId) : getRows('Deadlines')
+    else if (action === 'getIncomingMail') result = e.parameter.caseId ? getRows('IncomingMail', 'caseId', e.parameter.caseId) : getRows('IncomingMail')
+    else if (action === 'getCaseTypes') result = getCaseTypes(e.parameter.includeDisabled === 'true')
+    else if (action === 'getSettings') result = getSettings()
+    else if (action === 'searchCases') result = searchCases(e.parameter.q)
     else if (action === 'getAudit') result = getRows('AuditLog').slice(-100).reverse()
     else if (action === 'repairIdentityTextCodes') result = repairIdentityTextCodes()
-    else if (action === 'ping') result = { status: 'ok', time: new Date().toISOString() }
+    else if (action === 'ping') result = { status: 'ok', time: new Date().toISOString(), user: user }
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
   } catch(err) {
@@ -396,6 +436,7 @@ function doGet(e) {
 
 function doPost(e) {
   try {
+    assertAuthorizedUser()
     if (!e || !e.postData || !e.postData.contents) {
       throw new Error('Missing request body')
     }
@@ -407,6 +448,14 @@ function doPost(e) {
     else if (action === 'saveDoc') result = upsertRow('Documents', validateRow('Documents', data.row))
     else if (action === 'saveDebt') result = upsertRow('Debts', validateRow('Debts', data.row))
     else if (action === 'saveBankCertificate') result = upsertRow('BankCertificates', validateRow('BankCertificates', data.row))
+    else if (action === 'saveHearing') result = saveScheduledItem('Hearings', data.row)
+    else if (action === 'deleteHearing') result = deleteScheduledItem('Hearings', data.id)
+    else if (action === 'saveDeadline') result = saveScheduledItem('Deadlines', data.row)
+    else if (action === 'deleteDeadline') result = deleteScheduledItem('Deadlines', data.id)
+    else if (action === 'logIncomingMail') result = logIncomingMail(data)
+    else if (action === 'saveCaseType') result = saveCaseType(data)
+    else if (action === 'saveSetting') result = saveSetting(data)
+    else if (action === 'migrateCaseStage') result = migrateCaseStage(data)
     else if (action === 'uploadDocument') result = uploadDocument(data)
     else if (action === 'generateRegisterRequest') result = generateRegisterRequest(data)
     else if (action === 'generateStateRequest') result = generateStateRequest(data)
@@ -415,6 +464,10 @@ function doPost(e) {
     else if (action === 'importIngaApplicantVahagnSpouseCase') result = importIngaApplicantVahagnSpouseCase()
     else if (action === 'repairBankCertificateExpiryDates') result = repairBankCertificateExpiryDates()
     else if (action === 'repairIdentityTextCodes') result = repairIdentityTextCodes()
+    else if (action === 'migrateExistingCases') result = migrateExistingCases()
+    else if (action === 'runReminders') result = sendUpcomingReminders()
+    else if (action === 'runBackup') result = backupSpreadsheet()
+    else if (action === 'installMaintenanceTriggers') result = installMaintenanceTriggers()
     else if (action === 'audit') result = appendRow('AuditLog', validateRow('AuditLog', data.row))
     else result = { error: 'Unknown action: ' + action }
     return jsonResponse(result)
@@ -427,6 +480,120 @@ function jsonResponse(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON)
+}
+
+function assertAuthorizedUser() {
+  const props = PropertiesService.getScriptProperties()
+  const email = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase()
+  if (props.getProperty('IKV_ALLOW_UNAUTHENTICATED') === 'true') {
+    return email || 'explicitly-allowed-unauthenticated-user'
+  }
+  if (!email) {
+    throw new Error('Authentication required. Deploy the web app for firm accounts only.')
+  }
+  const allowedEmails = String(props.getProperty('IKV_ALLOWED_EMAILS') || '')
+    .split(',').map(function(value) { return value.trim().toLowerCase() }).filter(Boolean)
+  const allowedDomain = String(props.getProperty('IKV_ALLOWED_DOMAIN') || '').trim().toLowerCase()
+  if (allowedEmails.length && allowedEmails.indexOf(email) === -1) {
+    throw new Error('This account is not authorised for IKV.')
+  }
+  if (allowedDomain && !email.endsWith('@' + allowedDomain)) {
+    throw new Error('This account is outside the authorised IKV domain.')
+  }
+  return email
+}
+
+function currentUserEmail() {
+  return String(Session.getActiveUser().getEmail() || 'web-app-user').trim()
+}
+
+function rowToObject(sheetName, row) {
+  return Object.fromEntries(HEADERS[sheetName].map(function(header, index) {
+    return [header, row[index] || '']
+  }))
+}
+
+function objectToRow(sheetName, object) {
+  return HEADERS[sheetName].map(function(header) {
+    return safeCellValue(object[header])
+  })
+}
+
+function getSettings() {
+  return Object.fromEntries(getRows('Settings').map(function(item) {
+    return [item.key, item.value]
+  }))
+}
+
+function getSetting(key, fallback) {
+  const row = getRows('Settings').find(function(item) { return item.key === key })
+  return row && row.value !== '' ? row.value : fallback
+}
+
+function saveSetting(data) {
+  const key = String(data.key || '').trim().toUpperCase()
+  if (['REMINDER_DAYS','SHARED_CALENDAR_ID','BACKUP_FOLDER_ID'].indexOf(key) === -1) {
+    throw new Error('Unknown setting')
+  }
+  const existing = getRows('Settings').find(function(item) { return item.key === key }) || {}
+  const row = objectToRow('Settings', {
+    key: key,
+    value: String(data.value || '').trim(),
+    description: existing.description || String(data.description || ''),
+    updatedAt: new Date().toISOString()
+  })
+  const result = upsertRow('Settings', row)
+  auditAction('UPDATE', 'Setting', key, { value: key === 'SHARED_CALENDAR_ID' ? '[configured]' : data.value })
+  return result
+}
+
+function getCaseTypes(includeDisabled) {
+  return getRows('CaseTypes')
+    .filter(function(item) { return includeDisabled || item.enabled !== 'NO' })
+    .sort(function(a, b) { return Number(a.sortOrder || 0) - Number(b.sortOrder || 0) })
+}
+
+function saveCaseType(data) {
+  const key = String(data.key || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const label = String(data.label || '').trim()
+  if (!key || !label) throw new Error('Case type key and label are required')
+  const row = objectToRow('CaseTypes', {
+    key: key,
+    label: label,
+    enabled: data.enabled === false || data.enabled === 'NO' ? 'NO' : 'YES',
+    sortOrder: String(Number(data.sortOrder || 999)),
+    updatedAt: new Date().toISOString()
+  })
+  const result = upsertRow('CaseTypes', row)
+  auditAction('UPDATE', 'CaseType', key, { label: label, enabled: row[2] })
+  return result
+}
+
+function auditAction(action, entity, entityId, detail) {
+  return appendRow('AuditLog', validateRow('AuditLog', [
+    Utilities.getUuid(), new Date().toISOString(), currentUserEmail(),
+    action, entity, entityId, JSON.stringify(detail || {})
+  ]))
+}
+
+function searchCases(query) {
+  const needle = String(query || '').trim().toLocaleLowerCase()
+  if (!needle) return []
+  const mailByCase = {}
+  getRows('IncomingMail').forEach(function(item) {
+    if (!mailByCase[item.caseId]) mailByCase[item.caseId] = []
+    mailByCase[item.caseId].push(item.sender)
+  })
+  return getRows('Cases').filter(function(item) {
+    return [
+      item.applicantName, item.spouseName, item.internalNumber, item.id,
+      item.officialCaseNumber, item.caseType, item.stage, item.storageNumber,
+      item.storageRoom, item.storageShelf, item.storageBox, item.locationHints,
+      (mailByCase[item.id] || []).join(' ')
+    ].some(function(value) {
+      return String(value || '').toLocaleLowerCase().indexOf(needle) !== -1
+    })
+  }).slice(0, 50)
 }
 
 function getRows(sheetName, filterCol, filterVal) {
@@ -449,7 +616,10 @@ function getDashboardData() {
   return {
     cases: getRows('Cases'),
     documents: getRows('Documents'),
-    bankCertificates: getRows('BankCertificates')
+    bankCertificates: getRows('BankCertificates'),
+    hearings: getRows('Hearings'),
+    deadlines: getRows('Deadlines'),
+    caseTypes: getCaseTypes(false)
   }
 }
 
@@ -465,7 +635,10 @@ function getCaseBundle(caseId) {
     documents: getRows('Documents', 'caseId', caseId),
     debts: getRows('Debts', 'caseId', caseId),
     bankCertificates: getRows('BankCertificates', 'caseId', caseId),
-    files: getRows('CaseFiles', 'caseId', caseId)
+    files: getRows('CaseFiles', 'caseId', caseId),
+    hearings: getRows('Hearings', 'caseId', caseId),
+    deadlines: getRows('Deadlines', 'caseId', caseId),
+    incomingMail: getRows('IncomingMail', 'caseId', caseId)
   }
 }
 
@@ -574,6 +747,20 @@ function safeCellValue(value) {
 }
 
 function saveCaseWithFolders(row) {
+  const idIndex = HEADERS.Cases.indexOf('id')
+  const existing = getRows('Cases').find(function(item) { return item.id === row[idIndex] })
+  const user = currentUserEmail()
+  const now = new Date().toISOString()
+  setCaseDefault(row, 'internalNumber', existing ? existing.internalNumber : nextInternalNumber())
+  setCaseDefault(row, 'caseType', existing ? existing.caseType : 'bankruptcy')
+  setCaseDefault(row, 'stage', existing ? existing.stage : 'preparation')
+  setCaseDefault(row, 'stageChangedAt', existing ? existing.stageChangedAt : now)
+  setCaseDefault(row, 'stageChangedBy', existing ? existing.stageChangedBy : user)
+  setCaseDefault(row, 'createdAt', existing ? existing.createdAt : now)
+  setCaseDefault(row, 'createdBy', existing ? existing.createdBy : user)
+  row[HEADERS.Cases.indexOf('updatedAt')] = now
+  row[HEADERS.Cases.indexOf('updatedBy')] = user
+  validateCaseLifecycle(row)
   const folderIdIndex = HEADERS.Cases.indexOf('driveFolderId')
   const folderUrlIndex = HEADERS.Cases.indexOf('driveFolderUrl')
   let folder = null
@@ -593,7 +780,58 @@ function saveCaseWithFolders(row) {
   const saved = upsertRow('Cases', row)
   saved.driveFolderId = row[folderIdIndex]
   saved.driveFolderUrl = row[folderUrlIndex]
+  saved.internalNumber = row[HEADERS.Cases.indexOf('internalNumber')]
+  saved.caseType = row[HEADERS.Cases.indexOf('caseType')]
+  saved.stage = row[HEADERS.Cases.indexOf('stage')]
+  auditAction(existing ? 'UPDATE' : 'CREATE', 'Case', row[idIndex], {
+    applicantName: row[HEADERS.Cases.indexOf('applicantName')],
+    internalNumber: saved.internalNumber,
+    caseType: saved.caseType,
+    stage: saved.stage
+  })
   return saved
+}
+
+function validateCaseLifecycle(row) {
+  const stage = row[HEADERS.Cases.indexOf('stage')]
+  function required(header, message) {
+    if (!row[HEADERS.Cases.indexOf(header)]) throw new Error(message)
+  }
+  if (stage === 'process') {
+    required('officialCaseNumber', 'Official court case number is required')
+    required('court', 'Court is required')
+    required('courtInstance', 'Court instance is required')
+    required('judge', 'Judge is required')
+  }
+  if (stage === 'archive') {
+    required('storageRoom', 'Archive room is required')
+    required('storageShelf', 'Archive shelf is required')
+    required('storageBox', 'Archive box is required')
+    setCaseDefault(row, 'archivedAt', new Date().toISOString())
+  }
+}
+
+function setCaseDefault(row, header, value) {
+  const index = HEADERS.Cases.indexOf(header)
+  if (index !== -1 && !row[index]) row[index] = value || ''
+}
+
+function nextInternalNumber() {
+  const lock = LockService.getScriptLock()
+  lock.waitLock(30000)
+  try {
+    const props = PropertiesService.getScriptProperties()
+    const stored = Number(props.getProperty('IKV_CASE_SEQUENCE') || 0)
+    const existingMax = getRows('Cases').reduce(function(max, item) {
+      const match = String(item.internalNumber || '').match(/(\d+)$/)
+      return Math.max(max, match ? Number(match[1]) : 0)
+    }, 0)
+    const next = Math.max(stored, existingMax) + 1
+    props.setProperty('IKV_CASE_SEQUENCE', String(next))
+    return 'IKV-' + String(next).padStart(6, '0')
+  } finally {
+    lock.releaseLock()
+  }
 }
 
 function createCaseFolderTree(caseId, applicantName) {
@@ -661,6 +899,260 @@ function resolveCaseFolder(caseRow) {
   return folder
 }
 
+function migrateCaseStage(data) {
+  const caseId = String(data.caseId || '').trim()
+  const targetStage = String(data.targetStage || '').trim()
+  const stages = ['preparation','process','archive']
+  if (!caseId || stages.indexOf(targetStage) === -1) throw new Error('Invalid stage migration')
+
+  const lock = LockService.getScriptLock()
+  lock.waitLock(30000)
+  try {
+    const sheet = getOrCreateSheet('Cases')
+    const values = sheet.getDataRange().getDisplayValues()
+    const headers = values[0]
+    const rowIndex = values.findIndex(function(row, index) { return index > 0 && row[0] === caseId })
+    if (rowIndex === -1) throw new Error('Case not found')
+    const item = Object.fromEntries(headers.map(function(header, index) {
+      return [header, values[rowIndex][index] || '']
+    }))
+    const currentIndex = stages.indexOf(item.stage || 'preparation')
+    const targetIndex = stages.indexOf(targetStage)
+    if (Math.abs(targetIndex - currentIndex) !== 1) {
+      throw new Error('Cases can move only one stage at a time')
+    }
+    if (targetStage === 'process') {
+      if (!String(data.officialCaseNumber || item.officialCaseNumber || '').trim()) {
+        throw new Error('Official court case number is required')
+      }
+      if (!String(data.court || item.court || '').trim()) throw new Error('Court is required')
+      if (!String(data.courtInstance || item.courtInstance || '').trim()) throw new Error('Court instance is required')
+      if (!String(data.judge || item.judge || '').trim()) throw new Error('Judge is required')
+    }
+    if (targetStage === 'archive') {
+      if (!String(data.storageRoom || '').trim() ||
+          !String(data.storageShelf || '').trim() ||
+          !String(data.storageBox || '').trim()) {
+        throw new Error('Archive room, shelf and box are required')
+      }
+    }
+
+    const now = new Date().toISOString()
+    const user = currentUserEmail()
+    item.stage = targetStage
+    item.stageChangedAt = now
+    item.stageChangedBy = user
+    item.updatedAt = now
+    item.updatedBy = user
+    ;['officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome',
+      'storageNumber','storageRoom','storageShelf','storageBox','locationHints'].forEach(function(key) {
+      if (data[key] !== undefined) item[key] = String(data[key] || '').trim()
+    })
+    if (targetStage === 'archive') item.archivedAt = now
+    if (targetStage !== 'archive' && currentIndex === 2) item.archivedAt = ''
+
+    const nextRow = objectToRow('Cases', item)
+    sheet.getRange(rowIndex + 1, 1, 1, nextRow.length).setValues([nextRow])
+    const detail = {
+      from: stages[currentIndex],
+      to: targetStage,
+      internalNumber: item.internalNumber,
+      officialCaseNumber: item.officialCaseNumber,
+      archiveLocation: archiveLocation(item)
+    }
+    getOrCreateSheet('AuditLog').appendRow(validateRow('AuditLog', [
+      Utilities.getUuid(), now, user,
+      targetIndex > currentIndex ? 'MIGRATE_FORWARD' : 'MIGRATE_BACKWARD',
+      'Case', caseId, JSON.stringify(detail)
+    ]))
+    return item
+  } finally {
+    lock.releaseLock()
+  }
+}
+
+function archiveLocation(item) {
+  return [item.storageRoom, item.storageShelf, item.storageBox]
+    .filter(Boolean).join(' / ')
+}
+
+function logIncomingMail(data) {
+  const caseId = String(data.caseId || '').trim()
+  const caseRow = getRows('Cases').find(function(item) { return item.id === caseId })
+  if (!caseRow) throw new Error('Case not found')
+  const item = {
+    id: String(data.id || Utilities.getUuid()),
+    dateReceived: String(data.dateReceived || new Date().toISOString()),
+    sender: String(data.sender || '').trim(),
+    caseId: caseId,
+    internalNumber: caseRow.internalNumber,
+    loggedBy: currentUserEmail(),
+    note: String(data.note || '').trim()
+  }
+  appendRow('IncomingMail', validateRow('IncomingMail', objectToRow('IncomingMail', item)))
+  auditAction('MAIL_RECEIVED', 'Case', caseId, {
+    mailId: item.id, sender: item.sender, dateReceived: item.dateReceived
+  })
+  return item
+}
+
+function saveScheduledItem(sheetName, row) {
+  const item = rowToObject(sheetName, validateRow(sheetName, row))
+  const caseRow = getRows('Cases').find(function(value) { return value.id === item.caseId })
+  if (!caseRow) throw new Error('Case not found')
+  if (sheetName === 'Hearings' && !item.dateTime) throw new Error('Hearing date/time is required')
+  if (sheetName === 'Deadlines' && (!item.dueDate || !item.description)) {
+    throw new Error('Deadline date and description are required')
+  }
+  if (!item.reminderDaysBefore) item.reminderDaysBefore = getSetting('REMINDER_DAYS', DEFAULT_REMINDER_DAYS)
+  if (!item.responsibleEmails) item.responsibleEmails = caseRow.responsibleEmails
+  item.updatedAt = new Date().toISOString()
+  item.calendarEventId = syncCalendarItem(sheetName, item, caseRow)
+  const result = upsertRow(sheetName, validateRow(sheetName, objectToRow(sheetName, item)))
+  auditAction('UPDATE', sheetName.slice(0, -1), item.id, {
+    caseId: item.caseId,
+    date: sheetName === 'Hearings' ? item.dateTime : item.dueDate
+  })
+  result.item = item
+  return result
+}
+
+function deleteScheduledItem(sheetName, id) {
+  const item = getRows(sheetName).find(function(value) { return value.id === id })
+  if (!item) throw new Error('Item not found')
+  deleteCalendarEvent(item.calendarEventId)
+  const deleted = deleteRowsByValue(sheetName, 'id', id)
+  auditAction('DELETE', sheetName.slice(0, -1), id, { caseId: item.caseId })
+  return { status: 'deleted', id: id, deletedRows: deleted }
+}
+
+function syncCalendarItem(sheetName, item, caseRow) {
+  const calendarId = String(getSetting('SHARED_CALENDAR_ID', '') || '').trim()
+  if (!calendarId) return item.calendarEventId || ''
+  const calendar = CalendarApp.getCalendarById(calendarId)
+  if (!calendar) throw new Error('Shared calendar was not found')
+  const isHearing = sheetName === 'Hearings'
+  const start = new Date(isHearing ? item.dateTime : item.dueDate + 'T09:00:00')
+  if (isNaN(start.getTime())) throw new Error('Invalid calendar date')
+  const end = new Date(start.getTime() + (isHearing ? 60 : 30) * 60000)
+  const title = isHearing
+    ? 'Դատական նիստ · ' + caseRow.internalNumber + ' · ' + caseRow.applicantName
+    : 'Ժամկետ · ' + caseRow.internalNumber + ' · ' + item.description
+  const description = [
+    caseRow.applicantName,
+    'Ներքին համար՝ ' + caseRow.internalNumber,
+    caseRow.officialCaseNumber ? 'Դատական համար՝ ' + caseRow.officialCaseNumber : '',
+    isHearing ? item.note : item.description
+  ].filter(Boolean).join('\n')
+  let event = null
+  if (item.calendarEventId) {
+    try { event = calendar.getEventById(item.calendarEventId) } catch (err) {}
+  }
+  if (event) {
+    event.setTitle(title).setTime(start, end).setDescription(description)
+  } else {
+    event = calendar.createEvent(title, start, end, { description: description })
+  }
+  return event.getId()
+}
+
+function deleteCalendarEvent(eventId) {
+  if (!eventId) return
+  const calendarId = String(getSetting('SHARED_CALENDAR_ID', '') || '').trim()
+  if (!calendarId) return
+  try {
+    const event = CalendarApp.getCalendarById(calendarId).getEventById(eventId)
+    if (event) event.deleteEvent()
+  } catch (err) {}
+}
+
+function sendUpcomingReminders() {
+  const now = new Date()
+  const casesById = Object.fromEntries(getRows('Cases').map(function(item) { return [item.id, item] }))
+  let sent = 0
+  ;['Hearings','Deadlines'].forEach(function(sheetName) {
+    const sheet = getOrCreateSheet(sheetName)
+    const items = getRows(sheetName)
+    items.forEach(function(item) {
+      if (sheetName === 'Deadlines' && item.done === 'YES') return
+      const target = new Date(sheetName === 'Hearings' ? item.dateTime : item.dueDate + 'T09:00:00')
+      const days = Number(item.reminderDaysBefore || getSetting('REMINDER_DAYS', DEFAULT_REMINDER_DAYS))
+      const hoursUntil = (target.getTime() - now.getTime()) / 3600000
+      if (hoursUntil < 0 || hoursUntil > days * 24) return
+      if (item.reminderSentAt) return
+      const caseRow = casesById[item.caseId]
+      if (!caseRow) return
+      const recipients = String(item.responsibleEmails || caseRow.responsibleEmails || '')
+        .split(',').map(function(value) { return value.trim() }).filter(Boolean)
+      if (!recipients.length) return
+      const subject = sheetName === 'Hearings'
+        ? 'IKV հիշեցում․ դատական նիստ ' + caseRow.internalNumber
+        : 'IKV հիշեցում․ դատավարական ժամկետ ' + caseRow.internalNumber
+      const body = [
+        'Գործ՝ ' + caseRow.applicantName,
+        'Ներքին համար՝ ' + caseRow.internalNumber,
+        'Ամսաթիվ՝ ' + (sheetName === 'Hearings' ? item.dateTime : item.dueDate),
+        sheetName === 'Hearings' ? item.note : item.description
+      ].filter(Boolean).join('\n')
+      MailApp.sendEmail(recipients.join(','), subject, body)
+      const rowNumber = items.findIndex(function(value) { return value.id === item.id }) + 2
+      sheet.getRange(rowNumber, HEADERS[sheetName].indexOf('reminderSentAt') + 1)
+        .setValue(new Date().toISOString())
+      sent++
+    })
+  })
+  return { status: 'ok', sent: sent }
+}
+
+function backupSpreadsheet() {
+  const source = DriveApp.getFileById(SPREADSHEET_ID)
+  const folderId = String(getSetting('BACKUP_FOLDER_ID', '') || '').trim()
+  const folder = folderId ? DriveApp.getFolderById(folderId) : getOrCreateRootFolder()
+  const timezone = getSpreadsheet().getSpreadsheetTimeZone() || Session.getScriptTimeZone()
+  const stamp = Utilities.formatDate(new Date(), timezone, 'yyyy-MM-dd_HHmmss')
+  const copy = source.makeCopy('IKV_Backup_' + stamp, folder)
+  auditAction('BACKUP', 'Spreadsheet', SPREADSHEET_ID, { backupFileId: copy.getId() })
+  return { status: 'ok', fileId: copy.getId(), fileUrl: copy.getUrl() }
+}
+
+function installMaintenanceTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (['sendUpcomingReminders','backupSpreadsheet'].indexOf(trigger.getHandlerFunction()) !== -1) {
+      ScriptApp.deleteTrigger(trigger)
+    }
+  })
+  ScriptApp.newTrigger('sendUpcomingReminders').timeBased().everyHours(1).create()
+  ScriptApp.newTrigger('backupSpreadsheet').timeBased().everyDays(1).atHour(2).create()
+  return 'Hourly reminders and daily backups are installed.'
+}
+
+function migrateExistingCases() {
+  Object.keys(HEADERS).forEach(function(name) { getOrCreateSheet(name) })
+  const sheet = getOrCreateSheet('Cases')
+  const values = sheet.getDataRange().getDisplayValues()
+  if (values.length < 2) return { status: 'ok', before: 0, after: 0, updated: 0 }
+  backupSheetBeforeMigration(sheet, 'Cases_full_migration')
+  const headers = values[0]
+  const internalIndex = headers.indexOf('internalNumber')
+  const typeIndex = headers.indexOf('caseType')
+  const stageIndex = headers.indexOf('stage')
+  const changedAtIndex = headers.indexOf('stageChangedAt')
+  const changedByIndex = headers.indexOf('stageChangedBy')
+  let updated = 0
+  for (let i = 1; i < values.length; i++) {
+    if (!values[i][0]) continue
+    if (!values[i][internalIndex]) { values[i][internalIndex] = nextInternalNumber(); updated++ }
+    if (!values[i][typeIndex]) { values[i][typeIndex] = 'bankruptcy'; updated++ }
+    if (!values[i][stageIndex]) { values[i][stageIndex] = 'preparation'; updated++ }
+    if (!values[i][changedAtIndex]) values[i][changedAtIndex] = new Date().toISOString()
+    if (!values[i][changedByIndex]) values[i][changedByIndex] = currentUserEmail()
+  }
+  sheet.getRange(1, 1, values.length, headers.length).setValues(values)
+  const count = values.filter(function(row, index) { return index > 0 && row[0] }).length
+  auditAction('MIGRATION', 'Cases', 'all', { before: count, after: count, updatedCells: updated })
+  return { status: 'ok', before: count, after: count, updated: updated }
+}
+
 function deleteCase(data) {
   const caseId = String(data.caseId || '')
   const confirmationName = String(data.confirmationName || '').trim()
@@ -675,6 +1167,12 @@ function deleteCase(data) {
   const lock = LockService.getScriptLock()
   lock.waitLock(30000)
   try {
+    getRows('Hearings', 'caseId', caseId).forEach(function(item) {
+      deleteCalendarEvent(item.calendarEventId)
+    })
+    getRows('Deadlines', 'caseId', caseId).forEach(function(item) {
+      deleteCalendarEvent(item.calendarEventId)
+    })
     let folderTrashed = false
     if (caseRow.driveFolderId) {
       try {
@@ -689,6 +1187,9 @@ function deleteCase(data) {
       Debts: deleteRowsByValue('Debts', 'caseId', caseId),
       BankCertificates: deleteRowsByValue('BankCertificates', 'caseId', caseId),
       CaseFiles: deleteRowsByValue('CaseFiles', 'caseId', caseId),
+      IncomingMail: deleteRowsByValue('IncomingMail', 'caseId', caseId),
+      Hearings: deleteRowsByValue('Hearings', 'caseId', caseId),
+      Deadlines: deleteRowsByValue('Deadlines', 'caseId', caseId),
       Cases: deleteRowsByValue('Cases', 'id', caseId)
     }
     const user = Session.getActiveUser().getEmail() || 'web-app-user'
