@@ -328,7 +328,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2sekUU7WFRuo0XG9kKyEKp5Pznoe2-4ahKbOy0x-00Fck0giA9UZE-u43qoCHfoMkmg/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxSd4jEZrkkeHoY8BKIF25qKF6tbRerC981yVMqsfRQ-KHdhfjBLna6XGkt5AlmFtoCYA/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -783,7 +783,7 @@ function renderCasesTable(cases) {
     <th>Ներքին համար</th><th>Հաճախորդ</th><th>Տեսակ</th><th>Փուլ</th><th>Դատական համար / տեղ</th><th></th>
   </tr></thead><tbody>
     ${cases.map(c=>`<tr class="clickable" onclick="${inlineCall('openCase',c.id)}">
-      <td><strong>${esc(c.internalNumber||c.id)}</strong></td>
+      <td><strong>${esc(shortInternalNumber(c.internalNumber||c.id))}</strong></td>
       <td><strong>${esc(c.applicantName)}</strong>${c.isMarried==='YES'?'<br><span style="font-size:.72rem;color:var(--ink-muted)">Ամուսնացած է</span>':''}</td>
       <td style="font-size:.8rem">${esc(caseTypeLabel(c.caseType))}</td>
       <td>${stageBadge(c.stage)}</td>
@@ -822,6 +822,12 @@ async function loadCases() {
 
 function caseTypeLabel(key) {
   return caseTypes.find(item=>item.key===(key||'bankruptcy'))?.label || key || 'Սնանկություն'
+}
+
+function shortInternalNumber(value) {
+  const text=String(value||'').trim()
+  const legacy=text.match(/^IKV-0*(\d+)$/i)
+  return legacy ? legacy[1] : text
 }
 
 function stageLabel(stage) {
@@ -942,17 +948,23 @@ function renderDetail(tab) {
   let html = ''
 
   if(tab === 'info') {
+    const isCompany=c.clientEntityType==='company'
     html = `
     <div class="case-info-grid">
       <div class="card">
-        <div class="card-title">👤 Դիմողի տվյալներ</div>
-        <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.applicantName)} ${esc(c.middleName||'')}</span></div>
+        <div class="card-title">${isCompany?'🏢 Իրավաբանական անձի տվյալներ':'👤 Դիմողի տվյալներ'}</div>
+        <div class="srow"><span class="sk">${isCompany?'Ընկերության անվանում':'Անուն, ազգանուն, հայրանուն'}</span><span class="sv">${esc(c.applicantName)} ${isCompany?'':esc(c.middleName||'')}</span></div>
+        ${isCompany?`
+        <div class="srow"><span class="sk">Պետական գրանցման համար</span><span class="sv">${esc(c.companyRegistrationNumber||'—')}</span></div>
+        <div class="srow"><span class="sk">ՀՎՀՀ</span><span class="sv">${esc(c.companyTaxId||'—')}</span></div>
+        `:`
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.birthDate||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիր</span><span class="sv">${String(c.noPassport||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.passport)||'—')}</span></div>
         <div class="srow"><span class="sk">Անձնագիրը տրվել է</span><span class="sv">${esc(c.passportDate||'—')} ${esc(cleanTextCode(c.passportBy))}${c.passportDate&&String(c.noPassport||'').toUpperCase()!=='YES'?` <br><span style="font-size:.71rem">Վավ․ ժամկետ (10 տ.): ${passportExpiryBadge(c.passportDate)}</span>`:''}</span></div>
         <div class="srow"><span class="sk">Նույնականացման քարտ</span><span class="sv">${String(c.noIdCard||'').toUpperCase()==='YES'?'Չկա':esc(cleanTextCode(c.idCard)||'—')}</span></div>
         <div class="srow"><span class="sk">Քարտը տրվել է</span><span class="sv">${esc(c.idCardDate||'—')} ${esc(cleanTextCode(c.idCardBy))}</span></div>
         <div class="srow"><span class="sk">Հանրային ծառայությունների համարանիշ</span><span class="sv">${esc(c.psn||'—')}</span></div>
+        `}
         <div class="srow"><span class="sk">Հաշվառման հասցե</span><span class="sv">${esc(c.regAddr||'—')}</span></div>
         <div class="srow"><span class="sk">Ծանուցման հասցե</span><span class="sv">${esc(c.notifAddr||c.regAddr||'—')}</span></div>
         <div class="srow"><span class="sk">Դիմումը ներկայացնելու ամսաթիվ</span><span class="sv">${esc(c.filingDate||'—')}</span></div>
@@ -963,7 +975,7 @@ function renderDetail(tab) {
           <button class="btn btn-sm btn-red" onclick="openDeleteCaseModal()">Ջնջել գործը</button>
         </div>
       </div>
-      ${married?`<div class="card">
+      ${!isCompany&&married?`<div class="card">
         <div class="card-title">👫 Ամուսնու կամ կնոջ տվյալներ</div>
         <div class="srow"><span class="sk">Անուն, ազգանուն, հայրանուն</span><span class="sv">${esc(c.spouseName||'—')} ${esc(c.spouseMiddleName||'')}</span></div>
         <div class="srow"><span class="sk">Ծննդյան ամսաթիվ</span><span class="sv">${esc(c.spouseBirthDate||'—')}</span></div>
@@ -977,7 +989,7 @@ function renderDetail(tab) {
         <div style="margin-top:10px">
           <button class="btn btn-sm btn-gold" onclick="openEditSpouseModal()">✎ Խմբագրել ամուսնու տվյալները</button>
         </div>
-      </div>`:'<div class="card"><div class="card-title">ℹ Ընտանեկան դրություն</div><div class="srow"><span class="sk">Ամուսնացած է</span><span class="sv">Ոչ</span></div></div>'}
+      </div>`:!isCompany?'<div class="card"><div class="card-title">ℹ Ընտանեկան դրություն</div><div class="srow"><span class="sk">Ամուսնացած է</span><span class="sv">Ոչ</span></div></div>':''}
     </div>`
   }
 
@@ -1960,7 +1972,47 @@ function dlMotion(name) {
 }
 
 function openEditCaseModal() {
+  if(currentCase?.clientEntityType==='company') return editCompanyModal()
   return editCaseModal()
+}
+
+function editCompanyModal() {
+  const c=currentCase
+  openModal(`
+    <div class="modal-title">✎ Խմբագրել ընկերության տվյալները<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Ընկերության ամբողջական անվանում *</label><input id="ec-name" value="${esc(c.applicantName||'')}"/></div>
+    <div class="form-row"><div class="field"><label>Պետական գրանցման համար</label><input id="ec-registration" value="${esc(c.companyRegistrationNumber||'')}"/></div><div class="field"><label>ՀՎՀՀ</label><input id="ec-tax-id" value="${esc(c.companyTaxId||'')}"/></div></div>
+    <div class="field"><label>Հաշվառման հասցե</label><input id="ec-address" value="${esc(c.regAddr||'')}"/></div>
+    <div class="field"><label>Ծանուցման հասցե</label><input id="ec-notification" value="${esc(c.notifAddr||'')}"/></div>
+    <div class="field"><label>Պատասխանատու իրավաբանների էլ. հասցեներ</label><input id="ec-emails" value="${esc(c.responsibleEmails||'')}"/></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" id="ec-save" onclick="saveCompanyEdit()">Պահպանել</button></div>`)
+}
+
+async function saveCompanyEdit() {
+  const name=document.getElementById('ec-name').value.trim()
+  if(!name){alert('Ընկերության անվանումը պարտադիր է։');return}
+  const button=document.getElementById('ec-save')
+  button.disabled=true;button.textContent='Պահպանվում է...'
+  const updated={...currentCase,
+    applicantName:name,
+    companyRegistrationNumber:document.getElementById('ec-registration').value.trim(),
+    companyTaxId:document.getElementById('ec-tax-id').value.trim(),
+    regAddr:document.getElementById('ec-address').value.trim(),
+    notifAddr:document.getElementById('ec-notification').value.trim(),
+    responsibleEmails:document.getElementById('ec-emails').value.trim()
+  }
+  try {
+    await apiPost({action:'saveCase',row:buildCaseRow(updated)})
+    currentCase=updated
+    const index=allCases.findIndex(item=>item.id===updated.id)
+    if(index!==-1) allCases[index]=updated
+    closeModal()
+    document.getElementById('detail-title').textContent=updated.applicantName
+    renderDetail('info')
+  } catch(e) {
+    button.disabled=false;button.textContent='Պահպանել'
+    alert('Փոփոխությունները չպահպանվեցին՝ '+e.message)
+  }
 }
 
 function editCaseModal() {
@@ -2156,8 +2208,15 @@ async function openCreateCaseModal(stage='preparation') {
       ${caseTypes.map(item=>`<option value="${esc(item.key)}">${esc(item.label)}</option>`).join('')}
     </select></div>
     <div id="general-case-fields">
-      <div class="form-row"><div class="field"><label>Անուն *</label><input id="new-case-first"/></div><div class="field"><label>Ազգանուն *</label><input id="new-case-last"/></div></div>
-      <div class="field"><label>Հայրանուն / կազմակերպություն</label><input id="new-case-middle"/></div>
+      <div class="field"><label>Վստահորդի տեսակ *</label><select id="new-entity-type" onchange="toggleNewEntityType()"><option value="company">Իրավաբանական անձ / ընկերություն</option><option value="person">Ֆիզիկական անձ</option></select></div>
+      <div id="new-company-fields">
+        <div class="field"><label>Ընկերության ամբողջական անվանում *</label><input id="new-company-name" placeholder="օր.՝ ԳՈԳ ԳՈՇ ԱԿՈՒՄԲ ՍՊԸ"/></div>
+        <div class="form-row"><div class="field"><label>Պետական գրանցման համար</label><input id="new-company-registration"/></div><div class="field"><label>ՀՎՀՀ</label><input id="new-company-tax-id"/></div></div>
+      </div>
+      <div id="new-person-fields" style="display:none">
+        <div class="form-row"><div class="field"><label>Անուն *</label><input id="new-case-first"/></div><div class="field"><label>Ազգանուն *</label><input id="new-case-last"/></div></div>
+        <div class="field"><label>Հայրանուն</label><input id="new-case-middle"/></div>
+      </div>
       <div class="field"><label>Պատասխանատու իրավաբանների էլ. հասցեներ</label><input id="new-case-emails" placeholder="lawyer@company.am, ..."/></div>
       ${target==='process'?processFieldsHtml('new-'):''}
       ${target==='archive'?archiveFieldsHtml('new-'):''}
@@ -2165,9 +2224,10 @@ async function openCreateCaseModal(stage='preparation') {
     <div id="bankruptcy-quiz-note" class="alert alert-blue">Սնանկության նոր գործի համար կարող եք անցնել ամբողջական հարցաթերթը։</div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Չեղարկել</button>
-      <button class="btn btn-primary" onclick="${inlineCall('continueCreateCase',target)}">Շարունակել</button>
+      <button class="btn btn-primary" id="new-case-save" onclick="${inlineCall('continueCreateCase',target)}">Պահպանել գործը</button>
     </div>`)
   toggleGeneralCaseFields()
+  toggleNewEntityType()
 }
 
 function toggleGeneralCaseFields() {
@@ -2176,31 +2236,55 @@ function toggleGeneralCaseFields() {
   if(note) note.style.display=bankruptcy?'block':'none'
 }
 
+function toggleNewEntityType() {
+  const company=document.getElementById('new-entity-type')?.value==='company'
+  const companyFields=document.getElementById('new-company-fields')
+  const personFields=document.getElementById('new-person-fields')
+  if(companyFields) companyFields.style.display=company?'block':'none'
+  if(personFields) personFields.style.display=company?'none':'block'
+}
+
 async function continueCreateCase(stage) {
   const type=document.getElementById('new-case-type').value
-  if(type==='bankruptcy'&&stage==='preparation') {
+  const entityType=document.getElementById('new-entity-type').value
+  if(type==='bankruptcy'&&stage==='preparation'&&entityType==='person') {
     closeModal(); showPage('quiz'); return
   }
+  const companyName=document.getElementById('new-company-name').value.trim()
   const first=document.getElementById('new-case-first').value.trim()
   const last=document.getElementById('new-case-last').value.trim()
-  if(!first||!last){alert('Անունը և ազգանունը պարտադիր են։');return}
+  if(entityType==='company'&&!companyName){alert('Ընկերության անվանումը պարտադիր է։');return}
+  if(entityType==='person'&&(!first||!last)){alert('Անունը և ազգանունը պարտադիր են։');return}
+  const saveButton=document.getElementById('new-case-save')
+  saveButton.disabled=true
+  saveButton.textContent='Պահպանվում է...'
   const data={
-    id:newId(),applicantName:`${first} ${last}`,firstName:first,lastName:last,
-    middleName:document.getElementById('new-case-middle').value.trim(),
+    id:newId(),applicantName:entityType==='company'?companyName:`${first} ${last}`,
+    firstName:entityType==='person'?first:'',lastName:entityType==='person'?last:'',
+    middleName:entityType==='person'?document.getElementById('new-case-middle').value.trim():'',
     caseType:type,stage,responsibleEmails:document.getElementById('new-case-emails').value.trim(),
-    createdAt:new Date().toISOString()
+    createdAt:new Date().toISOString(),clientEntityType:entityType,
+    companyRegistrationNumber:entityType==='company'?document.getElementById('new-company-registration').value.trim():'',
+    companyTaxId:entityType==='company'?document.getElementById('new-company-tax-id').value.trim():''
   }
   if(stage==='process') Object.assign(data,readProcessFields('new-'))
   if(stage==='archive') {
     Object.assign(data,readArchiveFields('new-'))
     data.archivedAt=new Date().toISOString()
   }
-  const result=await apiPost({action:'saveCase',row:buildCaseRow(data)})
-  Object.assign(data,result)
-  allCases.push(data)
-  dashboardLoadedAt=0
-  closeModal()
-  setStageFilter(stage)
+  try {
+    const result=await apiPost({action:'saveCase',row:buildCaseRow(data)})
+    Object.assign(data,result)
+    allCases.push(data)
+    dashboardLoadedAt=0
+    closeModal()
+    activeStageFilter=stage
+    showPage('cases')
+  } catch(e) {
+    saveButton.disabled=false
+    saveButton.textContent='Պահպանել գործը'
+    alert('Գործը չպահպանվեց՝ '+e.message)
+  }
 }
 
 function processFieldsHtml(prefix) {
@@ -2241,7 +2325,7 @@ function renderLifecycleTab() {
   return `<div class="case-info-grid">
     <div class="card">
       <div class="card-title">Գործի նույնականացում</div>
-      <div class="srow"><span class="sk">Ներքին համար</span><span class="sv"><strong>${esc(c.internalNumber||c.id)}</strong></span></div>
+      <div class="srow"><span class="sk">Ներքին համար</span><span class="sv"><strong>${esc(shortInternalNumber(c.internalNumber||c.id))}</strong></span></div>
       <div class="srow"><span class="sk">Տեսակ</span><span class="sv">${esc(caseTypeLabel(c.caseType))}</span></div>
       <div class="srow"><span class="sk">Ընթացիկ փուլ</span><span class="sv">${stageBadge(c.stage)}</span></div>
       <div class="srow"><span class="sk">Փուլը փոխվել է</span><span class="sv">${esc(c.stageChangedAt||'—')}<br>${esc(c.stageChangedBy||'')}</span></div>
@@ -2369,7 +2453,7 @@ function searchIncomingMail(query) {
       const rows=await apiGet('searchCases',{q})
       rows.forEach(row=>{const index=allCases.findIndex(item=>item.id===row.id);if(index===-1)allCases.push(row);else allCases[index]=row})
       document.getElementById('mail-results').innerHTML=rows.length?rows.map(c=>`<div class="card" style="margin-top:10px;padding:14px">
-        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><strong>${esc(c.applicantName)}</strong><br><span class="hint">${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</span></div><div style="font-size:1.15rem;font-weight:900;color:var(--navy)">${esc(c.internalNumber||c.id)}</div></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><strong>${esc(c.applicantName)}</strong><br><span class="hint">${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</span></div><div style="font-size:1.15rem;font-weight:900;color:var(--navy)">${esc(shortInternalNumber(c.internalNumber||c.id))}</div></div>
         ${c.officialCaseNumber?`<div class="srow"><span class="sk">Դատական համար</span><span class="sv">${esc(c.officialCaseNumber)}</span></div>`:''}
         ${c.stage==='archive'?`<div class="alert alert-amber"><strong>Ֆիզիկական տեղ՝ ${esc(archiveLocationText(c))}</strong><span>${esc(c.locationHints||'')}</span></div>`:''}
         <div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="${inlineCall('openMailLogModal',c.id)}">Նամակն ստացված է</button><button class="btn btn-sm" onclick="${inlineCall('printMailLabel',c.id)}">Տպել պիտակ</button></div>
@@ -2381,7 +2465,7 @@ function searchIncomingMail(query) {
 function openMailLogModal(caseId) {
   const c=allCases.find(item=>item.id===caseId)
   openModal(`<div class="modal-title">Նամակն ստացված է<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
-    <div class="alert alert-blue"><strong>${esc(c?.applicantName||'')}</strong><span>${esc(c?.internalNumber||caseId)}</span></div>
+    <div class="alert alert-blue"><strong>${esc(c?.applicantName||'')}</strong><span>${esc(shortInternalNumber(c?.internalNumber||caseId))}</span></div>
     <div class="field"><label>Ուղարկող</label><input id="mail-sender"/></div><div class="field"><label>Նշում</label><textarea id="mail-note"></textarea></div>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Բաց թողնել</button><button class="btn btn-primary" onclick="${inlineCall('submitMailLog',caseId)}">Գրանցել</button></div>`)
 }
@@ -2395,7 +2479,7 @@ function printMailLabel(caseId) {
   const c=allCases.find(item=>item.id===caseId)
   if(!c)return
   const w=window.open('','_blank','width=500,height=350')
-  w.document.write(`<html><head><title>${esc(c.internalNumber)}</title><style>body{font-family:Arial;padding:28px}.label{border:3px solid #111;padding:22px}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(c.internalNumber||c.id)}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
+  w.document.write(`<html><head><title>${esc(shortInternalNumber(c.internalNumber||c.id))}</title><style>body{font-family:Arial;padding:28px}.label{border:3px solid #111;padding:22px}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(shortInternalNumber(c.internalNumber||c.id))}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
   w.document.close()
 }
 
@@ -2534,7 +2618,7 @@ function closeModal() {
 // ═══════════════════════════════════════════════
 let A={}, S={}, qMode='applicant', qFlow=[], qIdx=0, qLocChoice={}
 
-const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy']
+const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy','clientEntityType','companyRegistrationNumber','companyTaxId']
 
 function buildCaseRow(c) {
   return QUIZ_COLS.map(col => {

@@ -25,7 +25,7 @@ Armenian-first legal case management for preparation, court process, and physica
    - run **Միգրացնել առկա գործերը** once;
    - run **Տեղադրել ավտոմատ գործարկումները** once.
 
-The migration creates hidden sheet backups, appends new columns without removing existing columns, assigns stable `IKV-000001` style numbers, and defaults legacy cases to `bankruptcy` / `preparation`.
+The migration creates hidden sheet backups, appends new columns without removing existing columns, assigns short consecutive numbers (`1`, `2`, `3`), and defaults legacy cases to `bankruptcy` / `preparation`.
 
 ## Backup And Restore
 
