@@ -581,6 +581,7 @@ function auditAction(action, entity, entityId, detail) {
 
 function searchCases(query) {
   const needle = String(query || '').trim().toLocaleLowerCase()
+  const numberNeedle = needle.replace(/^(ա|արխ|arc|archive)[-\s]*/i, '')
   if (!needle) return []
   const mailByCase = {}
   getRows('IncomingMail').forEach(function(item) {
@@ -594,7 +595,9 @@ function searchCases(query) {
       item.storageRoom, item.storageShelf, item.storageBox, item.locationHints,
       (mailByCase[item.id] || []).join(' ')
     ].some(function(value) {
-      return String(value || '').toLocaleLowerCase().indexOf(needle) !== -1
+      const text = String(value || '').toLocaleLowerCase()
+      return text.indexOf(needle) !== -1 ||
+        (value === item.internalNumber && numberNeedle !== needle && text.indexOf(numberNeedle) !== -1)
     })
   }).slice(0, 50)
 }

@@ -359,7 +359,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5N_kR5JBJr_OUdNThN30OG4LgjJBDBParl6GQppZvljsXowHtTnwMy676fk9Rf6zQpw/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDgMh1tamB5b_3HbWycUTAViNMR0irLLwm0JJ3Vkj0ZzYL0699dGioRqatEtb9UJOCpA/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -815,7 +815,7 @@ function renderCasesTable(cases) {
     <th>Ներքին համար</th><th>Հաճախորդ</th><th>Տեսակ</th><th>Փուլ</th><th>Դատական համար / տեղ</th><th></th>
   </tr></thead><tbody>
     ${cases.map(c=>`<tr class="clickable" onclick="${inlineCall('openCase',c.id)}">
-      <td><strong>${esc(displayInternalNumber(c.internalNumber))}</strong></td>
+      <td><strong>${esc(displayCaseNumber(c))}</strong></td>
       <td><strong>${esc(c.applicantName)}</strong>${c.isMarried==='YES'?'<br><span style="font-size:.72rem;color:var(--ink-muted)">Ամուսնացած է</span>':''}</td>
       <td style="font-size:.8rem">${esc(caseTypeLabel(c.caseType))}</td>
       <td>${stageBadge(c.stage)}</td>
@@ -864,6 +864,11 @@ function shortInternalNumber(value) {
 
 function displayInternalNumber(value) {
   return shortInternalNumber(value) || 'Չհամարակալված'
+}
+
+function displayCaseNumber(c) {
+  const number=displayInternalNumber(c?.internalNumber)
+  return c?.stage==='archive'&&number!=='Չհամարակալված' ? `Ա-${number}` : number
 }
 
 function stageLabel(stage) {
@@ -2362,6 +2367,7 @@ function renderLifecycleTab() {
     <div class="card">
       <div class="card-title">Գործի նույնականացում</div>
       <div class="srow"><span class="sk">Ներքին համար</span><span class="sv"><strong>${esc(displayInternalNumber(c.internalNumber))}</strong></span></div>
+      ${c.stage==='archive'?`<div class="srow"><span class="sk">Արխիվային կոդ</span><span class="sv"><strong>${esc(displayCaseNumber(c))}</strong></span></div>`:''}
       <div class="srow"><span class="sk">Տեսակ</span><span class="sv">${esc(caseTypeLabel(c.caseType))}</span></div>
       <div class="srow"><span class="sk">Ընթացիկ փուլ</span><span class="sv">${stageBadge(c.stage)}</span></div>
       <div class="srow"><span class="sk">Փուլը փոխվել է</span><span class="sv">${esc(c.stageChangedAt||'—')}<br>${esc(c.stageChangedBy||'')}</span></div>
@@ -2561,7 +2567,7 @@ function renderMailCaseCard(c) {
   const archived=(c.stage||'preparation')==='archive'
   return `<article class="mail-case-card">
     <div class="mail-card-top">
-      <div class="mail-card-number">${esc(displayInternalNumber(c.internalNumber))}</div>
+      <div class="mail-card-number">${esc(displayCaseNumber(c))}</div>
       ${stageBadge(c.stage)}
     </div>
     <div class="mail-card-name">${esc(c.applicantName||'Անվանում չկա')}</div>
@@ -2578,7 +2584,7 @@ function renderMailCaseCard(c) {
 function openMailLogModal(caseId) {
   const c=allCases.find(item=>item.id===caseId)
   openModal(`<div class="modal-title">Նամակն ստացված է<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
-    <div class="alert alert-blue"><strong>${esc(c?.applicantName||'')}</strong><span>${esc(displayInternalNumber(c?.internalNumber))}</span></div>
+    <div class="alert alert-blue"><strong>${esc(c?.applicantName||'')}</strong><span>${esc(displayCaseNumber(c))}</span></div>
     <div class="field"><label>Ուղարկող</label><input id="mail-sender"/></div><div class="field"><label>Նշում</label><textarea id="mail-note"></textarea></div>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Բաց թողնել</button><button class="btn btn-primary" onclick="${inlineCall('submitMailLog',caseId)}">Գրանցել</button></div>`)
 }
@@ -2592,7 +2598,7 @@ function printMailLabel(caseId) {
   const c=allCases.find(item=>item.id===caseId)
   if(!c)return
   const w=window.open('','_blank','width=500,height=350')
-  w.document.write(`<html><head><title>${esc(displayInternalNumber(c.internalNumber))}</title><style>body{font-family:Arial;padding:28px}.label{border:3px solid #111;padding:22px}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(displayInternalNumber(c.internalNumber))}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
+  w.document.write(`<html><head><title>${esc(displayCaseNumber(c))}</title><style>body{font-family:Arial;padding:28px}.label{border:3px solid #111;padding:22px}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(displayCaseNumber(c))}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Հիմնական համար՝ ${esc(displayInternalNumber(c.internalNumber))}</p><p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
   w.document.close()
 }
 
