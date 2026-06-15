@@ -349,7 +349,7 @@ a:hover{text-decoration:none}
 </div>
 
 <!-- MODAL -->
-<div id="modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px">
+<div id="modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-box">
     <div id="modal-inner"></div>
   </div>
@@ -673,11 +673,7 @@ function showPage(id) {
   if(tabs[id]!==undefined) navTabs[tabs[id]]?.classList.add('active')
   if(id==='dashboard') loadDashboard()
   if(id==='cases') loadCases()
-  if(id==='quiz') {
-    if(!window.keepPendingCaseMeta) window.pendingCaseMeta=null
-    window.keepPendingCaseMeta=false
-    initQuiz()
-  }
+  if(id==='quiz') initQuiz()
   if(id==='mail') loadMailPage()
   if(id==='calendar') loadCalendar()
   if(id==='settings') loadSettings()
@@ -819,12 +815,11 @@ function renderCasesTable(cases) {
     <button class="btn btn-gold btn-sm" onclick="showPage('quiz')">+ Նոր հաճախորդ</button>
   </div>`
   return `<div style="overflow-x:auto"><table class="tbl"><thead><tr>
-    <th>Ներքին համար</th><th>Հաճախորդ</th><th>Գործ / հակառակ կողմ</th><th>Տեսակ</th><th>Փուլ</th><th>Դատական համար / տեղ</th><th></th>
+    <th>Ներքին համար</th><th>Հաճախորդ</th><th>Տեսակ</th><th>Փուլ</th><th>Դատական համար / տեղ</th><th></th>
   </tr></thead><tbody>
     ${cases.map(c=>`<tr class="clickable" onclick="${inlineCall('openCase',c.id)}">
       <td><strong>${esc(displayCaseNumber(c))}</strong></td>
       <td><strong>${esc(c.applicantName)}</strong>${c.isMarried==='YES'?'<br><span style="font-size:.72rem;color:var(--ink-muted)">Ամուսնացած է</span>':''}</td>
-      <td style="font-size:.78rem">${c.caseTitle?`<strong>${esc(c.caseTitle)}</strong>`:'<span style="color:var(--ink-muted)">Առարկան նշված չէ</span>'}${c.opponentName?`<br><span style="color:var(--ink-muted)">ընդդեմ ${esc(c.opponentName)}</span>`:''}</td>
       <td style="font-size:.8rem">${esc(caseTypeLabel(c.caseType))}</td>
       <td>${stageBadge(c.stage)}</td>
       <td style="font-size:.8rem">${esc(c.stage==='archive'?archiveLocationText(c):(c.officialCaseNumber||'—'))}</td>
@@ -838,7 +833,6 @@ function filterCases(query) {
   const staged=activeStageFilter==='all'?allCases:allCases.filter(c=>(c.stage||'preparation')===activeStageFilter)
   const filtered=!value?staged:staged.filter(c=>
     [c.applicantName,c.spouseName,c.passport,c.idCard,c.spousePassport,c.spouseIdCard,c.psn,c.id,
-      c.caseTitle,c.opponentName,c.opponentRegistrationNumber,c.opponentTaxId,
       c.internalNumber,c.officialCaseNumber,c.caseType,c.stage,c.storageNumber,c.storageRoom,c.storageShelf,c.storageBox,c.locationHints]
       .some(field=>String(field||'').toLocaleLowerCase('hy-AM').includes(value))
   )
@@ -2273,12 +2267,6 @@ async function openCreateCaseModal(stage='preparation') {
         <div class="form-row"><div class="field"><label>Անուն *</label><input id="new-case-first"/></div><div class="field"><label>Ազգանուն *</label><input id="new-case-last"/></div></div>
         <div class="field"><label>Հայրանուն</label><input id="new-case-middle"/></div>
       </div>
-      <div class="field"><label>Գործի կարճ անվանում / առարկա</label><input id="new-case-title" placeholder="օր.՝ պայմանագրային վեճ, պարտքի բռնագանձում"/></div>
-      <div class="field"><label>Հակառակ կողմի տեսակ</label><select id="new-opponent-type" onchange="toggleOpponentFields('new-')"><option value="">Չնշել</option><option value="person">Ֆիզիկական անձ</option><option value="company">Իրավաբանական անձ / ընկերություն</option></select></div>
-      <div id="new-opponent-fields" style="display:none">
-        <div class="field"><label>Հակառակ կողմի անուն / անվանում</label><input id="new-opponent-name" placeholder="Անուն Ազգանուն կամ ընկերության անվանում"/></div>
-        <div id="new-opponent-company-fields" style="display:none" class="form-row"><div class="field"><label>Պետական գրանցման համար</label><input id="new-opponent-registration"/></div><div class="field"><label>ՀՎՀՀ</label><input id="new-opponent-tax-id"/></div></div>
-      </div>
       <div class="field"><label>Պատասխանատու իրավաբանների էլ. հասցեներ</label><input id="new-case-emails" placeholder="lawyer@company.am, ..."/></div>
       ${target==='process'?processFieldsHtml('new-'):''}
       ${target==='archive'?archiveFieldsHtml('new-'):''}
@@ -2290,7 +2278,6 @@ async function openCreateCaseModal(stage='preparation') {
     </div>`)
   toggleGeneralCaseFields()
   toggleNewEntityType()
-  toggleOpponentFields('new-')
 }
 
 function toggleGeneralCaseFields() {
@@ -2307,34 +2294,10 @@ function toggleNewEntityType() {
   if(personFields) personFields.style.display=company?'none':'block'
 }
 
-function toggleOpponentFields(prefix) {
-  const type=document.getElementById(prefix+'opponent-type')?.value||''
-  const fields=document.getElementById(prefix+'opponent-fields')
-  const companyFields=document.getElementById(prefix+'opponent-company-fields')
-  if(fields) fields.style.display=type?'block':'none'
-  if(companyFields) companyFields.style.display=type==='company'?'grid':'none'
-}
-
-function readOpponentFields(prefix) {
-  const type=document.getElementById(prefix+'opponent-type')?.value||''
-  return {
-    opponentEntityType:type,
-    opponentName:type?(document.getElementById(prefix+'opponent-name')?.value.trim()||''):'',
-    opponentRegistrationNumber:type==='company'?(document.getElementById(prefix+'opponent-registration')?.value.trim()||''):'',
-    opponentTaxId:type==='company'?(document.getElementById(prefix+'opponent-tax-id')?.value.trim()||''):''
-  }
-}
-
 async function continueCreateCase(stage) {
   const type=document.getElementById('new-case-type').value
   const entityType=document.getElementById('new-entity-type').value
   if(type==='bankruptcy'&&stage==='preparation'&&entityType==='person') {
-    window.pendingCaseMeta={
-      caseTitle:document.getElementById('new-case-title').value.trim(),
-      responsibleEmails:document.getElementById('new-case-emails').value.trim(),
-      ...readOpponentFields('new-')
-    }
-    window.keepPendingCaseMeta=true
     closeModal(); showPage('quiz'); return
   }
   const companyName=document.getElementById('new-company-name').value.trim()
@@ -2352,9 +2315,7 @@ async function continueCreateCase(stage) {
     caseType:type,stage,responsibleEmails:document.getElementById('new-case-emails').value.trim(),
     createdAt:new Date().toISOString(),clientEntityType:entityType,
     companyRegistrationNumber:entityType==='company'?document.getElementById('new-company-registration').value.trim():'',
-    companyTaxId:entityType==='company'?document.getElementById('new-company-tax-id').value.trim():'',
-    caseTitle:document.getElementById('new-case-title').value.trim(),
-    ...readOpponentFields('new-')
+    companyTaxId:entityType==='company'?document.getElementById('new-company-tax-id').value.trim():''
   }
   if(stage==='process') Object.assign(data,readProcessFields('new-'))
   if(stage==='archive') {
@@ -2377,9 +2338,8 @@ async function continueCreateCase(stage) {
 }
 
 function processFieldsHtml(prefix) {
-  return `<div class="alert alert-blue">Դատական տվյալները պարտադիր չեն։ Դրանք կարող եք լրացնել կամ խմբագրել ավելի ուշ։</div>
-  <div class="form-row"><div class="field"><label>Պաշտոնական դատական համար</label><input id="${prefix}official"/></div><div class="field"><label>Ատյան</label><select id="${prefix}instance"><option value="">Չնշել</option><option value="first">Առաջին ատյան</option><option value="appeal">Վերաքննիչ</option><option value="cassation">Վճռաբեկ</option></select></div></div>
-  <div class="form-row"><div class="field"><label>Դատարան</label><input id="${prefix}court"/></div><div class="field"><label>Դատավոր</label><input id="${prefix}judge"/></div></div>
+  return `<div class="form-row"><div class="field"><label>Պաշտոնական դատական համար *</label><input id="${prefix}official"/></div><div class="field"><label>Ատյան *</label><select id="${prefix}instance"><option value="first">Առաջին ատյան</option><option value="appeal">Վերաքննիչ</option><option value="cassation">Վճռաբեկ</option></select></div></div>
+  <div class="form-row"><div class="field"><label>Դատարան *</label><input id="${prefix}court"/></div><div class="field"><label>Դատավոր *</label><input id="${prefix}judge"/></div></div>
   <div class="field"><label>Դատավարական կարգավիճակ</label><input id="${prefix}status"/></div>`
 }
 
@@ -2421,12 +2381,9 @@ function renderLifecycleTab() {
       <div class="srow"><span class="sk">Ներքին համար</span><span class="sv"><strong>${esc(displayInternalNumber(c.internalNumber))}</strong></span></div>
       ${c.stage==='archive'?`<div class="srow"><span class="sk">Արխիվային կոդ</span><span class="sv"><strong>${esc(displayCaseNumber(c))}</strong></span></div>`:''}
       <div class="srow"><span class="sk">Տեսակ</span><span class="sv">${esc(caseTypeLabel(c.caseType))}</span></div>
-      <div class="srow"><span class="sk">Գործի անվանում / առարկա</span><span class="sv">${esc(c.caseTitle||'—')}</span></div>
-      <div class="srow"><span class="sk">Հակառակ կողմ</span><span class="sv">${esc(c.opponentName||'—')}</span></div>
       <div class="srow"><span class="sk">Ընթացիկ փուլ</span><span class="sv">${stageBadge(c.stage)}</span></div>
       <div class="srow"><span class="sk">Փուլը փոխվել է</span><span class="sv">${esc(c.stageChangedAt||'—')}<br>${esc(c.stageChangedBy||'')}</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn btn-sm btn-gold" onclick="openCaseDetailsModal()">✎ Խմբագրել գործի տվյալները</button>
         ${index>0?`<button class="btn btn-sm" onclick="${inlineCall('openStageMigration',stages[index-1])}">← ${esc(stageLabel(stages[index-1]))}</button>`:''}
         ${index<2?`<button class="btn btn-sm btn-primary" onclick="${inlineCall('openStageMigration',stages[index+1])}">${esc(stageLabel(stages[index+1]))} →</button>`:''}
       </div>
@@ -2453,62 +2410,6 @@ function renderLifecycleTab() {
       </tr>`).join('')}
     </tbody></table></div>`:'<p class="hint">Հատորներ դեռ չեն ավելացվել։ Եթե գործն ունի մեկ թղթապանակ, կարող եք այն գրանցել որպես «Հատոր 1»։</p>'}
   </div>`:''}`
-}
-
-async function openCaseDetailsModal() {
-  if(!caseTypes.length) caseTypes=await apiGet('getCaseTypes')
-  const c=currentCase
-  const typeOptions=[...caseTypes]
-  if(c.caseType&&!typeOptions.some(item=>item.key===c.caseType)) {
-    typeOptions.push({key:c.caseType,label:caseTypeLabel(c.caseType)})
-  }
-  openModal(`<div class="modal-title">✎ Խմբագրել գործի տվյալները<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
-    <div class="field"><label>Գործի տեսակ *</label><select id="detail-case-type">${typeOptions.map(item=>`<option value="${esc(item.key)}" ${item.key===c.caseType?'selected':''}>${esc(item.label)}</option>`).join('')}</select></div>
-    <div class="field"><label>Գործի կարճ անվանում / առարկա</label><input id="detail-case-title" value="${esc(c.caseTitle||'')}" placeholder="օր.՝ պայմանագրային վեճ, պարտքի բռնագանձում"/></div>
-    <div class="field"><label>Հակառակ կողմի տեսակ</label><select id="detail-opponent-type" onchange="toggleOpponentFields('detail-')"><option value="" ${!c.opponentEntityType?'selected':''}>Չնշել</option><option value="person" ${c.opponentEntityType==='person'?'selected':''}>Ֆիզիկական անձ</option><option value="company" ${c.opponentEntityType==='company'?'selected':''}>Իրավաբանական անձ / ընկերություն</option></select></div>
-    <div id="detail-opponent-fields">
-      <div class="field"><label>Հակառակ կողմի անուն / անվանում</label><input id="detail-opponent-name" value="${esc(c.opponentName||'')}"/></div>
-      <div id="detail-opponent-company-fields" class="form-row"><div class="field"><label>Պետական գրանցման համար</label><input id="detail-opponent-registration" value="${esc(c.opponentRegistrationNumber||'')}"/></div><div class="field"><label>ՀՎՀՀ</label><input id="detail-opponent-tax-id" value="${esc(c.opponentTaxId||'')}"/></div></div>
-    </div>
-    ${processFieldsHtml('detail-')}
-    <div class="field"><label>Գործի վերջնական արդյունք / նշում</label><textarea id="detail-outcome">${esc(c.finalOutcome||'')}</textarea></div>
-    <div class="modal-actions"><button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" id="detail-save" onclick="saveCaseDetails()">Պահպանել փոփոխությունները</button></div>`)
-  document.getElementById('detail-official').value=c.officialCaseNumber||''
-  document.getElementById('detail-court').value=c.court||''
-  document.getElementById('detail-instance').value=c.courtInstance||''
-  document.getElementById('detail-judge').value=c.judge||''
-  document.getElementById('detail-status').value=c.caseStatus||''
-  toggleOpponentFields('detail-')
-}
-
-async function saveCaseDetails() {
-  const button=document.getElementById('detail-save')
-  const caseType=document.getElementById('detail-case-type').value
-  if(!caseType){alert('Ընտրեք գործի տեսակը։');return}
-  button.disabled=true
-  button.textContent='Պահպանվում է...'
-  const updated={...currentCase,
-    caseType,
-    caseTitle:document.getElementById('detail-case-title').value.trim(),
-    ...readOpponentFields('detail-'),
-    ...readProcessFields('detail-'),
-    finalOutcome:document.getElementById('detail-outcome').value.trim()
-  }
-  try {
-    const result=await apiPost({action:'saveCase',row:buildCaseRow(updated)})
-    Object.assign(updated,result)
-    currentCase=updated
-    const index=allCases.findIndex(item=>item.id===updated.id)
-    if(index!==-1) allCases[index]=updated
-    dashboardLoadedAt=0
-    closeModal()
-    renderDetailTabs()
-    renderDetail('lifecycle')
-  } catch(e) {
-    button.disabled=false
-    button.textContent='Պահպանել փոփոխությունները'
-    alert('Փոփոխությունները չպահպանվեցին՝ '+e.message)
-  }
 }
 
 const ARCHIVE_VOLUME_COLS=['id','caseId','volumeNumber','volumeLabel','storageNumber','storageRoom','storageShelf','storageBox','locationHints','createdAt','updatedAt']
@@ -2572,7 +2473,7 @@ function openStageMigration(targetStage) {
   if(targetStage==='process') {
     document.getElementById('move-official').value=currentCase.officialCaseNumber||''
     document.getElementById('move-court').value=currentCase.court||''
-    document.getElementById('move-instance').value=currentCase.courtInstance||''
+    document.getElementById('move-instance').value=currentCase.courtInstance||'first'
     document.getElementById('move-judge').value=currentCase.judge||''
     document.getElementById('move-status').value=currentCase.caseStatus||''
   }
@@ -2933,7 +2834,7 @@ function closeModal() {
 // ═══════════════════════════════════════════════
 let A={}, S={}, qMode='applicant', qFlow=[], qIdx=0, qLocChoice={}
 
-const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy','clientEntityType','companyRegistrationNumber','companyTaxId','caseTitle','opponentEntityType','opponentName','opponentRegistrationNumber','opponentTaxId']
+const QUIZ_COLS = ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy','clientEntityType','companyRegistrationNumber','companyTaxId']
 
 function buildCaseRow(c) {
   return QUIZ_COLS.map(col => {
@@ -3384,12 +3285,10 @@ async function saveAndGenerate(){
       spouseRegAddr:S.regAddr||'', spouseNotifAddr:S.notifAddr||'',
       assessmentJson:JSON.stringify({applicant:A,spouse:S}),
       driveFolderId:'',driveFolderUrl:'',
-      caseType:'bankruptcy',stage:'preparation',responsibleEmails:'',
-      ...(window.pendingCaseMeta||{})
+      caseType:'bankruptcy',stage:'preparation',responsibleEmails:''
     }
     const savedCase = await apiPost({action:'saveCase', row:buildCaseRow(caseData)})
     Object.assign(caseData,savedCase)
-    window.pendingCaseMeta=null
     allCases.push(caseData)
     dlText(genContract(caseData), 'Paymanagir_'+A.name+'_'+today()+'.txt')
     await new Promise(r=>setTimeout(r,400))

@@ -5,7 +5,6 @@ Armenian-first legal case management for preparation, court process, and physica
 ## Capabilities
 
 - Editable case types and three-stage case lifecycle.
-- Editable matter title, opponent identity, court data, and case classification.
 - Stable internal numbers and separate official court numbers.
 - Incoming paper-mail lookup, receipt register, and printable labels.
 - Physical archive room/shelf/box locator.
@@ -45,7 +44,7 @@ Restore procedure:
 
 1. Create a bankruptcy case and verify the original questionnaire and generated documents.
 2. Create a non-bankruptcy case and confirm bankruptcy-only screens are hidden.
-3. Move a case `preparation -> process -> archive`; confirm court fields are optional and archive location is required.
+3. Move a case `preparation -> process -> archive`; confirm court and archive fields are required.
 4. Confirm the internal number and Drive folder do not change.
 5. Find the case from **Մուտքային փոստ**, log receipt, and print a label.
 6. Add a hearing and deadline; confirm dashboard, email reminder, and shared Calendar event.
@@ -56,8 +55,7 @@ Restore procedure:
 - **Գործեր** բաժնում ընտրեք փուլը և սեղմեք **Ավելացնել գործ**։
 - Սնանկության նախապատրաստման գործի համար լրացրեք ամբողջական հարցաթերթը։
 - Գործի ներսում **Փուլ և արխիվ** ներդիրից տեղափոխեք գործը հաջորդ կամ նախորդ փուլ։
-- **Փուլ և արխիվ** ներդիրի **Խմբագրել գործի տվյալները** կոճակով փոխեք գործի տեսակը, առարկան, հակառակ կողմին կամ դատական տվյալները։
-- Դատական համարը, դատարանը, ատյանը և դատավորը պարտադիր չեն և կարող են լրացվել ավելի ուշ։
+- Ընթացիկ փուլ տեղափոխելիս լրացրեք դատական համարը, դատարանը, ատյանը և դատավորին։
 - Արխիվ տեղափոխելիս լրացրեք պահպանման տեղի առնվազն մեկ դաշտ կամ ազատ նկարագրություն։
 - **Նիստեր և ժամկետներ** ներդիրում ավելացրեք նիստերը, վերջնաժամկետները և հիշեցման հասցեները։
 - **Մուտքային փոստ** բաժնում գտեք գործը, նամակի վրա գրեք ներքին համարը, անհրաժեշտության դեպքում գրանցեք ստացումը և տպեք պիտակը։
