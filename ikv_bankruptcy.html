@@ -654,7 +654,7 @@ let currentDeadlines = []
 let currentIncomingMail = []
 let currentArchiveVolumes = []
 let currentTab = 'info'
-let activeStageFilter = 'preparation'
+let activeStageFilter = 'all'
 let mailVisibleCases = []
 let dashboardLoadedAt = 0
 let dashboardDataLoaded = false
@@ -899,7 +899,7 @@ function setStageFilter(stage) {
   const query=document.getElementById('case-search')?.value||''
   filterCases(query)
   const add=document.getElementById('stage-add-button')
-  if(add) add.textContent=`+ Ավելացնել գործ · ${stage==='all'?'Նախապատրաստում':stageLabel(stage)}`
+  if(add) add.textContent=stage==='all'?'+ Ավելացնել գործ · Ընտրել փուլը':`+ Ավելացնել գործ · ${stageLabel(stage)}`
 }
 
 // ═══════════════════════════════════════════════
@@ -2256,20 +2256,24 @@ async function confirmDeleteCase() {
 // CASE LIFECYCLE + GENERAL CASES
 // ═══════════════════════════════════════════════
 async function openCreateCaseModal(stage='preparation') {
+  if(stage==='all') {
+    openCaseStageChooser()
+    return
+  }
   if(!caseTypes.length) caseTypes=await apiGet('getCaseTypes')
-  const target=stage==='all'?'preparation':stage
+  const target=stage
   openModal(`
     <div class="modal-title">Ավելացնել գործ · ${esc(stageLabel(target))}<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
     <div class="field"><label>Գործի տեսակ *</label><select id="new-case-type" onchange="toggleGeneralCaseFields()">
       ${caseTypes.map(item=>`<option value="${esc(item.key)}">${esc(item.label)}</option>`).join('')}
     </select></div>
     <div id="general-case-fields">
-      <div class="field"><label>Վստահորդի տեսակ *</label><select id="new-entity-type" onchange="toggleNewEntityType()"><option value="company">Իրավաբանական անձ / ընկերություն</option><option value="person">Ֆիզիկական անձ</option></select></div>
-      <div id="new-company-fields">
+      <div class="field"><label>Վստահորդի տեսակ *</label><select id="new-entity-type" onchange="toggleNewEntityType()"><option value="person">Ֆիզիկական անձ</option><option value="company">Իրավաբանական անձ / ընկերություն</option></select></div>
+      <div id="new-company-fields" style="display:none">
         <div class="field"><label>Ընկերության ամբողջական անվանում *</label><input id="new-company-name" placeholder="օր.՝ ԳՈԳ ԳՈՇ ԱԿՈՒՄԲ ՍՊԸ"/></div>
         <div class="form-row"><div class="field"><label>Պետական գրանցման համար</label><input id="new-company-registration"/></div><div class="field"><label>ՀՎՀՀ</label><input id="new-company-tax-id"/></div></div>
       </div>
-      <div id="new-person-fields" style="display:none">
+      <div id="new-person-fields">
         <div class="form-row"><div class="field"><label>Անուն *</label><input id="new-case-first"/></div><div class="field"><label>Ազգանուն *</label><input id="new-case-last"/></div></div>
         <div class="field"><label>Հայրանուն</label><input id="new-case-middle"/></div>
       </div>
@@ -2291,6 +2295,17 @@ async function openCreateCaseModal(stage='preparation') {
   toggleGeneralCaseFields()
   toggleNewEntityType()
   toggleOpponentFields('new-')
+}
+
+function openCaseStageChooser() {
+  openModal(`<div class="modal-title">Ընտրեք նոր գործի փուլը<button class="btn btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="alert alert-blue">Ընտրեք այն փուլը, որտեղ գործը գտնվում է հիմա։ Մնացած տվյալները կարող եք լրացնել ավելի ուշ։</div>
+    <div style="display:grid;gap:10px">
+      <button class="btn btn-primary" onclick="closeModal();openCreateCaseModal('preparation')">Նախապատրաստում</button>
+      <button class="btn btn-primary" onclick="closeModal();openCreateCaseModal('process')">Ընթացիկ / Դատական</button>
+      <button class="btn btn-primary" onclick="closeModal();openCreateCaseModal('archive')">Արխիվ</button>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Չեղարկել</button></div>`)
 }
 
 function toggleGeneralCaseFields() {
@@ -2375,7 +2390,7 @@ function processFieldsHtml(prefix) {
 }
 
 function archiveFieldsHtml(prefix) {
-  return `<div class="alert alert-blue">Լրացրեք պահպանման տեղը ձեզ հարմար ձևով։ Գոնե մեկ դաշտ պետք է լրացված լինի։</div>
+  return `<div class="alert alert-blue">Արխիվի տեղը պարտադիր չէ։ Կարող եք հիմա ստանալ ներքին համարը և պահպանման տեղը լրացնել ավելի ուշ։</div>
   <div class="field"><label>Պահպանման տեղի ազատ նկարագրություն</label><input id="${prefix}hints" placeholder="օր.՝ գլխավոր գրասենյակ, մոխրագույն պահարան, վերևի դարակ"/></div>
   <div class="form-row-3"><div class="field"><label>Սենյակ / տարածք</label><input id="${prefix}room"/></div><div class="field"><label>Դարակ</label><input id="${prefix}shelf"/></div><div class="field"><label>Արկղ</label><input id="${prefix}box"/></div></div>
   <div class="field"><label>Պահեստային համար</label><input id="${prefix}storage"/></div>`

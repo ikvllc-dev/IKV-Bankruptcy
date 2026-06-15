@@ -807,9 +807,6 @@ function saveCaseWithFolders(row) {
 function validateCaseLifecycle(row) {
   const stage = row[HEADERS.Cases.indexOf('stage')]
   if (stage === 'archive') {
-    const hasLocation = ['storageNumber','storageRoom','storageShelf','storageBox','locationHints']
-      .some(function(header) { return Boolean(row[HEADERS.Cases.indexOf(header)]) })
-    if (!hasLocation) throw new Error('Archive location is required')
     setCaseDefault(row, 'archivedAt', new Date().toISOString())
   }
 }
@@ -921,13 +918,6 @@ function migrateCaseStage(data) {
     if (Math.abs(targetIndex - currentIndex) !== 1) {
       throw new Error('Cases can move only one stage at a time')
     }
-    if (targetStage === 'archive') {
-      if (![data.storageNumber, data.storageRoom, data.storageShelf, data.storageBox, data.locationHints]
-        .some(function(value) { return Boolean(String(value || '').trim()) })) {
-        throw new Error('Archive location is required')
-      }
-    }
-
     const now = new Date().toISOString()
     const user = currentUserEmail()
     item.stage = targetStage
