@@ -359,7 +359,7 @@ a:hover{text-decoration:none}
 // ═══════════════════════════════════════════════
 // CONFIG — paste your Apps Script URL here
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwT6caHnHJ-SuZMhp2FJDw7p_YAxBRMl8g3CrhfPUN9A6mLvoYKSuL_g9oCfDta_weY3w/exec'
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1pmehsy87Tia1ZYSkP2ts7raFVkCRC7EiK525a8e4nYcGjYoU1F2Ts19qp-yvZofHtg/exec'
 
 const COMPANY = {
   name: 'ԱՅ ՔԻ ՎԻ սահմանափակ պատասխանատվությամբ ընկերություն',
@@ -2283,7 +2283,7 @@ async function openCreateCaseModal(stage='preparation') {
       ${target==='process'?processFieldsHtml('new-'):''}
       ${target==='archive'?archiveFieldsHtml('new-'):''}
     </div>
-    <div id="bankruptcy-quiz-note" class="alert alert-blue">Սնանկության նոր գործի համար կարող եք անցնել ամբողջական հարցաթերթը։</div>
+    <div id="bankruptcy-quiz-note" class="alert alert-blue">Այժմ կարող եք գրանցել միայն հիմնական տվյալները և ստանալ ներքին համարը։ Մնացած տվյալները լրացրեք ավելի ուշ՝ գործի խմբագրման միջոցով։</div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Չեղարկել</button>
       <button class="btn btn-primary" id="new-case-save" onclick="${inlineCall('continueCreateCase',target)}">Պահպանել գործը</button>
@@ -2328,15 +2328,6 @@ function readOpponentFields(prefix) {
 async function continueCreateCase(stage) {
   const type=document.getElementById('new-case-type').value
   const entityType=document.getElementById('new-entity-type').value
-  if(type==='bankruptcy'&&stage==='preparation'&&entityType==='person') {
-    window.pendingCaseMeta={
-      caseTitle:document.getElementById('new-case-title').value.trim(),
-      responsibleEmails:document.getElementById('new-case-emails').value.trim(),
-      ...readOpponentFields('new-')
-    }
-    window.keepPendingCaseMeta=true
-    closeModal(); showPage('quiz'); return
-  }
   const companyName=document.getElementById('new-company-name').value.trim()
   const first=document.getElementById('new-case-first').value.trim()
   const last=document.getElementById('new-case-last').value.trim()
