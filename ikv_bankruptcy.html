@@ -2371,7 +2371,7 @@ async function continueCreateCase(stage) {
     const result=await apiPost({action:'saveCase',row:buildCaseRow(data)})
     Object.assign(data,result)
     allCases.push(data)
-    dashboardLoadedAt=0
+    dashboardLoadedAt=Date.now()
     closeModal()
     activeStageFilter='all'
     showPage('cases')

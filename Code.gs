@@ -775,20 +775,6 @@ function saveCaseWithFolders(row) {
   validateCaseLifecycle(row)
   const folderIdIndex = HEADERS.Cases.indexOf('driveFolderId')
   const folderUrlIndex = HEADERS.Cases.indexOf('driveFolderUrl')
-  let folder = null
-  if (row[folderIdIndex]) {
-    try {
-      folder = DriveApp.getFolderById(row[folderIdIndex])
-      if (folder.isTrashed()) folder = null
-    } catch (err) {}
-  }
-  if (!folder) {
-    folder = createCaseFolderTree(row[0], row[1])
-    row[folderIdIndex] = folder.getId()
-    row[folderUrlIndex] = folder.getUrl()
-  } else {
-    ensureCaseFolderTree(folder)
-  }
   const saved = upsertRow('Cases', row)
   saved.driveFolderId = row[folderIdIndex]
   saved.driveFolderUrl = row[folderUrlIndex]

@@ -12,6 +12,7 @@ Armenian-first legal case management for preparation, court process, and physica
 - Hearings, procedural deadlines, email reminders, and shared Calendar sync.
 - Existing bankruptcy questionnaire, documents, debts, certificates, uploads, templates, folders, and audit history.
 - Schema migration, scheduled backups, and restore-friendly spreadsheet copies.
+- Fast bulk case entry: Drive folders are created lazily when a case is opened for document work, not during the initial number assignment.
 
 ## Production Deployment
 
