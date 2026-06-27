@@ -66,7 +66,7 @@ function authorizeDocumentGeneration() {
 }
 
 const HEADERS = {
-  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy','clientEntityType','companyRegistrationNumber','companyTaxId'],
+  Cases: ['id','applicantName','firstName','lastName','middleName','birthDate','passport','passportDate','passportBy','regAddr','notifAddr','psn','isMarried','spouseName','filingDate','employed','salaryAbove','banks','debts','spouseBanks','spouseDebts','lawyerApproved','lawyerApprovedBy','lawyerApprovedAt','createdAt','createdBy','spouseFirstName','spouseLastName','spouseMiddleName','spouseBirthDate','spousePassport','spousePassportDate','spousePassportBy','spousePsn','spouseRegAddr','spouseNotifAddr','assessmentJson','driveFolderId','driveFolderUrl','additionalIdentity','spouseAdditionalIdentity','noPassport','idCard','idCardDate','idCardBy','spouseNoPassport','spouseIdCard','spouseIdCardDate','spouseIdCardBy','noIdCard','spouseNoIdCard','internalNumber','caseType','stage','stageChangedAt','stageChangedBy','officialCaseNumber','court','courtInstance','judge','caseStatus','finalOutcome','archivedAt','storageNumber','storageRoom','storageShelf','storageBox','locationHints','responsibleEmails','updatedAt','updatedBy','clientEntityType','companyRegistrationNumber','companyTaxId','caseTitle','opponentEntityType','opponentName','opponentRegistrationNumber','opponentTaxId'],
   Documents: ['id','caseId','typeId','subject','status','issueDate','expiryDate','appliedAt','updatedAt'],
   Debts: ['id','caseId','subject','creditor','contractNumber','contractDate','currency','principal','interest','penalty','totalAmount','dueDate','claimBasis','collateral','enforcementInfo','notes','createdAt','updatedAt'],
   BankCertificates: ['id','caseId','subject','bank','status','result','accountInfo','balance','currency','issueDate','expiryDate','appliedAt','notes','updatedAt'],
@@ -775,20 +775,6 @@ function saveCaseWithFolders(row) {
   validateCaseLifecycle(row)
   const folderIdIndex = HEADERS.Cases.indexOf('driveFolderId')
   const folderUrlIndex = HEADERS.Cases.indexOf('driveFolderUrl')
-  let folder = null
-  if (row[folderIdIndex]) {
-    try {
-      folder = DriveApp.getFolderById(row[folderIdIndex])
-      if (folder.isTrashed()) folder = null
-    } catch (err) {}
-  }
-  if (!folder) {
-    folder = createCaseFolderTree(row[0], row[1])
-    row[folderIdIndex] = folder.getId()
-    row[folderUrlIndex] = folder.getUrl()
-  } else {
-    ensureCaseFolderTree(folder)
-  }
   const saved = upsertRow('Cases', row)
   saved.driveFolderId = row[folderIdIndex]
   saved.driveFolderUrl = row[folderUrlIndex]
@@ -806,19 +792,7 @@ function saveCaseWithFolders(row) {
 
 function validateCaseLifecycle(row) {
   const stage = row[HEADERS.Cases.indexOf('stage')]
-  function required(header, message) {
-    if (!row[HEADERS.Cases.indexOf(header)]) throw new Error(message)
-  }
-  if (stage === 'process') {
-    required('officialCaseNumber', 'Official court case number is required')
-    required('court', 'Court is required')
-    required('courtInstance', 'Court instance is required')
-    required('judge', 'Judge is required')
-  }
   if (stage === 'archive') {
-    const hasLocation = ['storageNumber','storageRoom','storageShelf','storageBox','locationHints']
-      .some(function(header) { return Boolean(row[HEADERS.Cases.indexOf(header)]) })
-    if (!hasLocation) throw new Error('Archive location is required')
     setCaseDefault(row, 'archivedAt', new Date().toISOString())
   }
 }
@@ -930,21 +904,6 @@ function migrateCaseStage(data) {
     if (Math.abs(targetIndex - currentIndex) !== 1) {
       throw new Error('Cases can move only one stage at a time')
     }
-    if (targetStage === 'process') {
-      if (!String(data.officialCaseNumber || item.officialCaseNumber || '').trim()) {
-        throw new Error('Official court case number is required')
-      }
-      if (!String(data.court || item.court || '').trim()) throw new Error('Court is required')
-      if (!String(data.courtInstance || item.courtInstance || '').trim()) throw new Error('Court instance is required')
-      if (!String(data.judge || item.judge || '').trim()) throw new Error('Judge is required')
-    }
-    if (targetStage === 'archive') {
-      if (![data.storageNumber, data.storageRoom, data.storageShelf, data.storageBox, data.locationHints]
-        .some(function(value) { return Boolean(String(value || '').trim()) })) {
-        throw new Error('Archive location is required')
-      }
-    }
-
     const now = new Date().toISOString()
     const user = currentUserEmail()
     item.stage = targetStage

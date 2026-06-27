@@ -1,0 +1,9 @@
+# Normalize line endings to LF for all text (Apps Script / web project)
+* text=auto eol=lf
+
+# Binary assets — never touch
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.docx binary

@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Auto-generated timestamped backups
+*.backup-*
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+desktop.ini

@@ -1,0 +1,11 @@
+{
+  "name": "ikv-case-management",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build:spec": "node build_tz.js"
+  },
+  "dependencies": {
+    "docx": "9.6.1"
+  }
+}

@@ -200,7 +200,11 @@ children.push(h2('5.1 Case Types', '5.1 Գործերի տեսակներ'));
   ['Bankruptcy-specific features (questionnaire, POA/state-letter generation) appear only for bankruptcy cases; other types show a general case form. Nothing bankruptcy-specific is removed.',
    'Սնանկությանը հատուկ գործառույթները (հարցաթերթ, լիազորագիր/պետական նամակների գեներացում) հայտնվում են միայն սնանկության գործերի համար, մյուս տեսակները ցույց են տալիս ընդհանուր ձև։ Սնանկությանը հատուկ ոչինչ չի հեռացվում։'],
   ['The type list is editable by the firm (add/rename/disable) without code changes.',
-   'Տեսակների ցանկը խմբագրելի է ընկերության կողմից (ավելացնել/վերանվանել/անջատել)՝ առանց կոդի փոփոխման։']
+   'Տեսակների ցանկը խմբագրելի է ընկերության կողմից (ավելացնել/վերանվանել/անջատել)՝ առանց կոդի փոփոխման։'],
+  ['An authorised user can correct the type of an existing case without recreating the case or changing its internal number, files, archive volumes or history.',
+   'Լիազորված օգտատերը կարող է ուղղել առկա գործի տեսակը՝ առանց գործը վերստեղծելու կամ դրա ներքին համարը, ֆայլերը, արխիվային հատորները կամ պատմությունը փոխելու։'],
+  ['Each case may store a short matter title and an opposing party identified as a physical or legal person, including optional registration number and tax ID for legal persons.',
+   'Յուրաքանչյուր գործ կարող է ունենալ կարճ անվանում/առարկա և հակառակ կողմ՝ նշված որպես ֆիզիկական կամ իրավաբանական անձ, իսկ իրավաբանական անձի համար՝ նաև ընտրովի պետական գրանցման համար և ՀՎՀՀ։']
 ].forEach(([e, a]) => children.push(...bullet(e, a)));
 
 children.push(h2('5.2 Case Stages & Migration', '5.2 Գործերի փուլեր և տեղափոխում'));
@@ -209,10 +213,10 @@ children.push(h2('5.2 Case Stages & Migration', '5.2 Գործերի փուլեր
    'Երեք փուլ՝ Նախապատրաստում, Ընթացիկ (Դատական), Արխիվ։ Գլխավոր էկրանն ունի յուրաքանչյուր փուլի համար բաժին/ներդիր՝ իր «Ավելացնել գործ» կոճակով և ցանկով։'],
   ['A "Migrate" button moves a case forward (Preparation→Process→Archive). The system records the migration timestamp and the user who performed it, and writes it to the audit log.',
    '«Տեղափոխել» կոճակը գործը տանում է առաջ (Նախապատրաստում→Ընթացիկ→Արխիվ)։ Համակարգը գրանցում է տեղափոխման ժամանակը և կատարող օգտատիրոջը և գրառում աուդիտի մատյանում։'],
-  ['Migrating to Process prompts for the official court-case number, court, instance and judge (Section 5.6).',
-   'Ընթացիկ տեղափոխելիս համակարգը պահանջում է պաշտոնական դատական համար, դատարան, ատյան և դատավոր (բաժին 5.6)։'],
-  ['Migrating to Archive prompts for the physical location (room/shelf/box) and sets the archival date automatically (Section 5.5).',
-   'Արխիվ տեղափոխելիս համակարգը պահանջում է ֆիզիկական տեղը (սենյակ/դարակ/արկղ) և ինքնաշխատ սահմանում արխիվացման ամսաթիվը (բաժին 5.5)։'],
+  ['Migrating to Process offers the official court-case number, court, instance and judge fields, but they remain optional so non-court matters can be registered immediately and supplemented later (Section 5.6).',
+   'Ընթացիկ տեղափոխելիս համակարգը առաջարկում է պաշտոնական դատական համար, դատարան, ատյան և դատավոր դաշտերը, սակայն դրանք պարտադիր չեն, որպեսզի ոչ դատական գործերը գրանցվեն անմիջապես և տվյալները լրացվեն ավելի ուշ (բաժին 5.6)։'],
+  ['Migrating to Archive offers the physical location fields (room/shelf/box) and sets the archival date automatically; the location may be completed later during rapid legacy-case entry (Section 5.5).',
+   'Արխիվ տեղափոխելիս համակարգն առաջարկում է ֆիզիկական տեղի դաշտերը (սենյակ/դարակ/արկղ) և ինքնաշխատ սահմանում արխիվացման ամսաթիվը, իսկ արագ հին գործերի մուտքագրման ժամանակ տեղը կարող է լրացվել ավելի ուշ (բաժին 5.5)։'],
   ['Backward migration (e.g. archive re-opened) is allowed for authorised users and is also logged.',
    'Հետընթաց տեղափոխումը (օր.՝ արխիվից վերաբացում) թույլատրվում է և նույնպես գրանցվում է մատյանում։'],
   ['The internal number never changes across stages; the Drive folder is preserved (no re-creation, no re-numbering).',
@@ -267,6 +271,8 @@ children.push(h2('5.6 Trial / Process Tracking', '5.6 Դատական / ընթա�
 [
   ['Court fields: court name, instance (first / appeal / cassation), assigned judge.',
    'Դատական դաշտեր՝ դատարանի անվանում, ատյան (առաջին / վերաքննիչ / վճռաբեկ), նշանակված դատավոր։'],
+  ['Court name, official case number, instance and judge are optional at creation and remain editable throughout the case life cycle.',
+   'Դատարանի անվանումը, պաշտոնական գործի համարը, ատյանը և դատավորը ստեղծման պահին պարտադիր չեն և խմբագրելի են գործի ողջ կյանքի ցիկլում։'],
   ['Hearing dates: each hearing has date/time and optional note; upcoming hearings appear in the dashboard.',
    'Նիստերի ամսաթվեր՝ յուրաքանչյուր նիստ ունի ամսաթիվ/ժամ և ընտրովի նշում, առաջիկա նիստերը հայտնվում են վահանակում։'],
   ['Procedural deadlines: each deadline has a due date and description; a "due soon" view highlights approaching ones.',
@@ -287,8 +293,8 @@ children.push(h2('5.7 Reminders', '5.7 Հիշեցումներ'));
 
 children.push(h2('5.8 Search & Backend Visibility', '5.8 Որոնում և հետնամասի տեսանելիություն'));
 [
-  ['Global search by client name, internal number, official court number, sender, case type, stage, and location.',
-   'Համընդհանուր որոնում՝ ըստ վստահորդի անվան, ներքին համարի, պաշտոնական դատական համարի, ուղարկողի, գործի տեսակի, փուլի և տեղի։'],
+  ['Global search by client name, matter title, opponent name/identifier, internal number, official court number, sender, case type, stage, and location.',
+   'Համընդհանուր որոնում՝ ըստ վստահորդի անվան, գործի առարկայի, հակառակ կողմի անվան/նույնացուցիչի, ներքին համարի, պաշտոնական դատական համարի, ուղարկողի, գործի տեսակի, փուլի և տեղի։'],
   ['Every new field is stored in the worksheet/database and readable directly from the backend, not only the UI.',
    'Յուրաքանչյուր նոր դաշտ պահվում է աղյուսակում/տվյալների բազայում և ընթեռնելի է ուղղակիորեն հետնամասից, ոչ միայն ինտերֆեյսից։']
 ].forEach(([e, a]) => children.push(...bullet(e, a)));
@@ -309,6 +315,11 @@ children.push(h1('6. Data Model Changes', '6. Տվյալների մոդելի փ
 children.push(h2('6.1 New fields on the Cases table', '6.1 Նոր դաշտեր Cases աղյուսակում'));
 children.push(dictTable([
   ['caseType', 'Case type (bankruptcy / civil / criminal / administrative / advisory / other).', 'Գործի տեսակ (սնանկություն / քաղաքացիական / քրեական / վարչական / խորհրդատվ. / այլ)։'],
+  ['caseTitle', 'Short matter title used to distinguish multiple cases for the same client.', 'Գործի կարճ անվանում/առարկա՝ նույն վստահորդի բազմաթիվ գործերը տարբերակելու համար։'],
+  ['opponentEntityType', 'Opposing party type: physical person or legal person.', 'Հակառակ կողմի տեսակ՝ ֆիզիկական կամ իրավաբանական անձ։'],
+  ['opponentName', 'Opposing party name or legal entity name.', 'Հակառակ կողմի անուն կամ իրավաբանական անձի անվանում։'],
+  ['opponentRegistrationNumber', 'Optional state registration number for a legal-person opponent.', 'Իրավաբանական անձ հակառակ կողմի ընտրովի պետական գրանցման համար։'],
+  ['opponentTaxId', 'Optional tax identification number for a legal-person opponent.', 'Իրավաբանական անձ հակառակ կողմի ընտրովի ՀՎՀՀ։'],
   ['stage', 'Current stage: preparation / process / archive.', 'Ընթացիկ փուլ՝ նախապատրաստում / ընթացիկ / արխիվ։'],
   ['stageChangedAt', 'Timestamp of the last stage change.', 'Վերջին փուլափոխման ժամանակային դրոշմ։'],
   ['stageChangedBy', 'User who performed the last stage change.', 'Վերջին փուլափոխումը կատարած օգտատեր։'],
@@ -380,6 +391,12 @@ children.push(...bp({
    'Գրառումների քանակները համընկնում են միգրացիայից առաջ և հետո, տվյալներ չեն կորել։'],
   ['A case can be created, migrated Preparation→Process→Archive, and each migration is logged with user + timestamp.',
    'Գործը կարելի է ստեղծել, տեղափոխել Նախապատրաստում→Ընթացիկ→Արխիվ, և յուրաքանչյուր տեղափոխում գրանցվում է օգտատիրոջ + ժամանակային դրոշմով։'],
+  ['Fast bulk entry is supported: initial case save assigns the internal number without creating the Drive folder tree; the Drive folder is created lazily when the case is opened for document work or a file is uploaded.',
+   'Արագ զանգվածային մուտքագրումը աջակցվում է․ սկզբնական պահպանումը տալիս է ներքին համարը առանց Drive թղթապանակների ծառը ստեղծելու, իսկ Drive պանակը ստեղծվում է ավելի ուշ՝ գործը փաստաթղթային աշխատանքի համար բացելիս կամ ֆայլ վերբեռնելիս։'],
+  ['An existing case type, matter title, opponent and court data can be corrected without changing the case ID, internal number, files or archive volumes.',
+   'Առկա գործի տեսակը, առարկան, հակառակ կողմի և դատական տվյալները կարող են ուղղվել՝ առանց գործի ID-ն, ներքին համարը, ֆայլերը կամ արխիվային հատորները փոխելու։'],
+  ['The new-case modal does not close when the user clicks or drags on the shaded backdrop; entered data is retained until an explicit save or cancel action.',
+   'Նոր գործի պատուհանը չի փակվում, երբ օգտատերը սեղմում կամ շարժում է մկնիկը մգեցված ֆոնի վրա․ մուտքագրված տվյալները պահպանվում են մինչև հստակ պահպանում կամ չեղարկում։'],
   ['A junior can find any case and its physical location from the mail screen in under ~10 seconds, by name or any number.',
    'Կրտսերը կարող է փոստի էկրանից ~10 վայրկյանից պակասում գտնել ցանկացած գործ և դրա ֆիզիկական տեղը՝ ըստ անվան կամ ցանկացած համարի։'],
   ['An archived file can be located by storage room/shelf/box from both the UI and the backend sheet.',
