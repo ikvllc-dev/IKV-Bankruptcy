@@ -2479,6 +2479,7 @@ async function openCaseDetailsModal() {
       <div id="detail-opponent-company-fields" class="form-row"><div class="field"><label>Պետական գրանցման համար</label><input id="detail-opponent-registration" value="${esc(c.opponentRegistrationNumber||'')}"/></div><div class="field"><label>ՀՎՀՀ</label><input id="detail-opponent-tax-id" value="${esc(c.opponentTaxId||'')}"/></div></div>
     </div>
     ${processFieldsHtml('detail-')}
+    ${c.stage==='archive'?`<label style="display:block;font-weight:700;margin:10px 0 2px">📍 Արխիվի պահպանման տեղ</label>${archiveFieldsHtml('detail-')}`:''}
     <div class="field"><label>Գործի վերջնական արդյունք / նշում</label><textarea id="detail-outcome">${esc(c.finalOutcome||'')}</textarea></div>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Չեղարկել</button><button class="btn btn-primary" id="detail-save" onclick="saveCaseDetails()">Պահպանել փոփոխությունները</button></div>`)
   document.getElementById('detail-official').value=c.officialCaseNumber||''
@@ -2487,6 +2488,13 @@ async function openCaseDetailsModal() {
   document.getElementById('detail-judge').value=c.judge||''
   document.getElementById('detail-status').value=c.caseStatus||''
   toggleOpponentFields('detail-')
+  if(c.stage==='archive'){
+    document.getElementById('detail-room').value=c.storageRoom||''
+    document.getElementById('detail-shelf').value=c.storageShelf||''
+    document.getElementById('detail-box').value=c.storageBox||''
+    document.getElementById('detail-storage').value=c.storageNumber||''
+    document.getElementById('detail-hints').value=c.locationHints||''
+  }
 }
 
 async function saveCaseDetails() {
@@ -2502,6 +2510,7 @@ async function saveCaseDetails() {
     ...readProcessFields('detail-'),
     finalOutcome:document.getElementById('detail-outcome').value.trim()
   }
+  if(currentCase.stage==='archive') Object.assign(updated,readArchiveFields('detail-'))
   try {
     const result=await apiPost({action:'saveCase',row:buildCaseRow(updated)})
     Object.assign(updated,result)
