@@ -2811,7 +2811,7 @@ function printMailLabel(caseId) {
   const c=allCases.find(item=>item.id===caseId)
   if(!c)return
   const w=window.open('','_blank','width=420,height=595')
-  w.document.write(`<html><head><title>${esc(displayCaseNumber(c))}</title><style>@page{size:A4 portrait;margin:2mm}html,body{margin:0;padding:0}body{font-family:Arial}.label{border:2px solid #111;padding:16px;transform:rotate(180deg)}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(displayCaseNumber(c))}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Հիմնական համար՝ ${esc(displayInternalNumber(c.internalNumber))}</p><p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
+  w.document.write(`<html><head><title>${esc(displayCaseNumber(c))}</title><style>@page{size:A4 portrait;margin:5mm}html,body{margin:0;padding:0}body{font-family:Arial}.label{border:2px solid #111;padding:16px;transform:rotate(180deg)}h1{font-size:34px;margin:0 0 12px}p{font-size:18px;margin:7px 0}</style></head><body><div class="label"><h1>${esc(displayCaseNumber(c))}</h1><p><strong>${esc(c.applicantName)}</strong></p><p>${esc(caseTypeLabel(c.caseType))} · ${esc(stageLabel(c.stage))}</p>${c.stage==='archive'?`<p>Հիմնական համար՝ ${esc(displayInternalNumber(c.internalNumber))}</p><p>Տեղ՝ ${esc(archiveLocationText(c))}</p>`:''}</div><script>window.print()<\/script></body></html>`)
   w.document.close()
 }
 
